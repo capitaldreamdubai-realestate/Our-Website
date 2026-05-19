@@ -3,6 +3,7 @@ export const en: Record<string, string> = {
   'nav.home': 'Home',
   'nav.allProperties': 'All Properties',
   'nav.newDevelopments': 'Offplan',
+  'nav.developers': 'Developers',
   'nav.forRent': 'For rent',
   'nav.forSale': 'For sale',
   'nav.about': 'About us',
@@ -124,9 +125,12 @@ export const en: Record<string, string> = {
   'seo.forRent.title': 'Properties for Rent in Dubai | Capital Dreams',
   'seo.forRent.description':
     'Find apartments, villas, and luxury homes for rent in Dubai and across the UAE with expert support from Capital Dreams.',
-  'seo.newDevelopments.title': 'New Developments in Dubai | Off-Plan UAE Projects',
+  'seo.newDevelopments.title': 'Off-Plan Properties in Dubai | Capital Dreams UAE',
   'seo.newDevelopments.description':
-    'Discover new Dubai developments and off-plan opportunities in the UAE with launch updates, pricing guidance, and expert advice.',
+    'Browse off-plan listings in Dubai and across the UAE with launch updates, pricing guidance, and expert advice from Capital Dreams.',
+  'seo.developers.title': 'UAE Property Developers | Capital Dreams Dubai',
+  'seo.developers.description':
+    'Explore UAE property developers with active listings at Capital Dreams — Emaar, DAMAC, Sobha, and more.',
   'seo.articleMissing.title': 'Dubai Real Estate Article | Capital Dreams UAE',
   'seo.articleMissing.description':
     'Read practical Dubai and UAE property insights from Capital Dreams real estate experts.',
@@ -294,15 +298,51 @@ export const en: Record<string, string> = {
   'listing.grid.rent': 'For rent',
   'listing.emptyChannel.rent':
     'There are no for-rent listings in the catalog yet. Tag listings with “For rent” in the admin or browse all properties.',
-  'listing.hero.new.title': 'New developments',
+  'listing.hero.new.title': 'Offplan',
   'listing.hero.new.desc':
-    'Explore launches and newly released homes. Use the same filters as our full collection to narrow by price, location, and layout.',
-  'listing.featured.new': 'Featured new developments',
-  'listing.grid.new': 'New developments',
+    'Explore off-plan launches and pre-completion opportunities. Use the same filters as our full collection to narrow by price, location, and layout.',
+  'listing.featured.new': 'Featured off-plan listings',
+  'listing.grid.new': 'Offplan',
   'listing.emptyChannel.new':
-    'There are no new development listings in the catalog yet. Browse all properties or check back soon.',
+    'There are no off-plan listings in the catalog yet. Tag listings with “Offplan” in the admin or browse all properties.',
   'listing.emptyFiltered.rent': 'No rentals match these filters. Try clearing filters or broadening your search.',
-  'listing.emptyFiltered.new': 'No new developments match these filters. Try clearing filters or broadening your search.',
+  'listing.emptyFiltered.new': 'No off-plan listings match these filters. Try clearing filters or broadening your search.',
+
+  'developers.aria.main': 'Developers',
+  'developers.aria.grid': 'Developers with listings',
+  'developers.eyebrow': 'Developers',
+  'developers.h1': 'UAE property developers',
+  'developers.intro':
+    'Browse developer brands we currently represent. Only developers with at least one published listing appear here.',
+  'developers.loading': 'Loading developers…',
+  'developers.empty':
+    'No developers with published listings yet. Assign a developer on a property in admin to feature them here.',
+  'developers.showMore': 'Show more',
+  'developers.carouselAria': 'Developers carousel',
+  'developers.listingsCount': '{count} listings',
+  'developers.cardAria': 'View {name} listings',
+
+  'developerDetail.seo.title': '{name} Properties | Capital Dreams Dubai',
+  'developerDetail.seo.titleMissing': 'Developer | Capital Dreams Dubai',
+  'developerDetail.seo.description':
+    'Browse {name} property listings in Dubai and the UAE with Capital Dreams.',
+  'developerDetail.seo.descriptionMissing':
+    'Developer property listings at Capital Dreams Dubai.',
+  'developerDetail.loadingAria': 'Loading developer',
+  'developerDetail.loading': 'Loading developer…',
+  'developerDetail.profileAria': 'Developer profile',
+  'developerDetail.eyebrow': 'Developer',
+  'developerDetail.website': 'Official website',
+  'developerDetail.back': 'All developers',
+  'developerDetail.hero.title': '{name} listings',
+  'developerDetail.hero.desc':
+    'Explore published {name} properties in our collection. Use filters to narrow by price, location, and layout.',
+  'developerDetail.featured': 'Featured {name} listings',
+  'developerDetail.grid': '{name} properties',
+  'developerDetail.emptyFiltered':
+    'No {name} listings match these filters. Try clearing filters or broadening your search.',
+  'developerDetail.emptyChannel':
+    'There are no published listings for this developer yet.',
 
   'propertyGrid.propertiesFallback': 'Properties',
 
@@ -362,6 +402,12 @@ export const en: Record<string, string> = {
   'contact.mailSubject': 'Contact request — Capital Dream',
   'contact.mailBody':
     'Name: {name}\nEmail: {email}\nPhone: {phone}\n\nMessage:\n{message}',
+
+  'popup.closeAria': 'Close popup',
+  'popup.submit': 'Submit',
+  'popup.sending': 'Sending…',
+  'popup.thankYou': 'Thank you. Our team will be in touch shortly.',
+  'popup.errorNotConnected': 'Unable to submit right now. Please try again later.',
 
   'testimonials.aria.main': 'Testimonials',
   'testimonials.eyebrow': 'Testimonials',

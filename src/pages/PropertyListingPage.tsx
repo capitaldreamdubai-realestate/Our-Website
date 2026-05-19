@@ -170,7 +170,7 @@ export function PropertyListingPage(props: PropertyListingPageProps) {
               <Button
                 type="button"
                 variant="inkSolid"
-                className="w-full shrink-0 sm:mt-1 sm:w-auto sm:self-start"
+                className="btn-hover-clear w-full shrink-0 sm:mt-1 sm:w-auto sm:self-start"
                 onClick={clearFilters}
               >
                 {t('listing.clearFilters')}

@@ -221,8 +221,8 @@ export function filterProperties(
     )
   } else if (f.sort === 'new') {
     out = [...out].sort((a, b) => {
-      const an = a.tag?.toLowerCase() === 'new' ? 1 : 0
-      const bn = b.tag?.toLowerCase() === 'new' ? 1 : 0
+      const an = a.tag?.toLowerCase() === 'offplan' ? 1 : 0
+      const bn = b.tag?.toLowerCase() === 'offplan' ? 1 : 0
       return bn - an
     })
   }

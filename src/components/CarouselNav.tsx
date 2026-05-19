@@ -36,7 +36,7 @@ export function CarouselNav({
   }, [emblaApi, onSelect])
 
   const btnBase =
-    'inline-flex size-11 shrink-0 items-center justify-center rounded-full border text-center transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none'
+    'btn-icon-ink inline-flex size-11 shrink-0 items-center justify-center rounded-full border text-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none'
 
   return (
     <div
@@ -50,7 +50,7 @@ export function CarouselNav({
           btnBase,
           prevDisabled
             ? 'border-ink/15 bg-cream text-ink/30 opacity-60 focus-visible:outline-ink/20'
-            : 'border-transparent bg-ink text-cream hover:bg-ink/88 focus-visible:outline-cream/40',
+            : 'border-transparent bg-ink text-cream focus-visible:outline-cream/40',
         )}
         aria-label={t('carousel.prev')}
         onClick={scrollPrev}
@@ -64,7 +64,7 @@ export function CarouselNav({
           btnBase,
           nextDisabled
             ? 'border-ink/15 bg-cream text-ink/30 opacity-60 focus-visible:outline-ink/20'
-            : 'border-transparent bg-ink text-cream hover:bg-ink/88 focus-visible:outline-cream/40',
+            : 'border-transparent bg-ink text-cream focus-visible:outline-cream/40',
         )}
         aria-label={t('carousel.next')}
         onClick={scrollNext}

@@ -16,25 +16,25 @@ type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
 }
 
 export const buttonBaseClass =
-  'type-button font-display inline-flex items-center justify-center rounded-xl px-6 py-2.5 font-medium tracking-wide transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50'
+  'type-button font-display inline-flex items-center justify-center rounded-xl px-6 py-2.5 font-medium tracking-wide transition-[color,background-color,border-color,transform,box-shadow,filter] duration-300 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50'
 
 const base = buttonBaseClass
 
 const variants: Record<Variant, string> = {
   primary:
-    'bg-terracotta text-cream hover:bg-terracotta/90 focus-visible:outline-terracotta',
+    'border border-transparent bg-terracotta text-cream hover:bg-ink hover:text-cream focus-visible:outline-terracotta',
   ghost:
-    'bg-transparent text-cream underline-offset-4 hover:underline focus-visible:outline-cream',
+    'border border-transparent bg-transparent text-cream underline-offset-4 hover:bg-cream/15 hover:text-cream hover:underline focus-visible:outline-cream',
   outline:
-    'border border-cream/80 text-cream hover:bg-cream/10 focus-visible:outline-cream',
+    'border border-cream/80 bg-transparent text-cream hover:border-cream hover:bg-cream hover:text-ink focus-visible:outline-cream',
   outlineTerracotta:
-    'border border-terracotta text-terracotta hover:bg-terracotta/10 focus-visible:outline-terracotta',
+    'border border-terracotta bg-transparent text-terracotta hover:border-terracotta hover:bg-terracotta hover:text-cream focus-visible:outline-terracotta',
   creamOnTerracotta:
-    'bg-cream text-terracotta hover:bg-cream/90 focus-visible:outline-cream',
+    'border border-transparent bg-cream text-terracotta hover:bg-ink hover:text-cream focus-visible:outline-cream',
   whiteSolid:
-    'bg-white text-terracotta hover:bg-cream hover:text-terracotta focus-visible:outline-white',
+    'border border-transparent bg-white text-terracotta hover:bg-ink hover:text-cream focus-visible:outline-white',
   inkSolid:
-    'bg-ink text-cream hover:bg-ink/90 focus-visible:outline-ink',
+    'border border-transparent bg-ink text-cream hover:bg-terracotta hover:text-cream focus-visible:outline-ink',
 }
 
 export function buttonClassNames(

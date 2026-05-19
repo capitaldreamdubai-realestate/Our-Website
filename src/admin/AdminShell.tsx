@@ -11,6 +11,7 @@ import {
   Sparkles,
   Users,
   MessageSquare,
+  Megaphone,
   X,
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
@@ -47,6 +48,7 @@ const nav: NavItem[] = [
   { to: '/admin/salespeople', label: 'Sales team', icon: Users },
   { to: '/admin/users', label: 'User management', icon: Shield },
   { to: '/admin/marketing', label: 'Marketing', icon: Newspaper },
+  { to: '/admin/campaign-popups', label: 'Campaign popups', icon: Megaphone },
   { to: '/admin/integrations', label: 'Integrations', icon: Plug },
 ]
 

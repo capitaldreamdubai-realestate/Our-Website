@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import useEmblaCarousel from 'embla-carousel-react'
+import { buttonClassNames } from '@/components/Button'
 import { CarouselNav } from '@/components/CarouselNav'
 import { useCms } from '@/contexts/CmsContext'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
@@ -206,7 +207,7 @@ export function TestimonialsPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="type-button font-display inline-flex min-h-11 items-center justify-center rounded-xl bg-black px-5 py-2.5 font-medium text-white transition hover:bg-neutral-900 disabled:cursor-not-allowed disabled:opacity-60"
+              className={buttonClassNames('primary', 'min-h-11 px-5 py-2.5 disabled:cursor-not-allowed')}
             >
               {submitting ? t('testimonials.submitting') : t('testimonials.submit')}
             </button>

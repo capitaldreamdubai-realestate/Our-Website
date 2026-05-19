@@ -78,7 +78,7 @@ export function FloatingWhatsappButton() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`Open ${item.platform}`}
-                className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-white transition-transform duration-200 hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#155AA8]/50 ${platformButtonClass(
+                className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-white transition-[transform,background-color] duration-300 ease-out hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#155AA8]/50 ${platformButtonClass(
                   item.platform,
                 )}`}
               >
@@ -91,7 +91,7 @@ export function FloatingWhatsappButton() {
             onClick={() => setSocialOpen((v) => !v)}
             aria-expanded={socialOpen}
             aria-label={socialOpen ? 'Hide social links' : 'Show social links'}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#155AA8] shadow-lg shadow-black/20 transition-transform duration-200 hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#155AA8]/40"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#155AA8] shadow-lg shadow-black/20 transition-[transform,background-color,color] duration-300 ease-out hover:scale-105 hover:bg-[#155AA8] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#155AA8]/40"
           >
             <span className="text-xl font-semibold leading-none">@</span>
           </button>
@@ -102,7 +102,7 @@ export function FloatingWhatsappButton() {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat with us on WhatsApp"
-        className="group relative inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-black/20 transition-transform duration-300 hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        className="group relative inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-black/20 transition-[transform,background-color] duration-300 ease-out hover:scale-105 hover:bg-[#1ebe5d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
       >
         <span
           className="pointer-events-none absolute inset-0 rounded-full bg-[#25D366]/60 animate-ping"

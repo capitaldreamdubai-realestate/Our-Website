@@ -45,6 +45,8 @@ export type Property = {
   salespersonId?: string
   /** e.g. Villa, Apartment, Penthouse. */
   propertyType?: string
+  /** FK to property_developers. */
+  developerId?: string
 }
 
 type Props = {

@@ -1,0 +1,120 @@
+{
+  "info": {
+    "_postman_id": "6f8ec9f2-5b92-4ad2-9d31-2a0dcf4f8ec4",
+    "name": "DataPulseFlow API v1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Starter Postman collection for DataPulseFlow integration workflows."
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{dpf_api_key}}"
+          }
+        ],
+        "url": {
+          "raw": "{{dpf_base_url}}/health",
+          "host": ["{{dpf_base_url}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Get Property By ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{dpf_api_key}}"
+          }
+        ],
+        "url": {
+          "raw": "{{dpf_base_url}}/properties/{{property_id}}",
+          "host": ["{{dpf_base_url}}"],
+          "path": ["properties", "{{property_id}}"]
+        }
+      }
+    },
+    {
+      "name": "Trigger Property Sync",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{dpf_api_key}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"scope\": \"incremental\",\n  \"since\": \"{{sync_since_iso}}\"\n}"
+        },
+        "url": {
+          "raw": "{{dpf_base_url}}/sync/properties",
+          "host": ["{{dpf_base_url}}"],
+          "path": ["sync", "properties"]
+        }
+      }
+    },
+    {
+      "name": "Transform Currency",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{dpf_api_key}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"source_currency\": \"USD\",\n  \"target_currency\": \"AED\",\n  \"amounts\": [520000, 715000]\n}"
+        },
+        "url": {
+          "raw": "{{dpf_base_url}}/transform/currency",
+          "host": ["{{dpf_base_url}}"],
+          "path": ["transform", "currency"]
+        }
+      }
+    },
+    {
+      "name": "Real Estate Search Filter",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{dpf_api_key}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"city\": \"Dubai\",\n  \"intent\": \"rent\",\n  \"price_min\": 5000,\n  \"price_max\": 15000,\n  \"bedrooms\": [1, 2],\n  \"property_types\": [\"apartment\"]\n}"
+        },
+        "url": {
+          "raw": "{{dpf_base_url}}/filters/real-estate/search",
+          "host": ["{{dpf_base_url}}"],
+          "path": ["filters", "real-estate", "search"]
+        }
+      }
+    }
+  ]
+}
+

@@ -91,8 +91,8 @@ export function FollowLightSection({
           </div>
           <Button
             type="submit"
-            variant="primary"
-            className="h-auto min-h-14 w-full whitespace-normal border border-ink px-5 py-3.5 text-center text-base font-medium normal-case leading-snug tracking-normal !bg-ink !text-cream shadow-sm hover:!border-ink hover:!bg-ink/88 hover:!text-cream focus-visible:!outline-cream/40"
+            variant="inkSolid"
+            className="btn-hover-subscribe h-auto min-h-14 w-full whitespace-normal border border-ink px-5 py-3.5 text-center text-base font-medium normal-case leading-snug tracking-normal shadow-sm"
           >
             {t('follow.ctaSubscribe')}
           </Button>

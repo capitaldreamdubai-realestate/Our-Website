@@ -30,6 +30,8 @@ import {
   staticSalespeopleListForSite,
   type HeroNeighbourhoodItem,
   type MarketingPage,
+  type DeveloperWithListings,
+  type PublicDeveloper,
   type PublicSalesperson,
   type PublicTestimonial,
   type SiteSettings,
@@ -58,6 +60,9 @@ type CmsContextValue = {
   experiences: ConciergeService[]
   faqSections: FaqSection[]
   testimonials: PublicTestimonial[]
+  propertyDevelopersList: PublicDeveloper[]
+  developersBySlug: Record<string, PublicDeveloper>
+  developersWithListings: DeveloperWithListings[]
   refetch: () => Promise<void>
 }
 
@@ -119,6 +124,15 @@ export function CmsProvider({ children }: { children: ReactNode }) {
   )
   const [faqSections, setFaqSections] = useState<FaqSection[]>([])
   const [testimonials, setTestimonials] = useState<PublicTestimonial[]>([])
+  const [propertyDevelopersList, setPropertyDevelopersList] = useState<PublicDeveloper[]>(
+    [],
+  )
+  const [developersBySlug, setDevelopersBySlug] = useState<
+    Record<string, PublicDeveloper>
+  >({})
+  const [developersWithListings, setDevelopersWithListings] = useState<
+    DeveloperWithListings[]
+  >([])
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
     heroBannerUrl: isSupabaseConfigured ? null : bannerVillaDusk,
     fullBleedYoutubeId: FULL_BLEED_YOUTUBE_VIDEO_ID,
@@ -152,6 +166,9 @@ export function CmsProvider({ children }: { children: ReactNode }) {
         setExperiences([])
         setFaqSections([])
         setTestimonials([])
+        setPropertyDevelopersList([])
+        setDevelopersBySlug({})
+        setDevelopersWithListings([])
         setSiteSettings({
           heroBannerUrl: null,
           fullBleedYoutubeId: FULL_BLEED_YOUTUBE_VIDEO_ID,
@@ -175,6 +192,9 @@ export function CmsProvider({ children }: { children: ReactNode }) {
         setExperiences(staticConcierge)
         setFaqSections([])
         setTestimonials([])
+        setPropertyDevelopersList([])
+        setDevelopersBySlug({})
+        setDevelopersWithListings([])
         setSiteSettings({
           heroBannerUrl: bannerVillaDusk,
           fullBleedYoutubeId: FULL_BLEED_YOUTUBE_VIDEO_ID,
@@ -197,6 +217,9 @@ export function CmsProvider({ children }: { children: ReactNode }) {
       setExperiences(snap.experiences)
       setFaqSections(snap.faqSections)
       setTestimonials(snap.testimonials)
+      setPropertyDevelopersList(snap.propertyDevelopersList)
+      setDevelopersBySlug(snap.developersBySlug)
+      setDevelopersWithListings(snap.developersWithListings)
       setSiteSettings({
         heroBannerUrl:
           snap.siteSettings.heroBannerUrl ?? bannerVillaDusk,
@@ -244,6 +267,9 @@ export function CmsProvider({ children }: { children: ReactNode }) {
       experiences,
       faqSections,
       testimonials,
+      propertyDevelopersList,
+      developersBySlug,
+      developersWithListings,
       refetch: fetchLive,
     }),
     [
@@ -265,6 +291,9 @@ export function CmsProvider({ children }: { children: ReactNode }) {
       experiences,
       faqSections,
       testimonials,
+      propertyDevelopersList,
+      developersBySlug,
+      developersWithListings,
       fetchLive,
     ],
   )

@@ -18,7 +18,8 @@ type NavItem = NavFlatItem | NavAboutItem
 const navStructure: NavItem[] = [
   { type: 'link', key: 'nav.home', to: '/', end: true },
   { type: 'link', key: 'nav.allProperties', to: '/all-properties' },
-  { type: 'link', key: 'nav.newDevelopments', to: '/new-developments' },
+  { type: 'link', key: 'nav.newDevelopments', to: '/offplan' },
+  { type: 'link', key: 'nav.developers', to: '/developers' },
   { type: 'link', key: 'nav.forRent', to: '/for-rent' },
   { type: 'link', key: 'nav.forSale', to: '/for-sale' },
   {
@@ -265,8 +266,10 @@ export function Navbar() {
             <button
               type="button"
               className={clsx(
-                'rounded-full p-2 xl:p-2.5',
-                innerScrolled ? 'text-ink' : 'text-cream',
+                'rounded-full p-2 transition-[color,background-color] duration-300 ease-out xl:p-2.5',
+                innerScrolled
+                  ? 'text-ink hover:bg-terracotta hover:text-cream'
+                  : 'text-cream hover:bg-terracotta/85 hover:text-cream',
               )}
               aria-expanded={open}
               aria-controls="site-nav-sheet"
@@ -318,7 +321,7 @@ export function Navbar() {
             <NavbarLocaleControls />
             <button
               type="button"
-              className="rounded-xl border border-white/20 bg-terracotta/20 p-3 text-cream transition-colors hover:bg-terracotta/35"
+              className="rounded-xl border border-white/20 bg-terracotta/20 p-3 text-cream transition-[color,background-color,border-color] duration-300 ease-out hover:border-terracotta hover:bg-terracotta hover:text-cream"
               onClick={() => setOpen(false)}
               aria-label={t('aria.nav.closeMenu')}
             >

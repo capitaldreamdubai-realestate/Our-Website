@@ -152,7 +152,7 @@ export function PropertyFilterFields({
       {!hideClearButton ? (
         <button
           type="button"
-          className="type-button text-left text-sm font-medium text-ink/55 underline-offset-4 hover:text-terracotta hover:underline"
+          className="btn-filter-action btn-filter-clear type-button text-left text-sm font-medium text-ink/55"
           onClick={onClear}
         >
           {t('filter.clear')}
@@ -161,7 +161,7 @@ export function PropertyFilterFields({
       {showMoreFilters ? (
         <button
           type="button"
-          className="type-button text-left text-sm font-medium text-terracotta underline-offset-4 hover:underline"
+          className="btn-filter-action btn-filter-more type-button text-left text-sm font-medium text-terracotta"
           onClick={onMoreFilters}
         >
           {t('filter.more')}

@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { buttonClassNames } from '@/components/Button'
 import { PhoneInputField } from '@/components/PhoneInputField'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
 import { getSupabase } from '@/integrations/supabase/client'
@@ -208,7 +209,7 @@ export function PropertyLeadForm({
           <button
             type="submit"
             disabled={busy}
-            className="type-button font-display w-full rounded-xl bg-terracotta px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-cream transition hover:bg-terracotta/90 disabled:opacity-60"
+            className={`w-full px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] ${buttonClassNames('primary')}`}
           >
             {busy ? t('lead.sending') : t('lead.send')}
           </button>

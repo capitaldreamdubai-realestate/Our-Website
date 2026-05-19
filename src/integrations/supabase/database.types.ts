@@ -40,6 +40,7 @@ export type Database = {
           published: boolean
           salesperson_id: string | null
           property_type: string | null
+          developer_id: string | null
           listing_source: 'cms' | 'property_finder'
           pf_listing_id: string | null
           pf_payload: Json | null
@@ -95,6 +96,7 @@ export type Database = {
           published?: boolean
           salesperson_id?: string | null
           property_type?: string | null
+          developer_id?: string | null
           listing_source?: 'cms' | 'property_finder'
           pf_listing_id?: string | null
           pf_payload?: Json | null
@@ -272,6 +274,32 @@ export type Database = {
         Update: Partial<Database['public']['Tables']['hero_neighbourhoods']['Insert']>
         Relationships: []
       }
+      property_developers: {
+        Row: {
+          id: string
+          slug: string
+          name: string
+          description_html: string | null
+          logo_url: string | null
+          website_url: string | null
+          sort_order: number
+          published: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          slug: string
+          name: string
+          description_html?: string | null
+          logo_url?: string | null
+          website_url?: string | null
+          sort_order?: number
+          published?: boolean
+        }
+        Update: Partial<Database['public']['Tables']['property_developers']['Insert']>
+        Relationships: []
+      }
       uae_emirates: {
         Row: {
           id: string
@@ -326,9 +354,10 @@ export type Database = {
         Row: {
           id: string
           created_at: string
-          source: 'property_enquiry'
+          source: 'property_enquiry' | 'campaign_popup'
           property_id: string | null
           property_title: string | null
+          popup_id: string | null
           name: string
           email: string
           phone: string | null
@@ -338,9 +367,10 @@ export type Database = {
         Insert: {
           id?: string
           created_at?: string
-          source: 'property_enquiry'
+          source: 'property_enquiry' | 'campaign_popup'
           property_id?: string | null
           property_title?: string | null
+          popup_id?: string | null
           name: string
           email: string
           phone?: string | null
@@ -348,6 +378,42 @@ export type Database = {
           meta?: Json
         }
         Update: Partial<Database['public']['Tables']['form_submissions']['Insert']>
+        Relationships: []
+      }
+      campaign_popups: {
+        Row: {
+          id: string
+          created_at: string
+          updated_at: string
+          internal_name: string
+          title: string
+          description: string | null
+          image_url: string
+          active: boolean
+          trigger_type: 'immediate' | 'delay' | 'scroll'
+          trigger_delay_seconds: number | null
+          trigger_scroll_percent: number | null
+          target_paths: string[]
+          show_once_per_session: boolean
+          submit_button_label: string | null
+          sort_order: number
+        }
+        Insert: {
+          id?: string
+          internal_name: string
+          title: string
+          description?: string | null
+          image_url: string
+          active?: boolean
+          trigger_type?: 'immediate' | 'delay' | 'scroll'
+          trigger_delay_seconds?: number | null
+          trigger_scroll_percent?: number | null
+          target_paths?: string[]
+          show_once_per_session?: boolean
+          submit_button_label?: string | null
+          sort_order?: number
+        }
+        Update: Partial<Database['public']['Tables']['campaign_popups']['Insert']>
         Relationships: []
       }
       experiences: {

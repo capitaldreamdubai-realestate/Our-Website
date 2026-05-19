@@ -3,6 +3,7 @@ export const fr: Record<string, string> = {
   'nav.home': 'Accueil',
   'nav.allProperties': 'Tous les biens',
   'nav.newDevelopments': 'Offplan',
+  'nav.developers': 'Promoteurs',
   'nav.forRent': 'À louer',
   'nav.forSale': 'À vendre',
   'nav.about': 'À propos',
@@ -125,9 +126,12 @@ export const fr: Record<string, string> = {
   'seo.forRent.title': 'Biens à louer Dubaï | Capital Dreams',
   'seo.forRent.description':
     'Appartements, villas et maisons de prestige à louer à Dubaï et dans les Émirats avec l’accompagnement Capital Dreams.',
-  'seo.newDevelopments.title': 'Programmes neufs Dubaï | Projets off-plan Émirats',
+  'seo.newDevelopments.title': 'Biens off-plan Dubaï | Capital Dreams Émirats',
   'seo.newDevelopments.description':
-    'Nouveaux programmes à Dubaï et opportunités off-plan aux Émirats : lancements, fourchettes de prix et conseil d’experts Capital Dreams.',
+    'Parcourez les annonces off-plan à Dubaï et aux Émirats : lancements, fourchettes de prix et conseil d’experts Capital Dreams.',
+  'seo.developers.title': 'Promoteurs immobiliers aux EAU | Capital Dreams Dubai',
+  'seo.developers.description':
+    'Découvrez les promoteurs des EAU avec des annonces actives chez Capital Dreams — Emaar, DAMAC, Sobha et plus.',
   'seo.articleMissing.title': 'Article immobilier Dubaï | Capital Dreams',
   'seo.articleMissing.description':
     'Conseils pratiques sur l’immobilier à Dubaï et aux Émirats par les experts Capital Dreams.',
@@ -297,17 +301,53 @@ export const fr: Record<string, string> = {
   'listing.grid.rent': 'À louer',
   'listing.emptyChannel.rent':
     'Il n’y a pas encore d’annonces à louer dans le catalogue. Marquez les biens « À louer » dans l’administration ou consultez tous les biens.',
-  'listing.hero.new.title': 'Programmes neufs',
+  'listing.hero.new.title': 'Offplan',
   'listing.hero.new.desc':
-    'Découvrez les lancements et les nouvelles sorties. Utilisez les mêmes filtres que sur le catalogue pour prix, lieu et configuration.',
-  'listing.featured.new': 'Programmes neufs à la une',
-  'listing.grid.new': 'Programmes neufs',
+    'Découvrez les lancements off-plan et les opportunités avant livraison. Utilisez les mêmes filtres que sur le catalogue pour prix, lieu et configuration.',
+  'listing.featured.new': 'Off-plan à la une',
+  'listing.grid.new': 'Offplan',
   'listing.emptyChannel.new':
-    'Il n’y a pas encore d’annonces « programme neuf » dans le catalogue. Consultez tous les biens ou revenez bientôt.',
+    'Il n’y a pas encore d’annonces off-plan dans le catalogue. Marquez les biens « Offplan » dans l’administration ou consultez tous les biens.',
   'listing.emptyFiltered.rent':
     'Aucune location ne correspond à ces filtres. Élargissez la recherche ou réinitialisez les filtres.',
   'listing.emptyFiltered.new':
     'Aucun programme neuf ne correspond à ces filtres. Élargissez la recherche ou réinitialisez les filtres.',
+
+  'developers.aria.main': 'Promoteurs',
+  'developers.aria.grid': 'Promoteurs avec annonces',
+  'developers.eyebrow': 'Promoteurs',
+  'developers.h1': 'Promoteurs immobiliers aux EAU',
+  'developers.intro':
+    'Parcourez les marques de promoteurs que nous représentons actuellement. Seuls les promoteurs avec au moins une annonce publiée apparaissent ici.',
+  'developers.loading': 'Chargement des promoteurs…',
+  'developers.empty':
+    'Aucun promoteur avec des annonces publiées pour le moment. Assignez un promoteur à un bien dans l’admin pour l’afficher ici.',
+  'developers.showMore': 'Voir plus',
+  'developers.carouselAria': 'Carrousel promoteurs',
+  'developers.listingsCount': '{count} annonces',
+  'developers.cardAria': 'Voir les annonces {name}',
+
+  'developerDetail.seo.title': 'Biens {name} | Capital Dreams Dubai',
+  'developerDetail.seo.titleMissing': 'Promoteur | Capital Dreams Dubai',
+  'developerDetail.seo.description':
+    'Parcourez les annonces {name} à Dubaï et aux EAU avec Capital Dreams.',
+  'developerDetail.seo.descriptionMissing':
+    'Annonces du promoteur chez Capital Dreams Dubai.',
+  'developerDetail.loadingAria': 'Chargement du promoteur',
+  'developerDetail.loading': 'Chargement du promoteur…',
+  'developerDetail.profileAria': 'Profil promoteur',
+  'developerDetail.eyebrow': 'Promoteur',
+  'developerDetail.website': 'Site officiel',
+  'developerDetail.back': 'Tous les promoteurs',
+  'developerDetail.hero.title': 'Annonces {name}',
+  'developerDetail.hero.desc':
+    'Explorez les biens {name} publiés dans notre collection. Filtrez par prix, emplacement et configuration.',
+  'developerDetail.featured': 'Sélection {name}',
+  'developerDetail.grid': 'Biens {name}',
+  'developerDetail.emptyFiltered':
+    'Aucune annonce {name} ne correspond à ces filtres. Réinitialisez ou élargissez la recherche.',
+  'developerDetail.emptyChannel':
+    'Il n’y a pas encore d’annonces publiées pour ce promoteur.',
 
   'propertyGrid.propertiesFallback': 'Biens',
 
@@ -367,6 +407,12 @@ export const fr: Record<string, string> = {
   'contact.mailSubject': 'Demande de contact — Capital Dream',
   'contact.mailBody':
     'Nom: {name}\nE-mail: {email}\nTéléphone: {phone}\n\nMessage:\n{message}',
+
+  'popup.closeAria': 'Fermer la fenêtre',
+  'popup.submit': 'Envoyer',
+  'popup.sending': 'Envoi…',
+  'popup.thankYou': 'Merci. Notre équipe vous contactera très bientôt.',
+  'popup.errorNotConnected': 'Envoi impossible pour le moment. Veuillez réessayer plus tard.',
 
   'testimonials.aria.main': 'Témoignages',
   'testimonials.eyebrow': 'Témoignages',

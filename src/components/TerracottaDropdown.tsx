@@ -150,7 +150,7 @@ export function TerracottaDropdown({
     }
     return isSel
       ? 'bg-terracotta font-semibold text-cream'
-      : 'text-terracotta hover:bg-terracotta/10'
+      : 'text-terracotta hover:bg-terracotta hover:text-cream'
   }
 
   const triggerClass = isAdmin
@@ -200,7 +200,7 @@ export function TerracottaDropdown({
               type="button"
               role="option"
               aria-selected={isSel}
-              className={`type-button w-full px-4 py-3 text-left text-sm transition ${optionBtnClass(isSel)}`}
+              className={`type-button w-full px-4 py-3 text-left text-sm transition-[color,background-color] duration-300 ease-out ${optionBtnClass(isSel)}`}
               onClick={() => pick(opt.value)}
             >
               {opt.label}

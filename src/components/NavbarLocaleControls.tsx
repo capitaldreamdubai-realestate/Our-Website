@@ -6,6 +6,7 @@ import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
 import type { DisplayCurrency } from '../lib/formatCurrency'
 import type { AreaDisplayMode } from '../lib/formatArea'
 import type { AppLanguage } from '../locale/messages'
+import { buttonClassNames } from './Button'
 import { FilterTerracottaDropdown } from './FilterTerracottaDropdown'
 
 type Props = { className?: string; surface?: 'hero' | 'paper' }
@@ -98,7 +99,7 @@ export function NavbarLocaleControls({ className, surface = 'hero' }: Props) {
           </h2>
           <button
             type="button"
-            className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-black bg-black text-white transition hover:bg-neutral-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta"
+            className="btn-icon-ink inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-ink bg-ink text-cream focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta"
             aria-label={t('locale.closeDialogAria')}
             onClick={close}
           >
@@ -136,7 +137,7 @@ export function NavbarLocaleControls({ className, surface = 'hero' }: Props) {
         <div className="shrink-0 border-t border-ink/10 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-5">
           <button
             type="button"
-            className="type-button font-display w-full rounded-xl bg-terracotta px-5 py-3 text-sm font-semibold uppercase tracking-[0.16em] text-cream transition hover:bg-terracotta/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta"
+            className={buttonClassNames('primary', 'w-full px-5 py-3 text-sm font-semibold uppercase tracking-[0.16em]')}
             onClick={close}
           >
             {t('locale.done')}
@@ -151,10 +152,10 @@ export function NavbarLocaleControls({ className, surface = 'hero' }: Props) {
       <button
         type="button"
         className={clsx(
-          'inline-flex size-10 items-center justify-center rounded-full transition sm:size-11',
+          'inline-flex size-10 items-center justify-center rounded-full transition-[color,background-color,border-color] duration-300 ease-out sm:size-11',
           surface === 'paper'
-            ? 'border border-ink/15 bg-ink/[0.06] text-ink hover:bg-ink/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta'
-            : 'border border-white/35 bg-white/10 text-cream hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+            ? 'border border-ink/15 bg-ink/[0.06] text-ink hover:border-terracotta hover:bg-terracotta hover:text-cream focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta'
+            : 'border border-white/35 bg-white/10 text-cream hover:border-cream/50 hover:bg-terracotta hover:text-cream focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
           className,
         )}
         aria-expanded={open}

@@ -304,6 +304,7 @@ export function AdminSalespeople() {
               <th className="px-3 py-3 md:px-4">Name</th>
               <th className="px-3 py-3 md:px-4">Title</th>
               <th className="px-3 py-3 md:px-4">Listings #</th>
+              <th className="px-3 py-3 md:px-4">Sort</th>
               <th className="px-3 py-3 md:px-4">Status</th>
               <th className="px-3 py-3 text-right md:px-4">Actions</th>
             </tr>
@@ -339,6 +340,7 @@ export function AdminSalespeople() {
                 </td>
                 <td className="px-3 py-2.5 text-ink/70 md:px-4">{r.title}</td>
                 <td className="px-3 py-2.5 md:px-4">{r.listings_count}</td>
+                <td className="px-3 py-2.5 text-ink/65 md:px-4">{r.sort_order}</td>
                 <td className="px-3 py-2.5 md:px-4">
                   {r.published ? (
                     <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[0.6875rem] font-medium text-emerald-800">
@@ -592,6 +594,7 @@ export function AdminSalespeople() {
                 { label: 'PF public profile ID', value: viewRow.pf_public_profile_id || '—' },
                 { label: 'PF user ID', value: viewRow.pf_user_id || '—' },
                 { label: 'Listings count', value: String(viewRow.listings_count) },
+                { label: 'Sort order', value: String(viewRow.sort_order) },
                 { label: 'Status', value: viewRow.published ? 'Live' : 'Hidden' },
                 { label: 'Bio', value: viewRow.bio || '—' },
               ]

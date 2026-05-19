@@ -39,6 +39,21 @@ export type PublicTestimonial = {
   rating: number
 }
 
+/** Published developer row for public directory and listing assignment. */
+export type PublicDeveloper = {
+  id: string
+  slug: string
+  name: string
+  descriptionHtml: string | null
+  logoUrl: string | null
+  websiteUrl: string | null
+  sortOrder: number
+}
+
+export type DeveloperWithListings = PublicDeveloper & {
+  listingsCount: number
+}
+
 /** Published agent row exposed to the public site (property detail, forms). */
 export type PublicSalesperson = {
   id: string
@@ -82,6 +97,41 @@ export type CmsSnapshot = {
   experiences: ConciergeService[]
   faqSections: FaqSection[]
   testimonials: PublicTestimonial[]
+  propertyDevelopersList: PublicDeveloper[]
+  developersBySlug: Record<string, PublicDeveloper>
+  developersWithListings: DeveloperWithListings[]
+}
+
+function mapPublicDeveloper(
+  row: Database['public']['Tables']['property_developers']['Row'],
+): PublicDeveloper {
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    descriptionHtml: row.description_html,
+    logoUrl: row.logo_url,
+    websiteUrl: row.website_url,
+    sortOrder: row.sort_order,
+  }
+}
+
+function buildDevelopersWithListings(
+  developers: PublicDeveloper[],
+  catalog: Property[],
+): DeveloperWithListings[] {
+  const counts = new Map<string, number>()
+  for (const p of catalog) {
+    if (!p.developerId) continue
+    counts.set(p.developerId, (counts.get(p.developerId) ?? 0) + 1)
+  }
+  return developers
+    .filter((d) => counts.has(d.id))
+    .map((d) => ({
+      ...d,
+      listingsCount: counts.get(d.id) ?? 0,
+    }))
+    .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
 }
 
 async function loadSettings(
@@ -144,7 +194,7 @@ export function staticSalespeopleListForSite(): PublicSalesperson[] {
 export async function loadCmsSnapshot(
   supabase: SupabaseClient<Database>,
 ): Promise<CmsSnapshot | null> {
-  const [propRes, artRes, heroRes, emiratesRes, mktRes, spRes, expRes, faqTopRes, faqEntRes, testimonialRes] =
+  const [propRes, artRes, heroRes, emiratesRes, devRes, mktRes, spRes, expRes, faqTopRes, faqEntRes, testimonialRes] =
     await Promise.all([
     supabase
       .from('properties')
@@ -162,6 +212,12 @@ export async function loadCmsSnapshot(
       .select('name')
       .eq('published', true)
       .order('sort_order', { ascending: true }),
+    supabase
+      .from('property_developers')
+      .select('*')
+      .eq('published', true)
+      .order('sort_order', { ascending: true })
+      .order('name', { ascending: true }),
     supabase.from('marketing_pages').select('*'),
     supabase
       .from('salespeople')
@@ -197,6 +253,9 @@ export async function loadCmsSnapshot(
   if (emiratesRes.error) {
     console.error(emiratesRes.error)
   }
+  if (devRes.error && devRes.error.code !== 'PGRST205') {
+    console.error(devRes.error)
+  }
   if (mktRes.error) {
     console.error(mktRes.error)
   }
@@ -219,6 +278,17 @@ export async function loadCmsSnapshot(
   const propRows = propRes.data ?? []
 
   const catalogProperties = propRows.map(mapPropertyRow)
+
+  const devRows = devRes.error ? [] : (devRes.data ?? [])
+  const propertyDevelopersList: PublicDeveloper[] = devRows.map(mapPublicDeveloper)
+  const developersBySlug: Record<string, PublicDeveloper> = {}
+  for (const d of propertyDevelopersList) {
+    developersBySlug[d.slug] = d
+  }
+  const developersWithListings = buildDevelopersWithListings(
+    propertyDevelopersList,
+    catalogProperties,
+  )
   const featuredProperties = propRows
     .filter((r) => r.home_section === 'featured')
     .map(mapPropertyRow)
@@ -301,5 +371,8 @@ export async function loadCmsSnapshot(
     experiences,
     faqSections,
     testimonials,
+    propertyDevelopersList,
+    developersBySlug,
+    developersWithListings,
   }
 }

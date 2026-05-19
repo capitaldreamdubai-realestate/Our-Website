@@ -131,7 +131,7 @@ export function PropertyDetailHero({ property, gallery }: Props) {
               <div className="flex justify-end">
                 <CarouselNav
                   emblaApi={emblaApi}
-                  className="[&_button]:border-cream/30 [&_button]:bg-ink/35 [&_button]:text-cream [&_button:disabled]:border-cream/15 [&_button:disabled]:text-cream/35"
+                  className="[&_button]:border-cream/30 [&_button]:bg-ink/35 [&_button]:text-cream [&_button:not(:disabled):hover]:border-cream/40 [&_button:not(:disabled):hover]:bg-terracotta [&_button:not(:disabled):hover]:text-cream [&_button:disabled]:border-cream/15 [&_button:disabled]:text-cream/35"
                 />
               </div>
             ) : null}

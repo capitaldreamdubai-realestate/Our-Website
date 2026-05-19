@@ -21,12 +21,13 @@ import { useAdminTablePagination } from './useAdminTablePagination'
 import { gallerySixForPropertyId } from '@/data/propertyGallerySeeds'
 import { getSupabase } from '@/integrations/supabase/client'
 import type { Database } from '@/integrations/supabase/database.types'
-import { mapPropertyRow, propertyToInsert } from '@/lib/cms/mapProperty'
+import { propertyRowToUpsert } from '@/lib/cms/mapProperty'
 
 type Row = Database['public']['Tables']['properties']['Row']
 type SalesRow = Database['public']['Tables']['salespeople']['Row']
 type ListingTagRow = Database['public']['Tables']['property_listing_tags']['Row']
 type PropertyTypeOptRow = Database['public']['Tables']['property_type_options']['Row']
+type DeveloperRow = Database['public']['Tables']['property_developers']['Row']
 
 type GalleryImageItem = { type: 'image'; src: string }
 
@@ -89,6 +90,7 @@ function createEmptyRow(): Row {
     published: true,
     salesperson_id: null,
     property_type: null,
+    developer_id: null,
     listing_source: 'cms',
     pf_listing_id: null,
     pf_payload: null,
@@ -133,6 +135,7 @@ export function AdminProperties() {
   const [galleryText, setGalleryText] = useState('[]')
   const [saveErr, setSaveErr] = useState<string | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [deleteBusy, setDeleteBusy] = useState(false)
   const [isNewRecord, setIsNewRecord] = useState(true)
   const [gallerySlots, setGallerySlots] = useState<string[]>(() => ['', '', '', '', '', ''])
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set())
@@ -144,6 +147,7 @@ export function AdminProperties() {
   const [bulkSalespersonId, setBulkSalespersonId] = useState<string>('')
   const [bulkBusy, setBulkBusy] = useState(false)
   const [salespeople, setSalespeople] = useState<SalesRow[]>([])
+  const [developers, setDevelopers] = useState<DeveloperRow[]>([])
   const [viewRow, setViewRow] = useState<Row | null>(null)
   const [listingTagOptions, setListingTagOptions] = useState<ListingTagRow[]>([])
   const [propertyTypeOptions, setPropertyTypeOptions] = useState<PropertyTypeOptRow[]>([])
@@ -194,9 +198,20 @@ export function AdminProperties() {
     setSalespeople(data ?? [])
   }, [sb])
 
+  const loadDevelopers = useCallback(async () => {
+    if (!sb) return
+    const { data } = await sb
+      .from('property_developers')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .order('name', { ascending: true })
+    setDevelopers(data ?? [])
+  }, [sb])
+
   useEffect(() => {
     void loadSalespeople()
-  }, [loadSalespeople])
+    void loadDevelopers()
+  }, [loadSalespeople, loadDevelopers])
 
   useEffect(() => {
     void loadListingLookups()
@@ -294,6 +309,29 @@ export function AdminProperties() {
     ],
     [salespeople],
   )
+
+  const developerNameById = useMemo(() => {
+    const m = new Map<string, string>()
+    for (const d of developers) m.set(d.id, d.name)
+    return m
+  }, [developers])
+
+  const deleteTarget = useMemo(
+    () => (deleteId ? rows.find((r) => r.id === deleteId) : undefined),
+    [rows, deleteId],
+  )
+
+  const developerDropdownOptions = useMemo((): TerracottaDropdownOption[] => {
+    const devId = draft?.developer_id ?? ''
+    const opts: TerracottaDropdownOption[] = [{ value: '', label: '—' }]
+    if (devId && !developers.some((d) => d.id === devId)) {
+      opts.push({ value: devId, label: `${devId} (legacy)` })
+    }
+    for (const d of developers) {
+      opts.push({ value: d.id, label: d.name })
+    }
+    return opts
+  }, [draft?.developer_id, developers])
 
   const homeSectionDropdownOptions = useMemo(
     (): TerracottaDropdownOption[] => [
@@ -400,18 +438,7 @@ export function AdminProperties() {
       ...draft,
       gallery: galleryPayload as Row['gallery'],
     }
-    const prop = mapPropertyRow(merged)
-    const payload = propertyToInsert(
-      prop,
-      merged.home_section,
-      merged.sort_order_home,
-      merged.published,
-      {
-        listing_source: merged.listing_source,
-        pf_listing_id: merged.pf_listing_id,
-        pf_payload: merged.pf_payload,
-      },
-    )
+    const payload = propertyRowToUpsert(merged)
     const { error } = await sb.from('properties').upsert(payload, { onConflict: 'id' })
     if (error) {
       setSaveErr(error.message)
@@ -422,9 +449,21 @@ export function AdminProperties() {
     void refetchCms()
   }
 
+  function requestDelete(id: string) {
+    if (modalOpen && draft?.id === id) {
+      closeModal()
+    }
+    if (viewRow?.id === id) {
+      setViewRow(null)
+    }
+    setDeleteId(id)
+  }
+
   async function confirmDelete() {
     if (!sb || !deleteId) return
+    setDeleteBusy(true)
     const { error } = await sb.from('properties').delete().eq('id', deleteId)
+    setDeleteBusy(false)
     if (error) {
       setLoadErr(error.message)
       return
@@ -721,7 +760,7 @@ export function AdminProperties() {
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation()
-                        setDeleteId(r.id)
+                        requestDelete(r.id)
                       }}
                       className="rounded-full p-2 text-red-600/80 hover:bg-red-50"
                       aria-label={`Delete ${r.title}`}
@@ -761,6 +800,15 @@ export function AdminProperties() {
         onClose={closeModal}
         footer={
           <>
+            {!isNewRecord && draft ? (
+              <button
+                type="button"
+                onClick={() => requestDelete(draft.id)}
+                className="w-full rounded-2xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-800 md:mr-auto md:w-auto"
+              >
+                Delete listing
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={closeModal}
@@ -858,6 +906,23 @@ export function AdminProperties() {
                     onChange={(v) => updateDraft('property_type', v || null)}
                     className="mt-1"
                   />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-medium text-ink/70">Developer</label>
+                  <AdminSearchableTerracottaDropdown
+                    label="Developer"
+                    searchPlaceholder="Search developers…"
+                    options={developerDropdownOptions}
+                    value={draft.developer_id ?? ''}
+                    onChange={(v) => {
+                      const id = v.trim() || null
+                      updateDraft('developer_id', id)
+                    }}
+                  />
+                  <p className="mt-1 text-[0.6875rem] text-ink/45">
+                    From <strong>Properties → Developers</strong>. Developer appears on{' '}
+                    <strong>/developers</strong> when this listing is published.
+                  </p>
                 </div>
                 <div className="sm:col-span-2">
                   <label className="text-xs font-medium text-ink/70">Assigned agent</label>
@@ -1288,12 +1353,19 @@ export function AdminProperties() {
 
       <AdminModal
         open={!!deleteId}
-        title="Delete property?"
-        onClose={() => setDeleteId(null)}
+        title={
+          deleteTarget?.title
+            ? `Delete “${deleteTarget.title}”?`
+            : 'Delete property?'
+        }
+        onClose={() => {
+          if (!deleteBusy) setDeleteId(null)
+        }}
         footer={
           <>
             <button
               type="button"
+              disabled={deleteBusy}
               onClick={() => setDeleteId(null)}
               className="w-full rounded-2xl border border-ink/15 px-4 py-2.5 text-sm font-medium md:w-auto"
             >
@@ -1301,16 +1373,31 @@ export function AdminProperties() {
             </button>
             <button
               type="button"
+              disabled={deleteBusy}
               onClick={() => void confirmDelete()}
               className="w-full rounded-2xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white md:w-auto"
             >
-              Delete
+              {deleteBusy ? 'Deleting…' : 'Delete'}
             </button>
           </>
         }
       >
         <p className="text-sm text-ink/75">
-          This removes the listing from the database. Links to this property will stop working.
+          {deleteTarget ? (
+            <>
+              You are about to permanently delete{' '}
+              <strong className="font-medium text-ink">{deleteTarget.title}</strong>
+              {deleteTarget.property_ref_id ? (
+                <>
+                  {' '}
+                  (<span className="tabular-nums">{deleteTarget.property_ref_id}</span>)
+                </>
+              ) : null}
+              . This cannot be undone and public links to this listing will stop working.
+            </>
+          ) : (
+            'This removes the listing from the database. Links to this property will stop working.'
+          )}
         </p>
       </AdminModal>
 
@@ -1324,6 +1411,12 @@ export function AdminProperties() {
                 { label: 'Reference', value: viewRow.property_ref_id || '—' },
                 { label: 'Price (AED)', value: viewRow.price_aed != null ? String(viewRow.price_aed) : '—' },
                 { label: 'Type', value: viewRow.property_type || '—' },
+                {
+                  label: 'Developer',
+                  value: viewRow.developer_id
+                    ? (developerNameById.get(viewRow.developer_id) ?? viewRow.developer_id)
+                    : '—',
+                },
                 { label: 'Tag', value: viewRow.tag },
                 { label: 'Beds / Baths', value: `${viewRow.beds ?? '—'} / ${viewRow.baths ?? '—'}` },
                 { label: 'Location', value: viewRow.location || '—' },

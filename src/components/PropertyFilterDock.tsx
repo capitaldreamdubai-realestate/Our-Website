@@ -21,17 +21,27 @@ const PROPERTY_LISTING_PATHS = [
   '/all-properties',
   '/for-sale',
   '/for-rent',
-  '/new-developments',
+  '/offplan',
 ] as const
 
 function mergeToUrl(f: FilterParams) {
   return createSearchParams(filterParamsToSearchParams(f)).toString()
 }
 
+function isDeveloperListingPath(pathname: string): boolean {
+  return pathname.startsWith('/developers/') && pathname.length > '/developers/'.length
+}
+
 function propertyListingPath(pathname: string): string {
+  if (isDeveloperListingPath(pathname)) return pathname
   return (PROPERTY_LISTING_PATHS as readonly string[]).includes(pathname)
     ? pathname
     : '/all-properties'
+}
+
+function onPropertyListingPage(pathname: string): boolean {
+  if ((PROPERTY_LISTING_PATHS as readonly string[]).includes(pathname)) return true
+  return isDeveloperListingPath(pathname)
 }
 
 export function PropertyFilterDock() {
@@ -78,9 +88,7 @@ export function PropertyFilterDock() {
     [pathname, navigate, closeDock, setSearchParams],
   )
 
-  const onListingPage = (PROPERTY_LISTING_PATHS as readonly string[]).includes(
-    pathname,
-  )
+  const onListingPage = onPropertyListingPage(pathname)
 
   const onChange = useCallback((patch: Partial<FilterParams>) => {
     setDraft((d) => ({ ...d, ...patch }))
@@ -123,7 +131,7 @@ export function PropertyFilterDock() {
             </div>
             <button
               type="button"
-              className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-terracotta/30 bg-terracotta text-cream shadow-sm transition hover:bg-terracotta/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta"
+              className="btn-icon-terracotta inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-terracotta/30 bg-terracotta text-cream shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta"
               aria-label={t('dock.closeIconAria')}
               onClick={closeDock}
             >
@@ -146,7 +154,7 @@ export function PropertyFilterDock() {
             <div className="min-w-0 flex flex-row items-center justify-start gap-x-4 gap-y-2">
               <button
                 type="button"
-                className="type-button text-left text-sm font-medium text-ink/55 underline-offset-4 hover:text-terracotta hover:underline"
+                className="btn-filter-action btn-filter-clear type-button text-left text-sm font-medium text-ink/55"
                 onClick={onClear}
               >
                 {t('filter.clear')}
@@ -154,7 +162,7 @@ export function PropertyFilterDock() {
               {!onListingPage ? (
                 <button
                   type="button"
-                  className="type-button text-left text-sm font-medium text-terracotta underline-offset-4 hover:underline"
+                  className="btn-filter-action btn-filter-more type-button text-left text-sm font-medium text-terracotta"
                   onClick={() => applyFiltersToListing(draft)}
                 >
                   {t('filter.more')}

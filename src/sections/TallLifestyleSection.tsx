@@ -78,7 +78,7 @@ export function TallLifestyleSection({
                         </div>
                         {c.showCta ? (
                           <div className="mt-6">
-                            <Button type="button" variant="whiteSolid">
+                            <Button type="button" variant="whiteSolid" className="btn-cool-cta">
                               Start a brief
                             </Button>
                           </div>

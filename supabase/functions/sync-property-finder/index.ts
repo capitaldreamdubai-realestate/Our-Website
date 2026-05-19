@@ -235,11 +235,11 @@ function listingTagFromPf(offering: string, projectStatus: string | null): strin
   const status = (projectStatus ?? '').trim().toLowerCase().replace(/[_-]+/g, ' ')
   if (
     status.includes('off plan') ||
-    status.includes('new') ||
+    status.includes('offplan') ||
     status.includes('under construction') ||
     status.includes('launch')
   ) {
-    return 'New'
+    return 'Offplan'
   }
   return offering === 'rent' || offering === 'monthly' || offering === 'yearly'
     ? 'For rent'
@@ -250,6 +250,7 @@ type Preserve = {
   home_section: string
   sort_order_home: number
   salesperson_id: string | null
+  developer_id: string | null
   exclusive_with_us: boolean
   /** May be null for legacy rows; sync always sends a non-null `created_at` on upsert. */
   created_at: string | null
@@ -409,6 +410,7 @@ function mapListingToRow(
     home_section: preserve?.home_section ?? 'none',
     sort_order_home: preserve?.sort_order_home ?? 9999,
     salesperson_id: linkedSalespersonId,
+    developer_id: preserve?.developer_id ?? null,
     updated_at: new Date().toISOString(),
     created_at: preserve?.created_at ?? new Date().toISOString(),
   }
@@ -494,7 +496,7 @@ Deno.serve(async (req) => {
     const { data: existingRows, error: exErr } = await supabase
       .from('properties')
       .select(
-        'pf_listing_id, home_section, sort_order_home, salesperson_id, exclusive_with_us, created_at',
+        'pf_listing_id, home_section, sort_order_home, salesperson_id, developer_id, exclusive_with_us, created_at',
       )
       .eq('listing_source', 'property_finder')
 
@@ -507,6 +509,7 @@ Deno.serve(async (req) => {
         home_section: r.home_section,
         sort_order_home: r.sort_order_home,
         salesperson_id: r.salesperson_id,
+        developer_id: r.developer_id,
         exclusive_with_us: r.exclusive_with_us,
         created_at: r.created_at,
       })

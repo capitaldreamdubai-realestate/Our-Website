@@ -4,7 +4,7 @@ import { ImagePrimaryOverlay } from '../components/ImagePrimaryOverlay'
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
 import { usePropertyFilterDock } from '../contexts/PropertyFilterDockContext'
 
-const HERO_VIDEO_PLACEHOLDER =
+const HERO_DESKTOP_IMAGE =
   'https://images.pexels.com/photos/14749801/pexels-photo-14749801.jpeg'
 const HERO_MOBILE_IMAGE =
   'https://images.pexels.com/photos/25286657/pexels-photo-25286657.jpeg'
@@ -16,7 +16,7 @@ type HeroProps = {
 export function HeroSection({ heroImageUrl }: HeroProps) {
   const { openDock } = usePropertyFilterDock()
   const { t } = useLocalePreferences()
-  const bannerSrc = heroImageUrl?.trim() ? heroImageUrl : HERO_VIDEO_PLACEHOLDER
+  const desktopSrc = heroImageUrl?.trim() ? heroImageUrl : HERO_DESKTOP_IMAGE
   return (
     <section
       className="relative min-h-[95vh] min-h-[95dvh] w-full overflow-hidden rounded-[1.5rem]"
@@ -31,18 +31,16 @@ export function HeroSection({ heroImageUrl }: HeroProps) {
         fetchPriority="high"
         decoding="async"
       />
-      <video
+      <img
+        src={desktopSrc}
+        alt=""
         className="absolute inset-0 z-0 hidden h-full w-full object-cover object-center md:block"
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        poster={bannerSrc}
+        width={2400}
+        height={1029}
+        fetchPriority="high"
+        decoding="async"
         aria-hidden
-      >
-        <source src="https://www.pexels.com/download/video/27740273/" type="video/mp4" />
-      </video>
+      />
       <ImagePrimaryOverlay />
       <div
         className="absolute inset-0 z-[2] bg-gradient-to-t from-ink/75 via-ink/45 to-ink/25"

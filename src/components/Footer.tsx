@@ -213,7 +213,7 @@ export function Footer() {
               <Button
                 type="submit"
                 variant="inkSolid"
-                className="h-auto min-h-12 w-full whitespace-normal border border-ink px-4 py-3 text-center text-sm font-medium normal-case leading-snug tracking-normal sm:min-h-14 sm:px-5 sm:py-3.5 sm:text-base"
+                className="btn-hover-subscribe h-auto min-h-12 w-full whitespace-normal border border-ink px-4 py-3 text-center text-sm font-medium normal-case leading-snug tracking-normal sm:min-h-14 sm:px-5 sm:py-3.5 sm:text-base"
               >
                 {t('follow.ctaSubscribe')}
               </Button>

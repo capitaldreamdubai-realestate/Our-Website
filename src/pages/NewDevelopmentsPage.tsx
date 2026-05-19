@@ -1,5 +1,5 @@
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
-import { isNewDevelopmentListing } from '../lib/propertyChannels'
+import { isOffplanListing } from '../lib/propertyChannels'
 import { PropertyListingPage } from './PropertyListingPage'
 
 export function NewDevelopmentsPage() {
@@ -7,10 +7,10 @@ export function NewDevelopmentsPage() {
   return (
     <PropertyListingPage
       variant="channel"
-      channelFilter={isNewDevelopmentListing}
+      channelFilter={isOffplanListing}
       seoTitle={t('seo.newDevelopments.title')}
       seoDescription={t('seo.newDevelopments.description')}
-      mainId="page-new-developments"
+      mainId="page-offplan"
       heroTitle={t('listing.hero.new.title')}
       heroDescription={t('listing.hero.new.desc')}
       featuredEyebrow={t('listing.featured.new')}

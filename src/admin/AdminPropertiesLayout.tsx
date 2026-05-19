@@ -51,6 +51,14 @@ export function AdminPropertiesLayout() {
         >
           Emirates
         </NavLink>
+        <NavLink
+          to="/admin/properties/developers"
+          className={({ isActive }) =>
+            `${subLink} ${isActive ? adminNavActive : adminNavInactive}`
+          }
+        >
+          Developers
+        </NavLink>
       </nav>
       <Outlet />
     </div>

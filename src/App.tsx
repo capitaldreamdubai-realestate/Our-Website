@@ -9,6 +9,7 @@ import { AdminProperties } from './admin/AdminProperties'
 import { AdminPropertiesLayout } from './admin/AdminPropertiesLayout'
 import { AdminPropertyListingTags, AdminPropertyTypes } from './admin/AdminPropertyLookups'
 import { AdminUaeEmirates } from './admin/AdminUaeEmirates'
+import { AdminDevelopers } from './admin/AdminDevelopers'
 import { AdminSalespeople } from './admin/AdminSalespeople'
 import { AdminUsers } from './admin/AdminUsers'
 import { AdminIntegrations } from './admin/AdminIntegrations'
@@ -18,6 +19,7 @@ import { AdminFormSubmissions } from './admin/AdminFormSubmissions'
 import { AdminFaqs } from './admin/AdminFaqs'
 import { AdminMedia } from './admin/AdminMedia'
 import { AdminTestimonials } from './admin/AdminTestimonials'
+import { AdminCampaignPopups } from './admin/AdminCampaignPopups'
 import { SiteLayout } from './layouts/SiteLayout'
 import { AboutPage } from './pages/AboutPage'
 import { AllPropertiesPage } from './pages/AllPropertiesPage'
@@ -37,6 +39,8 @@ import { TermsOfServicePage } from './pages/TermsOfServicePage'
 import { CookiesPolicyPage } from './pages/CookiesPolicyPage'
 import { FaqPage } from './pages/FaqPage'
 import { TestimonialsPage } from './pages/TestimonialsPage'
+import { DevelopersPage } from './pages/DevelopersPage'
+import { DeveloperDetailPage } from './pages/DeveloperDetailPage'
 
 function App() {
   return (
@@ -51,6 +55,7 @@ function App() {
           <Route path="listing-tags" element={<AdminPropertyListingTags />} />
           <Route path="property-types" element={<AdminPropertyTypes />} />
           <Route path="emirates" element={<AdminUaeEmirates />} />
+          <Route path="developers" element={<AdminDevelopers />} />
         </Route>
         <Route path="articles" element={<AdminArticles />} />
         <Route path="faqs" element={<AdminFaqs />} />
@@ -60,6 +65,7 @@ function App() {
         <Route path="salespeople" element={<AdminSalespeople />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="marketing" element={<AdminMarketing />} />
+        <Route path="campaign-popups" element={<AdminCampaignPopups />} />
         <Route path="integrations" element={<AdminIntegrations />} />
         <Route path="site" element={<AdminSiteSettings />} />
         <Route path="media" element={<AdminMedia />} />
@@ -71,9 +77,15 @@ function App() {
           element={<PropertyDetailPage />}
         />
         <Route path="all-properties" element={<AllPropertiesPage />} />
-        <Route path="new-developments" element={<NewDevelopmentsPage />} />
+        <Route path="offplan" element={<NewDevelopmentsPage />} />
+        <Route
+          path="new-developments"
+          element={<Navigate to="/offplan" replace />}
+        />
         <Route path="for-rent" element={<ForRentPage />} />
         <Route path="for-sale" element={<ForSalePage />} />
+        <Route path="developers" element={<DevelopersPage />} />
+        <Route path="developers/:slug" element={<DeveloperDetailPage />} />
         <Route path="off-market" element={<Navigate to="/for-rent" replace />} />
         <Route path="about" element={<AboutPage />} />
         <Route path="team" element={<TeamPage />} />

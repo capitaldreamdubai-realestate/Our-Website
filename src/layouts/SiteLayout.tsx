@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Footer } from '../components/Footer'
+import { CampaignPopupOverlay } from '../components/CampaignPopupOverlay'
 import { FloatingWhatsappButton } from '../components/FloatingWhatsappButton'
 import { Navbar } from '../components/Navbar'
 import { Noise } from '../components/Noise'
@@ -28,6 +29,7 @@ export function SiteLayout() {
         <Footer />
         <PropertyFilterDock />
         <FloatingWhatsappButton />
+        <CampaignPopupOverlay />
       </div>
     </>
   )

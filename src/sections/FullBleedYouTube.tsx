@@ -93,7 +93,7 @@ export function FullBleedYouTube({
   }, [muted, run])
 
   const ctrlClass =
-    'type-button flex size-11 shrink-0 items-center justify-center rounded-full border border-cream/25 bg-ink/75 text-cream shadow-lg backdrop-blur-sm transition hover:bg-ink hover:border-cream/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cream disabled:pointer-events-none disabled:opacity-40'
+    'btn-icon-ink type-button flex size-11 shrink-0 items-center justify-center rounded-full border border-cream/25 bg-ink/75 text-cream shadow-lg backdrop-blur-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cream disabled:pointer-events-none disabled:opacity-40'
 
   return (
     <SectionShell
@@ -114,7 +114,7 @@ export function FullBleedYouTube({
             title={t('youtube.bgTitle')}
             className="pointer-events-none absolute left-0 top-0 z-0 h-full w-full border-0"
             src={src}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen={false}
             loading="eager"
             referrerPolicy="strict-origin-when-cross-origin"

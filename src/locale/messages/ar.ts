@@ -3,6 +3,7 @@ export const ar: Record<string, string> = {
   'nav.home': 'الرئيسية',
   'nav.allProperties': 'جميع العقارات',
   'nav.newDevelopments': 'Offplan',
+  'nav.developers': 'المطورون',
   'nav.forRent': 'للإيجار',
   'nav.forSale': 'للبيع',
   'nav.about': 'من نحن',
@@ -124,9 +125,9 @@ export const ar: Record<string, string> = {
   'seo.forRent.title': 'عقارات للإيجار في دبي | كابيتال دريمز',
   'seo.forRent.description':
     'شقق وفلل ومنازل فاخرة للإيجار في دبي والإمارات مع دعم كابيتال دريمز.',
-  'seo.newDevelopments.title': 'مشاريع جديدة في دبي | مشاريع على الخارطة في الإمارات',
+  'seo.newDevelopments.title': 'عقارات على الخارطة في دبي | كابيتال دريمز الإمارات',
   'seo.newDevelopments.description':
-    'اكتشف التطورات الجديدة في دبي وفرص ما قبل التسليم في الإمارات مع تحديثات الإطلاق وتوجيه الأسعار وخبراء كابيتال دريمز.',
+    'تصفح قوائم ما قبل التسليم في دبي وعبر الإمارات مع تحديثات الإطلاق وتوجيه الأسعار وخبراء كابيتال دريمز.',
   'seo.articleMissing.title': 'مقال عقاري في دبي | كابيتال دريمز',
   'seo.articleMissing.description':
     'رؤى عملية للعقار في دبي والإمارات من خبراء كابيتال دريمز.',
@@ -294,17 +295,54 @@ export const ar: Record<string, string> = {
   'listing.grid.rent': 'للإيجار',
   'listing.emptyChannel.rent':
     'لا قوائم للإيجار في الكتالوج بعد. صنّف القوائم بـ «للإيجار» في الإدارة أو تصفح كل العقارات.',
-  'listing.hero.new.title': 'مشاريع جديدة',
+  'listing.hero.new.title': 'Offplan',
   'listing.hero.new.desc':
-    'استكشف الإطلاقات والمنازل الجديدة. استخدم نفس فلاتر المجموعة الكاملة للسعر والموقع والتخطيط.',
-  'listing.featured.new': 'مشاريع جديدة مميزة',
-  'listing.grid.new': 'مشاريع جديدة',
+    'استكشف إطلاقات ما قبل التسليم والفرص قبل الاكتمال. استخدم نفس فلاتر المجموعة الكاملة للسعر والموقع والتخطيط.',
+  'listing.featured.new': 'قوائم على الخارطة مميزة',
+  'listing.grid.new': 'Offplan',
   'listing.emptyChannel.new':
-    'لا قوائم مشاريع جديدة في الكتالوج بعد. تصفح كل العقارات أو عد لاحقًا.',
+    'لا قوائم على الخارطة في الكتالوج بعد. صنّف القوائم بـ «Offplan» في الإدارة أو تصفح كل العقارات.',
   'listing.emptyFiltered.rent':
     'لا إيجارات تطابق هذه الفلاتر. جرّب مسح الفلاتر أو توسيع البحث.',
   'listing.emptyFiltered.new':
     'لا مشاريع جديدة تطابق هذه الفلاتر. جرّب مسح الفلاتر أو توسيع البحث.',
+
+  'seo.developers.title': 'مطورو العقارات في الإمارات | كابيتال دريمز دبي',
+  'seo.developers.description':
+    'استكشف مطوري العقارات في الإمارات مع عقارات منشورة لدى كابيتال دريمز — إعمار، داماك، سوبها والمزيد.',
+
+  'developers.aria.main': 'المطورون',
+  'developers.aria.grid': 'مطورون لديهم عقارات',
+  'developers.eyebrow': 'المطورون',
+  'developers.h1': 'مطورو العقارات في الإمارات',
+  'developers.intro':
+    'تصفح علامات المطورين التي نمثلها حالياً. يظهر هنا فقط المطورون الذين لديهم عقار منشور واحد على الأقل.',
+  'developers.loading': 'جاري تحميل المطورين…',
+  'developers.empty':
+    'لا يوجد مطورون بعقارات منشورة بعد. عيّن مطوراً على عقار في لوحة الإدارة ليظهر هنا.',
+  'developers.showMore': 'عرض المزيد',
+  'developers.carouselAria': 'عرض المطورين',
+  'developers.listingsCount': '{count} عقار',
+  'developers.cardAria': 'عرض عقارات {name}',
+
+  'developerDetail.seo.title': 'عقارات {name} | كابيتال دريمز دبي',
+  'developerDetail.seo.titleMissing': 'المطور | كابيتال دريمز دبي',
+  'developerDetail.seo.description': 'تصفح عقارات {name} في دبي والإمارات مع كابيتال دريمز.',
+  'developerDetail.seo.descriptionMissing': 'عقارات المطور لدى كابيتال دريمز دبي.',
+  'developerDetail.loadingAria': 'تحميل المطور',
+  'developerDetail.loading': 'جاري تحميل المطور…',
+  'developerDetail.profileAria': 'ملف المطور',
+  'developerDetail.eyebrow': 'المطور',
+  'developerDetail.website': 'الموقع الرسمي',
+  'developerDetail.back': 'جميع المطورين',
+  'developerDetail.hero.title': 'عقارات {name}',
+  'developerDetail.hero.desc':
+    'استكشف عقارات {name} المنشورة في مجموعتنا. استخدم الفلاتر حسب السعر والموقع والتخطيط.',
+  'developerDetail.featured': 'عقارات {name} المميزة',
+  'developerDetail.grid': 'عقارات {name}',
+  'developerDetail.emptyFiltered':
+    'لا عقارات لـ {name} تطابق هذه الفلاتر. جرّب مسح الفلاتر أو توسيع البحث.',
+  'developerDetail.emptyChannel': 'لا توجد عقارات منشورة لهذا المطور بعد.',
 
   'propertyGrid.propertiesFallback': 'عقارات',
 
@@ -364,6 +402,12 @@ export const ar: Record<string, string> = {
   'contact.mailSubject': 'طلب تواصل — كابيتال دريم',
   'contact.mailBody':
     'الاسم: {name}\nالبريد الإلكتروني: {email}\nالهاتف: {phone}\n\nالرسالة:\n{message}',
+
+  'popup.closeAria': 'إغلاق النافذة',
+  'popup.submit': 'إرسال',
+  'popup.sending': 'جارٍ الإرسال…',
+  'popup.thankYou': 'شكراً لك. سيتواصل معك فريقنا قريباً.',
+  'popup.errorNotConnected': 'تعذر الإرسال حالياً. يرجى المحاولة لاحقاً.',
 
   'testimonials.aria.main': 'آراء العملاء',
   'testimonials.eyebrow': 'آراء العملاء',

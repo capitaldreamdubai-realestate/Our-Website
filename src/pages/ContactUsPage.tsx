@@ -1,4 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react'
+import { buttonClassNames } from '@/components/Button'
 import { PhoneInputField } from '@/components/PhoneInputField'
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
 import { usePageSeo } from '../hooks/usePageSeo'
@@ -170,10 +171,7 @@ export function ContactUsPage() {
               ) : null}
             </div>
 
-            <button
-              type="submit"
-              className="type-button font-display inline-flex min-h-11 items-center justify-center rounded-xl bg-black px-5 py-2.5 font-medium text-white transition hover:bg-neutral-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black/40"
-            >
+            <button type="submit" className={buttonClassNames('primary', 'min-h-11 px-5 py-2.5')}>
               {t('contact.submit')}
             </button>
           </form>
