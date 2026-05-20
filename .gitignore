@@ -24,3 +24,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Supabase migrations (excluded from public repo)
+supabase/migrations/
