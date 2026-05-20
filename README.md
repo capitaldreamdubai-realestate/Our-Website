@@ -1,73 +1,31 @@
-# React + TypeScript + Vite
+# Capital Dream Website
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Deploying on Hostinger
 
-Currently, two official plugins are available:
+This project is a Vite SPA with React Router. Direct visits to routes like `/about` or `/admin` require a server fallback to `index.html`.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### What is already configured
 
-## React Compiler
+- `public/.htaccess` is included and rewrites unknown paths to `index.html` for Apache hosting.
+- Router mode can be changed with `VITE_ROUTER_MODE`:
+  - `browser` (default): clean URLs, requires rewrite rules.
+  - `hash`: fallback mode if rewrites cannot be enabled.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Deployment steps
 
-## Expanding the ESLint configuration
+1. Set production `.env` values (at minimum `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`).
+2. Build:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+3. Upload the content of `dist/` to your Hostinger `public_html` directory.
+4. Confirm `.htaccess` exists in `public_html` after upload.
+5. Test direct reload on nested routes:
+   - `/about`
+   - `/contact-us`
+   - `/admin/login`
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+If your Hostinger plan does not honor `.htaccess`, set `VITE_ROUTER_MODE=hash` before build and redeploy.
