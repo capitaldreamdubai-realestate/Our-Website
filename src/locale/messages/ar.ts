@@ -18,7 +18,7 @@ export const ar: Record<string, string> = {
   'experiences.buyerConcierge': 'خدمات المشتري',
   'experiences.loading': 'جاري التحميل…',
   'experiences.cmsEmpty':
-    'ستظهر تجارب الكونسيرج هنا بعد نشرها في نظام إدارة المحتوى.',
+    'لم تُرفع خدمات الكونسيرج بعد. يرجى المراجعة لاحقًا.',
   'experiences.aria.featured': 'خدمات كونسيرج مميزة',
   'experiences.aria.more': 'المزيد من خدمات الكونسيرج',
   'nav.articles': 'مقالات',
@@ -332,7 +332,7 @@ export const ar: Record<string, string> = {
     'تصفح علامات المطورين التي نمثلها حالياً. يظهر هنا فقط المطورون الذين لديهم عقار منشور واحد على الأقل.',
   'developers.loading': 'جاري تحميل المطورين…',
   'developers.empty':
-    'لا يوجد مطورون بعقارات منشورة بعد. عيّن مطوراً على عقار في لوحة الإدارة ليظهر هنا.',
+    'لا يوجد مطورون معروضون في الوقت الحالي. يرجى المراجعة لاحقًا.',
   'developers.showMore': 'عرض المزيد',
   'developers.carouselAria': 'عرض المطورين',
   'developers.listingsCount': '{count} عقار',
@@ -355,7 +355,8 @@ export const ar: Record<string, string> = {
   'developerDetail.grid': 'عقارات {name}',
   'developerDetail.emptyFiltered':
     'لا عقارات لـ {name} تطابق هذه الفلاتر. جرّب مسح الفلاتر أو توسيع البحث.',
-  'developerDetail.emptyChannel': 'لا توجد عقارات منشورة لهذا المطور بعد.',
+  'developerDetail.emptyChannel':
+    'لا توجد عقارات لهذا المطور في الوقت الحالي. يرجى المراجعة لاحقًا.',
 
   'propertyGrid.propertiesFallback': 'عقارات',
 
@@ -388,7 +389,7 @@ export const ar: Record<string, string> = {
     'إجابات عملية عن العقار في دبي والإمارات — الشراء والإيجار والتأشيرات والتمويل وكيف تدعمك كابيتال دريم.',
   'faq.loading': 'جاري تحميل الأسئلة…',
   'faq.cmsEmpty':
-    'الأسئلة الشائعة غير متاحة بعد. إن كنت مالك الموقع، نفّذ ترحيلات Supabase وانشر المواضيع في الإدارة.',
+    'لم تُرفع أسئلة شائعة بعد. يرجى المراجعة لاحقًا.',
   'faq.aside.title': 'كابيتال دريم',
   'faq.aside.body':
     'تصفح حسب الموضوع أو افتح الأسئلة أدناه. المحتوى مخصص للمشترين والمستأجرين والمستثمرين في الإمارات.',
@@ -452,13 +453,16 @@ export const ar: Record<string, string> = {
   'team.eyebrow': 'فريقنا',
   'team.h1': 'تعرّف على متخصصي كابيتال دريم',
   'team.loading': 'جاري تحميل الفريق…',
-  'team.cmsEmpty': 'ستظهر ملفات الفريق هنا بعد نشرها في نظام إدارة المحتوى.',
+  'team.cmsEmpty':
+    'لم تُرفع ملفات الفريق بعد. يرجى المراجعة لاحقًا.',
   'team.carouselAria': 'معرض أعضاء الفريق',
   'team.showMore': 'عرض المزيد',
   'team.showing': 'عرض {current} من {total}',
 
   'property.notFound.aria': 'العقار غير موجود',
   'property.notFound.title': 'العقار غير موجود',
+  'property.descriptionEmpty':
+    'الوصف الكامل للعقار غير متاح في الوقت الحالي. يرجى المراجعة لاحقًا.',
 
   'lead.headlineWithAgent': 'تحدث مع {name} بشأن هذا العقار',
   'lead.headlineGeneric': 'تحدث مع كابيتال دريم بشأن هذا العقار',

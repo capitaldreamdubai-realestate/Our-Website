@@ -2,6 +2,7 @@ import { ChevronDown } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCms } from '../contexts/CmsContext'
+import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
 import { SectionShell } from '../components/SectionShell'
 
 type AboutFaqTopicsSectionProps = {
@@ -14,6 +15,7 @@ export function AboutFaqTopicsSection({
   'aria-label': ariaLabel = 'About us — FAQ topics',
 }: AboutFaqTopicsSectionProps = {}) {
   const { faqSections, loading } = useCms()
+  const { t } = useLocalePreferences()
   const topics = faqSections.slice(0, 5).map((topic) => ({
     ...topic,
     entries: topic.entries.slice(0, 7),
@@ -39,10 +41,10 @@ export function AboutFaqTopicsSection({
             </h1>
             <div className="mt-3 overflow-hidden rounded-2xl bg-white/50 backdrop-blur-sm">
               {loading ? (
-                <p className="px-4 py-3 text-sm text-ink/70">Loading topics...</p>
+                <p className="px-4 py-3 text-sm text-ink/70">{t('faq.loading')}</p>
               ) : null}
               {!loading && topics.length === 0 ? (
-                <p className="px-4 py-3 text-sm text-ink/70">No FAQ topics are published yet.</p>
+                <p className="px-4 py-3 text-sm text-ink/70">{t('faq.cmsEmpty')}</p>
               ) : null}
               {!loading && topics.length > 0
                 ? topics.map((topic) => {

@@ -18,7 +18,7 @@ export const fr: Record<string, string> = {
   'experiences.buyerConcierge': 'Conciergerie acheteur',
   'experiences.loading': 'Chargement…',
   'experiences.cmsEmpty':
-    'Les expériences conciergerie apparaîtront ici dès leur publication dans le CMS.',
+    'Aucun service conciergerie n’a été publié pour le moment. Revenez bientôt.',
   'experiences.aria.featured': 'Services conciergerie à la une',
   'experiences.aria.more': 'Autres services conciergerie',
   'nav.articles': 'Articles',
@@ -334,7 +334,7 @@ export const fr: Record<string, string> = {
     'Parcourez les marques de promoteurs que nous représentons actuellement. Seuls les promoteurs avec au moins une annonce publiée apparaissent ici.',
   'developers.loading': 'Chargement des promoteurs…',
   'developers.empty':
-    'Aucun promoteur avec des annonces publiées pour le moment. Assignez un promoteur à un bien dans l’admin pour l’afficher ici.',
+    'Aucun promoteur n’est listé pour le moment. Revenez bientôt.',
   'developers.showMore': 'Voir plus',
   'developers.carouselAria': 'Carrousel promoteurs',
   'developers.listingsCount': '{count} annonces',
@@ -360,7 +360,7 @@ export const fr: Record<string, string> = {
   'developerDetail.emptyFiltered':
     'Aucune annonce {name} ne correspond à ces filtres. Réinitialisez ou élargissez la recherche.',
   'developerDetail.emptyChannel':
-    'Il n’y a pas encore d’annonces publiées pour ce promoteur.',
+    'Aucune annonce pour ce promoteur n’est disponible pour le moment. Revenez bientôt.',
 
   'propertyGrid.propertiesFallback': 'Biens',
 
@@ -393,7 +393,7 @@ export const fr: Record<string, string> = {
     'Réponses pratiques sur l’immobilier à Dubaï et aux Émirats — achat, location, visas, financement et comment Capital Dream vous accompagne.',
   'faq.loading': 'Chargement des questions…',
   'faq.cmsEmpty':
-    'La FAQ n’est pas encore disponible. Si vous gérez le site, exécutez les migrations Supabase et publiez les sujets dans l’administration.',
+    'Aucune FAQ n’a été publiée pour le moment. Revenez bientôt.',
   'faq.aside.title': 'Capital Dream',
   'faq.aside.body':
     'Parcourez par thème ou ouvrez les questions ci-dessous. Le contenu est maintenu pour acheteurs, locataires et investisseurs aux Émirats.',
@@ -459,13 +459,15 @@ export const fr: Record<string, string> = {
   'team.h1': 'Rencontrez les spécialistes Capital Dream',
   'team.loading': 'Chargement de l’équipe…',
   'team.cmsEmpty':
-    'Les profils apparaîtront ici une fois publiés dans le CMS.',
+    'Aucun profil d’équipe n’a été publié pour le moment. Revenez bientôt.',
   'team.carouselAria': 'Carrousel de l’équipe',
   'team.showMore': 'Afficher plus',
   'team.showing': 'Affichage de {current} sur {total}',
 
   'property.notFound.aria': 'Bien introuvable',
   'property.notFound.title': 'Bien introuvable',
+  'property.descriptionEmpty':
+    'La description complète du bien n’est pas disponible pour le moment. Revenez bientôt.',
 
   'lead.headlineWithAgent': 'Échangez avec {name} à propos de ce bien',
   'lead.headlineGeneric': 'Échangez avec Capital Dream à propos de ce bien',

@@ -151,10 +151,7 @@ export function PropertyDetailPage() {
                 dangerouslySetInnerHTML={{ __html: property.descriptionHtml }}
               />
             ) : (
-              <p className="max-w-3xl text-ink/70">
-                Full editorial description will appear here once published from the
-                admin portal.
-              </p>
+              <p className="max-w-3xl text-ink/70">{t('property.descriptionEmpty')}</p>
             )}
 
             <div>

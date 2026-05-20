@@ -18,7 +18,7 @@ export const en: Record<string, string> = {
   'experiences.buyerConcierge': 'Buyer concierge',
   'experiences.loading': 'Loading…',
   'experiences.cmsEmpty':
-    'Concierge experiences will appear here once they are published in the CMS.',
+    'No concierge services have been uploaded at the moment. Please check back soon.',
   'experiences.aria.featured': 'Featured concierge services',
   'experiences.aria.more': 'More concierge services',
   'nav.articles': 'Articles',
@@ -329,7 +329,7 @@ export const en: Record<string, string> = {
     'Browse developer brands we currently represent. Only developers with at least one published listing appear here.',
   'developers.loading': 'Loading developers…',
   'developers.empty':
-    'No developers with published listings yet. Assign a developer on a property in admin to feature them here.',
+    'No developers are listed at the moment. Please check back soon.',
   'developers.showMore': 'Show more',
   'developers.carouselAria': 'Developers carousel',
   'developers.listingsCount': '{count} listings',
@@ -355,7 +355,7 @@ export const en: Record<string, string> = {
   'developerDetail.emptyFiltered':
     'No {name} listings match these filters. Try clearing filters or broadening your search.',
   'developerDetail.emptyChannel':
-    'There are no published listings for this developer yet.',
+    'No listings for this developer are available at the moment. Please check back soon.',
 
   'propertyGrid.propertiesFallback': 'Properties',
 
@@ -388,7 +388,7 @@ export const en: Record<string, string> = {
     'Practical answers on Dubai and UAE real estate—buying, renting, visas, finance, and how Capital Dream supports your move.',
   'faq.loading': 'Loading questions…',
   'faq.cmsEmpty':
-    'FAQs are not available yet. If you are the site owner, run the latest Supabase migrations and publish topics in the admin.',
+    'No FAQs have been uploaded at the moment. Please check back soon.',
   'faq.aside.title': 'Capital Dream',
   'faq.aside.body':
     'Browse by topic or open questions below. Content is maintained for UAE buyers, renters, and investors.',
@@ -452,13 +452,16 @@ export const en: Record<string, string> = {
   'team.eyebrow': 'Our team',
   'team.h1': 'Meet Capital Dream specialists',
   'team.loading': 'Loading team…',
-  'team.cmsEmpty': 'Team profiles will appear here once they are published in the CMS.',
+  'team.cmsEmpty':
+    'No team profiles have been uploaded at the moment. Please check back soon.',
   'team.carouselAria': 'Team members carousel',
   'team.showMore': 'Show more',
   'team.showing': 'Showing {current} of {total}',
 
   'property.notFound.aria': 'Property not found',
   'property.notFound.title': 'Property not found',
+  'property.descriptionEmpty':
+    'Full property description is not available at the moment. Please check back soon.',
 
   'lead.headlineWithAgent': 'Speak with {name} about this property',
   'lead.headlineGeneric': 'Speak with Capital Dream about this property',
