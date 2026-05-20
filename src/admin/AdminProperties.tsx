@@ -22,6 +22,13 @@ import { gallerySixForPropertyId } from '@/data/propertyGallerySeeds'
 import { getSupabase } from '@/integrations/supabase/client'
 import type { Database } from '@/integrations/supabase/database.types'
 import { propertyRowToUpsert } from '@/lib/cms/mapProperty'
+import { propertiesHasTagsColumn } from '@/lib/cms/propertiesSchema'
+import {
+  hasListingTag,
+  normalizePropertyTags,
+  sortTagsByLookupOrder,
+  syncLegacyTagField,
+} from '@/lib/listingTags'
 
 type Row = Database['public']['Tables']['properties']['Row']
 type SalesRow = Database['public']['Tables']['salespeople']['Row']
@@ -65,6 +72,7 @@ function createEmptyRow(): Row {
     slug: null,
     title: '',
     tag: 'For sale',
+    tags: ['For sale'],
     meta: null,
     detail: null,
     alt: '',
@@ -150,6 +158,7 @@ export function AdminProperties() {
   const [developers, setDevelopers] = useState<DeveloperRow[]>([])
   const [viewRow, setViewRow] = useState<Row | null>(null)
   const [listingTagOptions, setListingTagOptions] = useState<ListingTagRow[]>([])
+  const [tagsColumnReady, setTagsColumnReady] = useState<boolean | null>(null)
   const [propertyTypeOptions, setPropertyTypeOptions] = useState<PropertyTypeOptRow[]>([])
   const [geoLookup, setGeoLookup] = useState<{
     neighbourhoods: TerracottaDropdownOption[]
@@ -272,20 +281,16 @@ export function AdminProperties() {
     [propertyTypeOptions],
   )
 
-  const tagDropdownOptions = useMemo((): TerracottaDropdownOption[] => {
-    const tag = draft?.tag ?? ''
-    if (listingTagOptions.length === 0) {
-      return [{ value: tag, label: tag || '— add options under Properties → Listing tags' }]
-    }
-    const opts: TerracottaDropdownOption[] = []
-    if (tag && !listingTagNames.has(tag)) {
-      opts.push({ value: tag, label: `${tag} (legacy)` })
-    }
-    for (const t of listingTagOptions) {
-      opts.push({ value: t.name, label: t.name })
-    }
-    return opts
-  }, [draft?.tag, listingTagOptions, listingTagNames])
+  const draftTags = useMemo(
+    () => (draft ? normalizePropertyTags(draft.tags, draft.tag) : []),
+    [draft],
+  )
+
+  const listingTagChoices = useMemo(() => {
+    const names = listingTagOptions.map((t) => t.name)
+    const extra = draftTags.filter((t) => !listingTagNames.has(t))
+    return [...names, ...extra]
+  }, [listingTagOptions, draftTags, listingTagNames])
 
   const propertyTypeDropdownOptions = useMemo((): TerracottaDropdownOption[] => {
     const pt = draft?.property_type ?? ''
@@ -374,12 +379,43 @@ export function AdminProperties() {
     void refresh()
   }, [refresh])
 
+  useEffect(() => {
+    if (!sb) return
+    void propertiesHasTagsColumn(sb).then(setTagsColumnReady)
+  }, [sb])
+
+  function setDraftTags(next: string[]) {
+    if (!draft || next.length === 0) return
+    const ordered = sortTagsByLookupOrder(
+      next,
+      listingTagOptions.map((t) => t.name),
+    )
+    setDraft({
+      ...draft,
+      tags: ordered,
+      tag: syncLegacyTagField(ordered),
+    })
+  }
+
+  function toggleDraftTag(name: string) {
+    const current = draftTags
+    const lower = name.toLowerCase()
+    const has = current.some((t) => t.toLowerCase() === lower)
+    if (has) {
+      const next = current.filter((t) => t.toLowerCase() !== lower)
+      if (next.length > 0) setDraftTags(next)
+      return
+    }
+    setDraftTags([...current, name])
+  }
+
   async function openCreate() {
-    const { tags } = await loadListingLookups()
+    const { tags: tagOpts } = await loadListingLookups()
     const row = createEmptyRow()
     const tagDefault =
-      tags.find((t) => t.name === row.tag)?.name ?? tags[0]?.name ?? row.tag
+      tagOpts.find((t) => t.name === row.tag)?.name ?? tagOpts[0]?.name ?? row.tag
     row.tag = tagDefault
+    row.tags = [tagDefault]
     setIsNewRecord(true)
     setDraft(row)
     setGallerySlots(['', '', '', '', '', ''])
@@ -392,7 +428,8 @@ export function AdminProperties() {
   async function openEdit(row: Row) {
     await loadListingLookups()
     setIsNewRecord(false)
-    setDraft({ ...row })
+    const tags = normalizePropertyTags(row.tags, row.tag)
+    setDraft({ ...row, tags, tag: syncLegacyTagField(tags) })
     const slots = slotsFromGallery(row.gallery)
     setGallerySlots(slots)
     setGalleryText(JSON.stringify(galleryFromSlots(slots), null, 2))
@@ -434,14 +471,29 @@ export function AdminProperties() {
     if (galleryPayload.length === 0) {
       galleryPayload = gallerySixForPropertyId(draft.id) as GalleryImageItem[]
     }
+    const tags = normalizePropertyTags(draft.tags, draft.tag)
+    if (tags.length === 0) {
+      setSaveErr('Select at least one listing tag.')
+      setStep(0)
+      return
+    }
     const merged: Row = {
       ...draft,
+      tags,
+      tag: syncLegacyTagField(tags),
       gallery: galleryPayload as Row['gallery'],
     }
-    const payload = propertyRowToUpsert(merged)
+    const hasTagsCol =
+      tagsColumnReady ?? (await propertiesHasTagsColumn(sb))
+    setTagsColumnReady(hasTagsCol)
+    const payload = propertyRowToUpsert(merged, { includeTagsColumn: hasTagsCol })
     const { error } = await sb.from('properties').upsert(payload, { onConflict: 'id' })
     if (error) {
-      setSaveErr(error.message)
+      const hint =
+        /tags/i.test(error.message) && /column|schema cache/i.test(error.message)
+          ? ' Run migration supabase/migrations/20260520120000_property_listing_tags_array.sql in Supabase SQL Editor.'
+          : ''
+      setSaveErr(`${error.message}${hint}`)
       return
     }
     closeModal()
@@ -597,6 +649,17 @@ export function AdminProperties() {
 
       {loadErr ? <p className="text-sm text-red-600">{loadErr}</p> : null}
 
+      {tagsColumnReady === false ? (
+        <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-950 md:text-sm">
+          The database is missing the <code className="rounded bg-amber-100 px-1">properties.tags</code>{' '}
+          column. Property saves work with one tag only until you run{' '}
+          <code className="rounded bg-amber-100 px-1">
+            supabase/migrations/20260520120000_property_listing_tags_array.sql
+          </code>{' '}
+          in Supabase → SQL Editor (then refresh this page).
+        </p>
+      ) : null}
+
       {selectedList.length > 0 ? (
         <div className="flex flex-col gap-3 rounded-[var(--admin-radius-lg,24px)] border border-[var(--admin-primary)]/25 bg-[var(--admin-accent-soft)] p-4 sm:flex-row sm:flex-wrap sm:items-center">
           <p className="text-xs font-medium text-ink md:text-sm">
@@ -672,7 +735,7 @@ export function AdminProperties() {
               </th>
               <th className="px-3 py-3 md:px-4">Title</th>
               <th className="px-3 py-3 whitespace-nowrap md:px-4">Price</th>
-              <th className="px-3 py-3 md:px-4">Tag</th>
+              <th className="px-3 py-3 md:px-4">Tags</th>
               <th className="px-3 py-3 md:px-4">Type</th>
               <th className="px-3 py-3 md:px-4">Neighbourhood</th>
               <th className="px-3 py-3 md:px-4">Emirate</th>
@@ -716,9 +779,16 @@ export function AdminProperties() {
                   {formatPriceTableCell(r)}
                 </td>
                 <td className="min-w-0 px-3 py-2.5 md:px-4">
-                  <span className="rounded-md bg-[var(--admin-accent-soft)] px-1.5 py-0.5 text-[0.65rem] font-medium text-ink/80">
-                    {r.tag}
-                  </span>
+                  <div className="flex max-w-[11rem] flex-wrap gap-1">
+                    {normalizePropertyTags(r.tags, r.tag).map((label) => (
+                      <span
+                        key={label}
+                        className="rounded-md bg-[var(--admin-accent-soft)] px-1.5 py-0.5 text-[0.65rem] font-medium text-ink/80"
+                      >
+                        {label}
+                      </span>
+                    ))}
+                  </div>
                 </td>
                 <td className="min-w-0 px-3 py-2.5 text-[0.65rem] text-ink/75 md:px-4">
                   {r.property_type ?? '—'}
@@ -742,7 +812,32 @@ export function AdminProperties() {
                   {r.salesperson_id ? (salesNameById.get(r.salesperson_id) ?? '—') : '—'}
                 </td>
                 <td className="px-3 py-2.5 text-ink/70 md:px-4">{r.home_section}</td>
-                <td className="px-3 py-2.5 md:px-4">{r.published ? 'Yes' : 'No'}</td>
+                <td className="px-3 py-2.5 md:px-4">
+                  {r.published ? (
+                    'Yes'
+                  ) : (
+                    <span
+                      className={
+                        hasListingTag(
+                          { tags: normalizePropertyTags(r.tags, r.tag), tag: r.tag },
+                          'Offplan',
+                        )
+                          ? 'font-medium text-amber-800'
+                          : undefined
+                      }
+                      title={
+                        hasListingTag(
+                          { tags: normalizePropertyTags(r.tags, r.tag), tag: r.tag },
+                          'Offplan',
+                        )
+                          ? 'Hidden on the public site — turn on Published in the listing editor'
+                          : undefined
+                      }
+                    >
+                      No
+                    </span>
+                  )}
+                </td>
                 <td className="px-3 py-2.5 text-right md:px-4">
                   <div className="flex justify-end gap-1">
                     <button
@@ -846,9 +941,10 @@ export function AdminProperties() {
 
             {draft.listing_source === 'property_finder' ? (
               <p className="rounded-2xl border border-sky-200 bg-sky-50/80 px-3 py-2 text-xs leading-relaxed text-sky-950">
-                This row is synced from Property Finder. The next sync will refresh title, price, media, and
-                description from PF, but keeps <strong>home section</strong>, <strong>sort order</strong>,{' '}
-                <strong>assigned agent</strong>, and <strong>exclusive</strong> as you set here.
+                This row is synced from Property Finder. The next sync refreshes title, price, media, and
+                description from PF, and updates channel tags (For sale/rent, Offplan) while keeping{' '}
+                <strong>decorative tags</strong> (e.g. New, Exclusive), plus <strong>home section</strong>,{' '}
+                <strong>sort order</strong>, <strong>assigned agent</strong>, and <strong>exclusive</strong>.
               </p>
             ) : null}
 
@@ -883,17 +979,43 @@ export function AdminProperties() {
                     className={fieldClass()}
                   />
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-ink/70">Tag</label>
-                  <TerracottaDropdown
-                    variant="admin"
-                    listPortal
-                    label="Tag"
-                    options={tagDropdownOptions}
-                    value={draft.tag}
-                    onChange={(v) => updateDraft('tag', v)}
-                    className="mt-1"
-                  />
+                <div className="sm:col-span-2">
+                  <p className="text-xs font-medium text-ink/70">Listing tags</p>
+                  <p className="mt-0.5 text-[0.6875rem] leading-relaxed text-ink/50">
+                    Select all that apply — e.g. <strong>New</strong> and <strong>Offplan</strong>{' '}
+                    together. Channel pages (/for-sale, /for-rent, /offplan) filter by these tags.
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {listingTagChoices.length === 0 ? (
+                      <span className="text-xs text-ink/50">
+                        Add options under Properties → Listing tags
+                      </span>
+                    ) : (
+                      listingTagChoices.map((name) => {
+                        const checked = draftTags.some(
+                          (t) => t.toLowerCase() === name.toLowerCase(),
+                        )
+                        return (
+                          <label
+                            key={name}
+                            className={`flex cursor-pointer items-center gap-2 rounded-2xl border px-3 py-2 text-xs font-medium transition-colors ${
+                              checked
+                                ? 'border-[var(--admin-primary)] bg-[var(--admin-accent-soft)] text-ink'
+                                : 'border-ink/15 bg-white text-ink/75 hover:border-ink/25'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => toggleDraftTag(name)}
+                              className="size-4 rounded border-ink/20"
+                            />
+                            {name}
+                          </label>
+                        )
+                      })
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="text-xs font-medium text-ink/70">Property type</label>
@@ -1417,7 +1539,10 @@ export function AdminProperties() {
                     ? (developerNameById.get(viewRow.developer_id) ?? viewRow.developer_id)
                     : '—',
                 },
-                { label: 'Tag', value: viewRow.tag },
+                {
+                  label: 'Tags',
+                  value: normalizePropertyTags(viewRow.tags, viewRow.tag).join(', ') || '—',
+                },
                 { label: 'Beds / Baths', value: `${viewRow.beds ?? '—'} / ${viewRow.baths ?? '—'}` },
                 { label: 'Location', value: viewRow.location || '—' },
                 {

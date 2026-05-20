@@ -22,6 +22,7 @@ const PROPERTY_LISTING_PATHS = [
   '/for-sale',
   '/for-rent',
   '/offplan',
+  '/deals',
 ] as const
 
 function mergeToUrl(f: FilterParams) {

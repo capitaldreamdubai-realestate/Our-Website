@@ -6,6 +6,7 @@ export const ar: Record<string, string> = {
   'nav.developers': 'المطورون',
   'nav.forRent': 'للإيجار',
   'nav.forSale': 'للبيع',
+  'nav.deals': 'عروض',
   'nav.about': 'من نحن',
   'nav.team': 'فريقنا',
   'nav.experiences': 'تجارب',
@@ -128,6 +129,9 @@ export const ar: Record<string, string> = {
   'seo.newDevelopments.title': 'عقارات على الخارطة في دبي | كابيتال دريمز الإمارات',
   'seo.newDevelopments.description':
     'تصفح قوائم ما قبل التسليم في دبي وعبر الإمارات مع تحديثات الإطلاق وتوجيه الأسعار وخبراء كابيتال دريمز.',
+  'seo.deals.title': 'عروض عقارية في دبي | كابيتال دريمز الإمارات',
+  'seo.deals.description':
+    'اكتشف عروضاً محدودة وفرصاً مختارة في دبي وعبر الإمارات مع كابيتال دريمز.',
   'seo.articleMissing.title': 'مقال عقاري في دبي | كابيتال دريمز',
   'seo.articleMissing.description':
     'رؤى عملية للعقار في دبي والإمارات من خبراء كابيتال دريمز.',
@@ -287,25 +291,34 @@ export const ar: Record<string, string> = {
   'listing.featured.sale': 'مميز للبيع',
   'listing.grid.sale': 'للبيع',
   'listing.emptyChannel.sale':
-    'لا قوائم للبيع في الكتالوج بعد. صنّف القوائم بـ «للبيع» في الإدارة أو تصفح كل العقارات.',
+    'لا عقارات للبيع متاحة حالياً. يرجى المعاودة لاحقاً.',
   'listing.hero.rent.title': 'للإيجار',
   'listing.hero.rent.desc':
     'تصفح منازل وشقق للإيجار. رشّح حسب السعر والإمارة والحي والتخطيط — نفس أدوات المجموعة الكاملة.',
   'listing.featured.rent': 'إيجارات مميزة',
   'listing.grid.rent': 'للإيجار',
   'listing.emptyChannel.rent':
-    'لا قوائم للإيجار في الكتالوج بعد. صنّف القوائم بـ «للإيجار» في الإدارة أو تصفح كل العقارات.',
+    'لا عقارات للإيجار متاحة حالياً. يرجى المعاودة لاحقاً.',
   'listing.hero.new.title': 'Offplan',
   'listing.hero.new.desc':
     'استكشف إطلاقات ما قبل التسليم والفرص قبل الاكتمال. استخدم نفس فلاتر المجموعة الكاملة للسعر والموقع والتخطيط.',
   'listing.featured.new': 'قوائم على الخارطة مميزة',
   'listing.grid.new': 'Offplan',
   'listing.emptyChannel.new':
-    'لا قوائم على الخارطة في الكتالوج بعد. صنّف القوائم بـ «Offplan» في الإدارة أو تصفح كل العقارات.',
+    'لا مشاريع على الخارطة متاحة حالياً. يرجى المعاودة لاحقاً.',
+  'listing.hero.deals.title': 'عروض',
+  'listing.hero.deals.desc':
+    'فرص مختارة وعروض لفترة محدودة. استخدم نفس فلاتر المجموعة الكاملة للسعر والموقع والتخطيط.',
+  'listing.featured.deals': 'عروض مميزة',
+  'listing.grid.deals': 'عروض',
+  'listing.emptyChannel.deals':
+    'لا عروض متاحة حالياً. يرجى المعاودة لاحقاً.',
   'listing.emptyFiltered.rent':
     'لا إيجارات تطابق هذه الفلاتر. جرّب مسح الفلاتر أو توسيع البحث.',
   'listing.emptyFiltered.new':
     'لا مشاريع جديدة تطابق هذه الفلاتر. جرّب مسح الفلاتر أو توسيع البحث.',
+  'listing.emptyFiltered.deals':
+    'لا عروض تطابق هذه الفلاتر. جرّب مسح الفلاتر أو توسيع البحث.',
 
   'seo.developers.title': 'مطورو العقارات في الإمارات | كابيتال دريمز دبي',
   'seo.developers.description':

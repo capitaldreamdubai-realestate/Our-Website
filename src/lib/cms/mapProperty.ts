@@ -1,5 +1,10 @@
 import type { Property, PropertyGalleryItem } from '@/components/PropertyCard'
 import type { Database } from '@/integrations/supabase/database.types'
+import {
+  normalizePropertyTags,
+  primaryListingTag,
+  syncLegacyTagField,
+} from '@/lib/listingTags'
 
 type Row = Database['public']['Tables']['properties']['Row']
 
@@ -10,11 +15,13 @@ function asGallery(raw: unknown): PropertyGalleryItem[] {
 
 export function mapPropertyRow(row: Row): Property {
   const gallery = asGallery(row.gallery)
+  const tags = normalizePropertyTags(row.tags, row.tag)
   return {
     id: row.id,
     slug: row.slug ?? undefined,
     image: row.image_url,
-    tag: row.tag,
+    tag: primaryListingTag(tags) || row.tag,
+    tags,
     title: row.title,
     meta: row.meta ?? '',
     detail: row.detail ?? undefined,
@@ -42,12 +49,16 @@ export function mapPropertyRow(row: Row): Property {
 }
 
 /** Admin save: map DB row → upsert payload without losing FKs (e.g. developer_id). */
-export function propertyRowToUpsert(row: Row): Database['public']['Tables']['properties']['Insert'] {
-  return {
+export function propertyRowToUpsert(
+  row: Row,
+  options?: { includeTagsColumn?: boolean },
+): Database['public']['Tables']['properties']['Insert'] {
+  const tags = normalizePropertyTags(row.tags, row.tag)
+  const payload: Database['public']['Tables']['properties']['Insert'] = {
     id: row.id,
     slug: row.slug,
     title: row.title,
-    tag: row.tag,
+    tag: syncLegacyTagField(tags),
     meta: row.meta,
     detail: row.detail,
     alt: row.alt,
@@ -97,6 +108,10 @@ export function propertyRowToUpsert(row: Row): Database['public']['Tables']['pro
     pf_currency: row.pf_currency,
     pf_published_at: row.pf_published_at,
   }
+  if (options?.includeTagsColumn) {
+    payload.tags = tags
+  }
+  return payload
 }
 
 export function propertyToInsert(
@@ -107,11 +122,13 @@ export function propertyToInsert(
   sourceMeta?: Pick<Row, 'listing_source' | 'pf_listing_id' | 'pf_payload'>,
 ): Database['public']['Tables']['properties']['Insert'] {
   const gallery = p.gallery && p.gallery.length > 0 ? p.gallery : []
+  const tags = normalizePropertyTags(p.tags, p.tag)
   return {
     id: p.id,
     slug: p.slug ?? null,
     title: p.title,
-    tag: p.tag,
+    tag: syncLegacyTagField(tags),
+    tags,
     meta: p.meta || null,
     detail: p.detail ?? null,
     alt: p.alt,

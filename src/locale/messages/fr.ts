@@ -6,6 +6,7 @@ export const fr: Record<string, string> = {
   'nav.developers': 'Promoteurs',
   'nav.forRent': 'À louer',
   'nav.forSale': 'À vendre',
+  'nav.deals': 'Offres',
   'nav.about': 'À propos',
   'nav.team': 'Notre équipe',
   'nav.experiences': 'Expériences',
@@ -129,6 +130,9 @@ export const fr: Record<string, string> = {
   'seo.newDevelopments.title': 'Biens off-plan Dubaï | Capital Dreams Émirats',
   'seo.newDevelopments.description':
     'Parcourez les annonces off-plan à Dubaï et aux Émirats : lancements, fourchettes de prix et conseil d’experts Capital Dreams.',
+  'seo.deals.title': 'Offres immobilières Dubaï | Capital Dreams Émirats',
+  'seo.deals.description':
+    'Découvrez les offres limitées et opportunités sélectionnées à Dubaï et aux Émirats avec Capital Dreams.',
   'seo.developers.title': 'Promoteurs immobiliers aux EAU | Capital Dreams Dubai',
   'seo.developers.description':
     'Découvrez les promoteurs des EAU avec des annonces actives chez Capital Dreams — Emaar, DAMAC, Sobha et plus.',
@@ -293,25 +297,34 @@ export const fr: Record<string, string> = {
   'listing.featured.sale': 'À la une — à vendre',
   'listing.grid.sale': 'À vendre',
   'listing.emptyChannel.sale':
-    'Il n’y a pas encore d’annonces à vendre dans le catalogue. Marquez les biens « À vendre » dans l’administration ou consultez tous les biens.',
+    'Aucun bien à vendre n’est disponible pour le moment. Revenez bientôt.',
   'listing.hero.rent.title': 'À louer',
   'listing.hero.rent.desc':
     'Locations et appartements. Filtrez par prix, émirat, quartier et configuration — les mêmes outils que sur l’ensemble du catalogue.',
   'listing.featured.rent': 'Locations à la une',
   'listing.grid.rent': 'À louer',
   'listing.emptyChannel.rent':
-    'Il n’y a pas encore d’annonces à louer dans le catalogue. Marquez les biens « À louer » dans l’administration ou consultez tous les biens.',
+    'Aucune location n’est disponible pour le moment. Revenez bientôt.',
   'listing.hero.new.title': 'Offplan',
   'listing.hero.new.desc':
     'Découvrez les lancements off-plan et les opportunités avant livraison. Utilisez les mêmes filtres que sur le catalogue pour prix, lieu et configuration.',
   'listing.featured.new': 'Off-plan à la une',
   'listing.grid.new': 'Offplan',
   'listing.emptyChannel.new':
-    'Il n’y a pas encore d’annonces off-plan dans le catalogue. Marquez les biens « Offplan » dans l’administration ou consultez tous les biens.',
+    'Aucun programme off-plan n’est disponible pour le moment. Revenez bientôt.',
+  'listing.hero.deals.title': 'Offres',
+  'listing.hero.deals.desc':
+    'Sélection d’opportunités et offres à durée limitée. Utilisez les mêmes filtres que sur le catalogue complet.',
+  'listing.featured.deals': 'Offres à la une',
+  'listing.grid.deals': 'Offres',
+  'listing.emptyChannel.deals':
+    'Aucune offre n’est disponible pour le moment. Revenez bientôt.',
   'listing.emptyFiltered.rent':
     'Aucune location ne correspond à ces filtres. Élargissez la recherche ou réinitialisez les filtres.',
   'listing.emptyFiltered.new':
     'Aucun programme neuf ne correspond à ces filtres. Élargissez la recherche ou réinitialisez les filtres.',
+  'listing.emptyFiltered.deals':
+    'Aucune offre ne correspond à ces filtres. Élargissez la recherche ou réinitialisez les filtres.',
 
   'developers.aria.main': 'Promoteurs',
   'developers.aria.grid': 'Promoteurs avec annonces',

@@ -1,20 +1,22 @@
 import type { Property } from '../components/PropertyCard'
+import { hasListingTag } from './listingTags'
 
-function listingTagNorm(p: Property): string {
-  return p.tag?.trim().toLowerCase() ?? ''
-}
-
-/** Listing tag equals **Offplan** (matches CMS `property_listing_tags`). */
+/** Listing has **Offplan** tag (matches CMS `property_listing_tags`). */
 export function isOffplanListing(p: Property): boolean {
-  return listingTagNorm(p) === 'offplan'
+  return hasListingTag(p, 'Offplan')
 }
 
-/** Listing tag equals **For rent** (matches CMS `property_listing_tags`). */
+/** Listing has **For rent** tag. */
 export function isForRentListing(p: Property): boolean {
-  return listingTagNorm(p) === 'for rent'
+  return hasListingTag(p, 'For rent')
 }
 
-/** Listing tag equals **For sale**. */
+/** Listing has **For sale** tag. */
 export function isForSaleListing(p: Property): boolean {
-  return listingTagNorm(p) === 'for sale'
+  return hasListingTag(p, 'For sale')
+}
+
+/** Listing has **Deals** tag. */
+export function isDealsListing(p: Property): boolean {
+  return hasListingTag(p, 'Deals')
 }

@@ -15,6 +15,7 @@ export type Database = {
           slug: string | null
           title: string
           tag: string
+          tags: string[]
           meta: string | null
           detail: string | null
           alt: string
@@ -71,6 +72,7 @@ export type Database = {
           slug?: string | null
           title: string
           tag?: string
+          tags?: string[]
           meta?: string | null
           detail?: string | null
           alt?: string

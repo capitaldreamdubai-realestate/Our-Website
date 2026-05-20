@@ -27,6 +27,7 @@ import { HomePage } from './pages/HomePage'
 import { NewDevelopmentsPage } from './pages/NewDevelopmentsPage'
 import { ForRentPage } from './pages/ForRentPage'
 import { ForSalePage } from './pages/ForSalePage'
+import { DealsPage } from './pages/DealsPage'
 import { ArticleDetailPage } from './pages/ArticleDetailPage'
 import { ArticlesPage } from './pages/ArticlesPage'
 import { ExperiencesPage } from './pages/ExperiencesPage'
@@ -84,6 +85,7 @@ function App() {
         />
         <Route path="for-rent" element={<ForRentPage />} />
         <Route path="for-sale" element={<ForSalePage />} />
+        <Route path="deals" element={<DealsPage />} />
         <Route path="developers" element={<DevelopersPage />} />
         <Route path="developers/:slug" element={<DeveloperDetailPage />} />
         <Route path="off-market" element={<Navigate to="/for-rent" replace />} />

@@ -6,6 +6,7 @@ export const en: Record<string, string> = {
   'nav.developers': 'Developers',
   'nav.forRent': 'For rent',
   'nav.forSale': 'For sale',
+  'nav.deals': 'Deals',
   'nav.about': 'About us',
   'nav.team': 'Our team',
   'nav.experiences': 'Experiences',
@@ -128,6 +129,9 @@ export const en: Record<string, string> = {
   'seo.newDevelopments.title': 'Off-Plan Properties in Dubai | Capital Dreams UAE',
   'seo.newDevelopments.description':
     'Browse off-plan listings in Dubai and across the UAE with launch updates, pricing guidance, and expert advice from Capital Dreams.',
+  'seo.deals.title': 'Property Deals in Dubai | Capital Dreams UAE',
+  'seo.deals.description':
+    'Explore limited-time property deals and standout opportunities in Dubai and across the UAE with Capital Dreams.',
   'seo.developers.title': 'UAE Property Developers | Capital Dreams Dubai',
   'seo.developers.description':
     'Explore UAE property developers with active listings at Capital Dreams — Emaar, DAMAC, Sobha, and more.',
@@ -290,23 +294,32 @@ export const en: Record<string, string> = {
   'listing.featured.sale': 'Featured for sale',
   'listing.grid.sale': 'For sale',
   'listing.emptyChannel.sale':
-    'There are no for-sale listings in the catalog yet. Tag listings with “For sale” in the admin or browse all properties.',
+    'No properties for sale are available at the moment. Please check back soon.',
   'listing.hero.rent.title': 'For rent',
   'listing.hero.rent.desc':
     'Browse rental homes and apartments. Filter by price, emirate, neighbourhood, and layout — same tools as our full collection.',
   'listing.featured.rent': 'Featured rentals',
   'listing.grid.rent': 'For rent',
   'listing.emptyChannel.rent':
-    'There are no for-rent listings in the catalog yet. Tag listings with “For rent” in the admin or browse all properties.',
+    'No rental properties are available at the moment. Please check back soon.',
   'listing.hero.new.title': 'Offplan',
   'listing.hero.new.desc':
     'Explore off-plan launches and pre-completion opportunities. Use the same filters as our full collection to narrow by price, location, and layout.',
   'listing.featured.new': 'Featured off-plan listings',
   'listing.grid.new': 'Offplan',
   'listing.emptyChannel.new':
-    'There are no off-plan listings in the catalog yet. Tag listings with “Offplan” in the admin or browse all properties.',
+    'No off-plan listings are available at the moment. Please check back soon.',
+  'listing.hero.deals.title': 'Deals',
+  'listing.hero.deals.desc':
+    'Hand-picked opportunities and limited-time offers. Use the same filters as our full collection to narrow by price, location, and layout.',
+  'listing.featured.deals': 'Featured deals',
+  'listing.grid.deals': 'Deals',
+  'listing.emptyChannel.deals':
+    'No deals are available at the moment. Please check back soon.',
   'listing.emptyFiltered.rent': 'No rentals match these filters. Try clearing filters or broadening your search.',
   'listing.emptyFiltered.new': 'No off-plan listings match these filters. Try clearing filters or broadening your search.',
+  'listing.emptyFiltered.deals':
+    'No deals match these filters. Try clearing filters or broadening your search.',
 
   'developers.aria.main': 'Developers',
   'developers.aria.grid': 'Developers with listings',

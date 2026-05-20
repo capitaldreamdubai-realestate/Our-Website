@@ -231,7 +231,11 @@ function propertyTypeLabel(type: unknown): string | null {
   return type.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
-function listingTagFromPf(offering: string, projectStatus: string | null): string {
+function listingTagsFromPf(offering: string, projectStatus: string | null): string[] {
+  const tags: string[] = []
+  const isRent =
+    offering === 'rent' || offering === 'monthly' || offering === 'yearly'
+  tags.push(isRent ? 'For rent' : 'For sale')
   const status = (projectStatus ?? '').trim().toLowerCase().replace(/[_-]+/g, ' ')
   if (
     status.includes('off plan') ||
@@ -239,11 +243,26 @@ function listingTagFromPf(offering: string, projectStatus: string | null): strin
     status.includes('under construction') ||
     status.includes('launch')
   ) {
-    return 'Offplan'
+    tags.push('Offplan')
   }
-  return offering === 'rent' || offering === 'monthly' || offering === 'yearly'
-    ? 'For rent'
-    : 'For sale'
+  return tags
+}
+
+const CHANNEL_TAGS_LOWER = new Set(['for sale', 'for rent', 'offplan'])
+
+function mergePfSyncTags(
+  existingTags: string[] | null | undefined,
+  pfChannelTags: string[],
+): string[] {
+  const existing = Array.isArray(existingTags)
+    ? existingTags.filter((t): t is string => typeof t === 'string' && t.trim() !== '')
+    : []
+  const kept = existing.filter((t) => !CHANNEL_TAGS_LOWER.has(t.trim().toLowerCase()))
+  return [...new Set([...pfChannelTags, ...kept])]
+}
+
+function primaryTagFromTags(tags: string[]): string {
+  return tags[0] ?? 'For sale'
 }
 
 type Preserve = {
@@ -252,6 +271,7 @@ type Preserve = {
   salesperson_id: string | null
   developer_id: string | null
   exclusive_with_us: boolean
+  tags: string[] | null
   /** May be null for legacy rows; sync always sends a non-null `created_at` on upsert. */
   created_at: string | null
 }
@@ -296,7 +316,9 @@ function mapListingToRow(
   const emirate = emirateLabel(listing.uaeEmirate as string | undefined)
   const category = asText(listing.category)
   const projectStatus = asText(listing.projectStatus)
-  const tag = listingTagFromPf(offering, projectStatus)
+  const pfChannelTags = listingTagsFromPf(offering, projectStatus)
+  const tags = mergePfSyncTags(preserve?.tags, pfChannelTags)
+  const tag = primaryTagFromTags(tags)
   const verificationStatus = asText(listing.verificationStatus)
   const quality = listing.qualityScore as Record<string, unknown> | undefined
   const qualityValue = parseNumeric(quality?.value)
@@ -363,6 +385,7 @@ function mapListingToRow(
     slug: `${slugify(title)}-${pfId.slice(-6)}`,
     title,
     tag,
+    tags,
     meta: formatMeta(priceAed, locationName ?? emirate, ref),
     detail,
     alt: title,
@@ -496,7 +519,7 @@ Deno.serve(async (req) => {
     const { data: existingRows, error: exErr } = await supabase
       .from('properties')
       .select(
-        'pf_listing_id, home_section, sort_order_home, salesperson_id, developer_id, exclusive_with_us, created_at',
+        'pf_listing_id, home_section, sort_order_home, salesperson_id, developer_id, exclusive_with_us, tags, created_at',
       )
       .eq('listing_source', 'property_finder')
 
@@ -511,6 +534,7 @@ Deno.serve(async (req) => {
         salesperson_id: r.salesperson_id,
         developer_id: r.developer_id,
         exclusive_with_us: r.exclusive_with_us,
+        tags: Array.isArray(r.tags) ? r.tags : null,
         created_at: r.created_at,
       })
     }

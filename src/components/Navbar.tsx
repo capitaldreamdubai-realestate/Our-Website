@@ -4,6 +4,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
 import { useMediaQuery } from '../hooks/useMediaQuery'
+import { NavbarDealsButton } from './NavbarDealsButton'
 import { NavbarLocaleControls } from './NavbarLocaleControls'
 
 type NavFlatItem = { type: 'link'; key: string; to: string; end?: boolean }
@@ -257,7 +258,10 @@ export function Navbar() {
           ) : null}
         </div>
 
-        <div className="z-10 flex shrink-0 items-center gap-2">
+        <div className="z-10 flex shrink-0 items-center gap-2 sm:gap-2.5">
+          <NavbarDealsButton
+            className={clsx(!showInlineDesktop && isXl ? 'inline-flex' : 'hidden xl:inline-flex')}
+          />
           <NavbarLocaleControls
             surface={innerScrolled ? 'paper' : 'hero'}
             className={clsx(!showInlineDesktop && isXl ? 'inline-flex' : 'hidden xl:inline-flex')}
@@ -329,6 +333,13 @@ export function Navbar() {
             </button>
           </div>
           <div className="flex flex-1 flex-col overflow-y-auto px-4 pb-8 pt-2 sm:px-5">
+            <NavLink
+              to="/deals"
+              className="mb-4 flex items-center justify-center rounded-full bg-red-600 px-5 py-3.5 font-compact text-sm font-bold uppercase tracking-[0.16em] text-white shadow-[0_4px_14px_rgba(185,28,28,0.45)] motion-safe:animate-deals-glow"
+              onClick={() => setOpen(false)}
+            >
+              {t('nav.deals')}
+            </NavLink>
             {navStructure.map((item) =>
               item.type === 'link' ? (
                 <NavLink
@@ -420,6 +431,13 @@ export function Navbar() {
               </button>
             </div>
             <div className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 pb-8 pt-4">
+              <NavLink
+                to="/deals"
+                className="mb-3 flex items-center justify-center rounded-full bg-red-600 px-4 py-3 font-compact text-xs font-bold uppercase tracking-[0.16em] text-white motion-safe:animate-deals-glow"
+                onClick={() => setOpen(false)}
+              >
+                {t('nav.deals')}
+              </NavLink>
               {navStructure.map((item) =>
                 item.type === 'link' ? (
                   <NavLink

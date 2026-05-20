@@ -1,4 +1,5 @@
 import { ImagePrimaryOverlay } from './ImagePrimaryOverlay'
+import { PropertyTagBadges } from './PropertyTagBadges'
 import { Link } from 'react-router-dom'
 
 /** Gallery item for property detail hero (images and optional video URLs from admin uploads). */
@@ -11,7 +12,10 @@ export type PropertyGalleryItem = {
 export type Property = {
   id: string
   image: string
+  /** Primary badge label (legacy); use `tags` when multiple apply. */
   tag: string
+  /** All listing tags, e.g. New + Offplan + For sale. */
+  tags?: string[]
   title: string
   meta: string
   detail?: string
@@ -70,9 +74,11 @@ export function PropertyCard({ property }: Props) {
             />
             <ImagePrimaryOverlay />
           </div>
-          <span className="type-badge absolute right-3 top-3 z-[2] rounded-md bg-badge-blue px-2.5 py-1 font-semibold uppercase tracking-widest text-white">
-            {property.tag}
-          </span>
+          <PropertyTagBadges
+            tag={property.tag}
+            tags={property.tags}
+            className="absolute right-3 top-3 z-[2]"
+          />
         </div>
         <div className="flex flex-1 flex-col gap-1.5 px-1 pt-6 sm:pt-7">
           <p className="type-card-title font-compact font-normal uppercase tracking-[0.02em] text-ink">

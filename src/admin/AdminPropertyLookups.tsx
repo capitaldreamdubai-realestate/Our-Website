@@ -26,7 +26,7 @@ const CONFIG: Record<
     title: 'Listing tags',
     helpAria: 'About listing tags',
     blurb:
-      'Labels such as “For sale” and “Offplan”. They appear on property cards and drive filters (e.g. new developments). Add or reorder options here; the listing editor loads this list.',
+      'Labels such as “For sale”, “New”, “Offplan”, and “Deals”. Listings can have multiple tags. Tags drive channel pages (/for-sale, /for-rent, /offplan, /deals) and card badges. Add or reorder options here.',
     singular: 'tag',
     columnLabel: 'Tag',
     pluralLabel: 'listing tags',

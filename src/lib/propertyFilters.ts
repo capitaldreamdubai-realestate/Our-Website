@@ -1,5 +1,6 @@
 import type { Property } from '../components/PropertyCard'
 import { catalogProperties } from '../data/properties'
+import { hasListingTag } from './listingTags'
 
 export type FilterDropdownOption = {
   value: string
@@ -221,8 +222,8 @@ export function filterProperties(
     )
   } else if (f.sort === 'new') {
     out = [...out].sort((a, b) => {
-      const an = a.tag?.toLowerCase() === 'offplan' ? 1 : 0
-      const bn = b.tag?.toLowerCase() === 'offplan' ? 1 : 0
+      const an = hasListingTag(a, 'Offplan') ? 1 : 0
+      const bn = hasListingTag(b, 'Offplan') ? 1 : 0
       return bn - an
     })
   }

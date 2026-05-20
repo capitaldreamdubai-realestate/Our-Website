@@ -4,6 +4,7 @@ import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
 import { formatAreaFromM2 } from '../lib/formatArea'
 import { formatPriceFromAed } from '../lib/formatCurrency'
 import { ImagePrimaryOverlay } from './ImagePrimaryOverlay'
+import { PropertyTagBadges } from './PropertyTagBadges'
 import type { Property } from './PropertyCard'
 
 type Props = {
@@ -38,9 +39,11 @@ export function PropertyListingCard({ property, compact }: Props) {
           />
           <ImagePrimaryOverlay />
         </div>
-        <span className="type-badge absolute right-3 top-3 z-[2] rounded-md bg-badge-blue px-2.5 py-1 font-semibold uppercase tracking-widest text-white">
-          {property.tag}
-        </span>
+        <PropertyTagBadges
+          tag={property.tag}
+          tags={property.tags}
+          className="absolute right-3 top-3 z-[2]"
+        />
       </div>
       <div
         className={`flex flex-1 flex-col gap-2 px-1 ${compact ? 'pt-4 sm:pt-5' : 'pt-6 sm:pt-7'}`}
