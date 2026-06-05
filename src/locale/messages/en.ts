@@ -460,6 +460,8 @@ export const en: Record<string, string> = {
 
   'property.notFound.aria': 'Property not found',
   'property.notFound.title': 'Property not found',
+  'property.loading.aria': 'Loading property',
+  'property.loading.body': 'Loading property details…',
   'property.descriptionEmpty':
     'Full property description is not available at the moment. Please check back soon.',
 

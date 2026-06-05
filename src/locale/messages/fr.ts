@@ -466,6 +466,8 @@ export const fr: Record<string, string> = {
 
   'property.notFound.aria': 'Bien introuvable',
   'property.notFound.title': 'Bien introuvable',
+  'property.loading.aria': 'Chargement du bien',
+  'property.loading.body': 'Chargement des détails du bien…',
   'property.descriptionEmpty':
     'La description complète du bien n’est pas disponible pour le moment. Revenez bientôt.',
 

@@ -241,8 +241,7 @@ export async function loadCmsSnapshot(
   ])
 
   if (propRes.error) {
-    console.error(propRes.error)
-    return null
+    console.error('properties query failed', propRes.error)
   }
   if (artRes.error) {
     console.error(artRes.error)
@@ -275,7 +274,7 @@ export async function loadCmsSnapshot(
     console.error(testimonialRes.error)
   }
 
-  const propRows = propRes.data ?? []
+  const propRows = propRes.error ? [] : (propRes.data ?? [])
 
   const catalogProperties = propRows.map(mapPropertyRow)
 

@@ -17,7 +17,7 @@ import { agentWhatsappUrl } from '../lib/whatsapp'
 
 export function PropertyDetailPage() {
   const { propertyId } = useParams<{ propertyId: string }>()
-  const { property, salesperson } = usePropertyDetail(propertyId)
+  const { property, salesperson, loading } = usePropertyDetail(propertyId)
   const related = useRelatedProperties(property, 3)
   const { areaUnit, intlLocale, t } = useLocalePreferences()
   const listingMeta = property?.meta ?? ''
@@ -33,6 +33,21 @@ export function PropertyDetailPage() {
         })
       : t('property.seo.descFallback'),
   })
+
+  if (loading && !property) {
+    return (
+      <main
+        id="page-property-loading"
+        className="flex w-full flex-col gap-[0.625rem]"
+        aria-busy="true"
+        aria-label={t('property.loading.aria')}
+      >
+        <SectionShell variant="cream">
+          <p className="text-sm text-ink/70">{t('property.loading.body')}</p>
+        </SectionShell>
+      </main>
+    )
+  }
 
   if (!property) {
     return (

@@ -23,6 +23,7 @@ import { getSupabase } from '@/integrations/supabase/client'
 import type { Database } from '@/integrations/supabase/database.types'
 import { propertyRowToUpsert } from '@/lib/cms/mapProperty'
 import { propertiesHasTagsColumn } from '@/lib/cms/propertiesSchema'
+import { propertyIdValidationMessage, slugifyPropertyKey } from '@/lib/propertyId'
 import {
   hasListingTag,
   normalizePropertyTags,
@@ -446,6 +447,25 @@ export function AdminProperties() {
   async function save() {
     if (!sb || !draft) return
     setSaveErr(null)
+    const propertyId = draft.id.trim()
+    const idErr = propertyIdValidationMessage(propertyId)
+    if (idErr) {
+      setSaveErr(idErr)
+      setStep(0)
+      return
+    }
+    if (isNewRecord) {
+      const { data: existing } = await sb
+        .from('properties')
+        .select('id')
+        .eq('id', propertyId)
+        .maybeSingle()
+      if (existing) {
+        setSaveErr('Another listing already uses this property ID. Choose a unique ID.')
+        setStep(0)
+        return
+      }
+    }
     if (!draft.title.trim()) {
       setSaveErr('Title is required.')
       return
@@ -477,8 +497,15 @@ export function AdminProperties() {
       setStep(0)
       return
     }
+    const slugRaw = draft.slug?.trim() ?? ''
+    const slug =
+      slugRaw.length > 0
+        ? slugifyPropertyKey(slugRaw) || null
+        : slugifyPropertyKey(draft.title) || null
     const merged: Row = {
       ...draft,
+      id: propertyId,
+      slug,
       tags,
       tag: syncLegacyTagField(tags),
       gallery: galleryPayload as Row['gallery'],
@@ -959,8 +986,10 @@ export function AdminProperties() {
                     className={fieldClass()}
                   />
                   <p className="mt-1 text-[0.6875rem] text-ink/45">
-                    Used in <code className="rounded bg-ink/5 px-1">/properties/{'{id}'}</code>. Change
-                    only before sharing links.
+                    Used in <code className="rounded bg-ink/5 px-1">/properties/{'{id}'}</code>. Use
+                    letters, numbers, and hyphens only (e.g.{' '}
+                    <code className="rounded bg-ink/5 px-1">knightsbridge-by-leos</code>). Cannot be
+                    changed after saving.
                   </p>
                 </div>
                 <div className="sm:col-span-2">

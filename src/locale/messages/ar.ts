@@ -461,6 +461,8 @@ export const ar: Record<string, string> = {
 
   'property.notFound.aria': 'العقار غير موجود',
   'property.notFound.title': 'العقار غير موجود',
+  'property.loading.aria': 'جارٍ تحميل العقار',
+  'property.loading.body': 'جارٍ تحميل تفاصيل العقار…',
   'property.descriptionEmpty':
     'الوصف الكامل للعقار غير متاح في الوقت الحالي. يرجى المراجعة لاحقًا.',
 
