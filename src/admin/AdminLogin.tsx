@@ -18,7 +18,7 @@ export function AdminLogin() {
     return (
       <div className="admin-portal flex min-h-svh items-center justify-center bg-[var(--admin-surface)] px-4">
         <p className="max-w-sm text-center text-sm text-ink/70">
-          Configure Supabase environment variables to enable admin sign-in.
+          Sign-in is temporarily unavailable. Please contact your site administrator.
         </p>
       </div>
     )
@@ -44,8 +44,8 @@ export function AdminLogin() {
           Admin sign in
         </h1>
         <p className="mt-2 text-xs leading-relaxed text-ink/60 md:text-sm">
-          Use a Supabase Auth user with email & password. Create the user in the Supabase
-          dashboard under Authentication.
+          Sign in with your administrator email and password to manage listings, content, and site
+          settings.
         </p>
         <form onSubmit={(e) => void onSubmit(e)} className="mt-6 space-y-4">
           <div>
