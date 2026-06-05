@@ -12,7 +12,6 @@ import { AdminUaeEmirates } from './admin/AdminUaeEmirates'
 import { AdminDevelopers } from './admin/AdminDevelopers'
 import { AdminSalespeople } from './admin/AdminSalespeople'
 import { AdminUsers } from './admin/AdminUsers'
-import { AdminIntegrations } from './admin/AdminIntegrations'
 import { AdminSiteSettings } from './admin/AdminSiteSettings'
 import { AdminExperiences } from './admin/AdminExperiences'
 import { AdminFormSubmissions } from './admin/AdminFormSubmissions'
@@ -67,7 +66,7 @@ function App() {
         <Route path="users" element={<AdminUsers />} />
         <Route path="marketing" element={<AdminMarketing />} />
         <Route path="campaign-popups" element={<AdminCampaignPopups />} />
-        <Route path="integrations" element={<AdminIntegrations />} />
+        <Route path="integrations" element={<Navigate to="/admin" replace />} />
         <Route path="site" element={<AdminSiteSettings />} />
         <Route path="media" element={<AdminMedia />} />
       </Route>

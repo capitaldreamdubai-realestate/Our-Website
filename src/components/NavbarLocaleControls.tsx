@@ -11,6 +11,9 @@ import { FilterTerracottaDropdown } from './FilterTerracottaDropdown'
 
 type Props = { className?: string; surface?: 'hero' | 'paper' }
 
+/** Set to true when the navbar language/region toggle should be shown again. */
+const NAV_LOCALE_CONTROLS_VISIBLE = false
+
 export function NavbarLocaleControls({ className, surface = 'hero' }: Props) {
   const {
     language,
@@ -156,7 +159,7 @@ export function NavbarLocaleControls({ className, surface = 'hero' }: Props) {
           surface === 'paper'
             ? 'border border-ink/15 bg-ink/[0.06] text-ink hover:border-terracotta hover:bg-terracotta hover:text-cream focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta'
             : 'border border-white/35 bg-white/10 text-cream hover:border-cream/50 hover:bg-terracotta hover:text-cream focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
-          className,
+          NAV_LOCALE_CONTROLS_VISIBLE ? className : '!hidden',
         )}
         aria-expanded={open}
         aria-haspopup="dialog"

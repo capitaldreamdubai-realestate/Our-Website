@@ -6,7 +6,6 @@ import {
   Menu,
   Newspaper,
   HelpCircle,
-  Plug,
   Shield,
   Sparkles,
   Users,
@@ -49,7 +48,6 @@ const nav: NavItem[] = [
   { to: '/admin/users', label: 'User management', icon: Shield },
   { to: '/admin/marketing', label: 'Marketing', icon: Newspaper },
   { to: '/admin/campaign-popups', label: 'Campaign popups', icon: Megaphone },
-  { to: '/admin/integrations', label: 'Integrations', icon: Plug },
 ]
 
 export function AdminShell({ children }: { children: ReactNode }) {
@@ -101,7 +99,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   const visibleNav = useMemo(() => {
     if (currentRole !== 'editor') return nav
-    return nav.filter((item) => item.to !== '/admin/users' && item.to !== '/admin/integrations')
+    return nav.filter((item) => item.to !== '/admin/users')
   }, [currentRole])
 
   useEffect(() => {

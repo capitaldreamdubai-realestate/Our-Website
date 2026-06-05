@@ -1,5 +1,5 @@
 import { Pencil, Plus, Trash2 } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   adminBtnGhost,
   adminBtnPrimary,
@@ -37,9 +37,15 @@ function fieldClass(extra = '') {
 
 const roleOptions: Role[] = ['owner', 'admin', 'editor', 'viewer']
 
+function assignableRoles(currentRole: Role | null): Role[] {
+  if (currentRole === 'owner') return roleOptions
+  return roleOptions.filter((role) => role !== 'owner')
+}
+
 export function AdminUsers() {
   const sb = getSupabase()
   const [rows, setRows] = useState<Row[]>([])
+  const [currentRole, setCurrentRole] = useState<Role | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [draft, setDraft] = useState<Row | null>(null)
@@ -98,13 +104,37 @@ export function AdminUsers() {
     }
   }, [sb])
 
+  const loadCurrentRole = useCallback(async (): Promise<Role | null> => {
+    if (!sb) return null
+    const {
+      data: { user },
+    } = await sb.auth.getUser()
+    if (!user) return null
+
+    const email = (user.email ?? '').trim().toLowerCase()
+    const { data: roleRow } = await sb
+      .from('admin_users')
+      .select('role')
+      .or(`auth_user_id.eq.${user.id},email.eq.${email}`)
+      .limit(1)
+      .maybeSingle()
+
+    const role = (roleRow?.role as Role | undefined) ?? null
+    setCurrentRole(role)
+    return role
+  }, [sb])
+
   const refresh = useCallback(async () => {
     if (!sb) return
     await ensureCurrentUserRecord()
-    const { data, error } = await sb
-      .from('admin_users')
-      .select('*')
-      .order('created_at', { ascending: false })
+    const role = await loadCurrentRole()
+
+    let query = sb.from('admin_users').select('*').order('created_at', { ascending: false })
+    if (role && role !== 'owner') {
+      query = query.neq('role', 'owner')
+    }
+
+    const { data, error } = await query
     if (error) {
       setErr(error.message)
       return
@@ -112,7 +142,7 @@ export function AdminUsers() {
     setErr(null)
     setRows(data ?? [])
     setSelectedIds(new Set())
-  }, [sb, ensureCurrentUserRecord])
+  }, [sb, ensureCurrentUserRecord, loadCurrentRole])
 
   useEffect(() => {
     void refresh()
@@ -128,6 +158,8 @@ export function AdminUsers() {
     rangeEnd: tableRangeEnd,
     showPagination: showTablePagination,
   } = useAdminTablePagination(rows)
+
+  const roleChoices = useMemo(() => assignableRoles(currentRole), [currentRole])
 
   function openCreate() {
     setDraft(emptyRow())
@@ -200,6 +232,10 @@ export function AdminUsers() {
       return
     }
     const isEdit = rows.some((r) => r.id === draft.id)
+    if (currentRole !== 'owner' && draft.role === 'owner') {
+      setSaveErr('Only owners can create or assign the owner role.')
+      return
+    }
     const password = passwordDraft.trim()
     if (!isEdit && password.length < 8) {
       setSaveErr('Password is required and must be at least 8 characters for new users.')
@@ -314,6 +350,10 @@ export function AdminUsers() {
 
   async function runBulkRole() {
     if (!sb || selectedList.length === 0) return
+    if (currentRole !== 'owner' && bulkRole === 'owner') {
+      setErr('Only owners can assign the owner role.')
+      return
+    }
     setBulkBusy(true)
     const { error } = await sb.from('admin_users').update({ role: bulkRole }).in('id', selectedList)
     setBulkBusy(false)
@@ -384,7 +424,7 @@ export function AdminUsers() {
               onChange={(e) => setBulkRole(e.target.value as Role)}
               className="min-h-9 rounded-2xl border border-ink/15 bg-white px-3 py-2 text-xs text-ink md:text-sm"
             >
-              {roleOptions.map((r) => (
+              {roleChoices.map((r) => (
                 <option key={r} value={r}>
                   {r}
                 </option>
@@ -584,7 +624,7 @@ export function AdminUsers() {
                 onChange={(e) => upd('role', e.target.value as Role)}
                 className={fieldClass()}
               >
-                {roleOptions.map((r) => (
+                {roleChoices.map((r) => (
                   <option key={r} value={r}>
                     {r}
                   </option>

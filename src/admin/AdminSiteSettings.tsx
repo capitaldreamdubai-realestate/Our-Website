@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom'
 
-/** Legacy route — settings live under Integrations. */
+/** Legacy route — integrations are temporarily unavailable. */
 export function AdminSiteSettings() {
-  return <Navigate to="/admin/integrations" replace />
+  return <Navigate to="/admin" replace />
 }
