@@ -46,10 +46,37 @@ export function propertyIdValidationMessage(id: string): string | null {
   return null
 }
 
-export function suggestPropertyIdFromTitle(title: string, fallbackId: string): string {
+/** Unique public URL key from listing title (e.g. "Ian Katana" → ian-katana, then ian-katana-2 if taken). */
+export function propertyIdFromTitle(
+  title: string,
+  takenIds: Iterable<string>,
+): string {
+  const taken = new Set(
+    [...takenIds].map((id) => id.trim().toLowerCase()).filter(Boolean),
+  )
+
   const fromTitle = slugifyPropertyKey(title)
-  if (fromTitle && isValidPropertyId(fromTitle)) return fromTitle
-  const fromFallback = slugifyPropertyKey(fallbackId.replace(/^vm-/, ''))
-  if (fromFallback && isValidPropertyId(fromFallback)) return fromFallback
-  return fallbackId.trim()
+  let base =
+    fromTitle && isValidPropertyId(fromTitle)
+      ? fromTitle
+      : fromTitle
+        ? `listing-${fromTitle}`
+        : ''
+
+  if (!base || !isValidPropertyId(base)) {
+    base = `listing-${crypto.randomUUID().replace(/-/g, '').slice(0, 8)}`
+  }
+
+  if (!taken.has(base.toLowerCase())) return base
+
+  for (let n = 2; n < 1000; n++) {
+    const suffix = `-${n}`
+    const trimmed = base.slice(0, Math.max(3, 80 - suffix.length))
+    const candidate = `${trimmed}${suffix}`
+    if (isValidPropertyId(candidate) && !taken.has(candidate.toLowerCase())) {
+      return candidate
+    }
+  }
+
+  return `listing-${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}`
 }

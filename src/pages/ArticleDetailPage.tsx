@@ -10,6 +10,13 @@ const panelBg = '#FAF7F2'
 const panelInk = '#6B3B34'
 const rule = 'rgba(107, 59, 52, 0.18)'
 
+const articleBodyClass =
+  'font-sans text-[length:var(--brand-font-body-lg)] font-normal leading-[1.65] text-[#6B3B34]/95 [&_a]:font-medium [&_a]:text-[#6B3B34] [&_a]:underline [&_a]:decoration-[#6B3B34]/35 [&_a]:underline-offset-[0.2em] [&_h2]:type-card-title [&_h2]:font-display [&_h2]:mt-8 [&_h2]:text-left [&_h2]:font-medium [&_h2]:leading-snug [&_h2]:tracking-[0.02em] [&_h2]:first:mt-0 [&_h3]:mt-6 [&_h3]:font-display [&_h3]:text-lg [&_h3]:font-medium [&_li]:my-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_p+_p]:mt-4 [&_p]:text-pretty [&_ul]:list-disc [&_ul]:pl-5'
+
+function looksLikeHtml(value: string): boolean {
+  return /<[a-z][\s\S]*>/i.test(value.trim())
+}
+
 function TocBlock({ toc }: { toc: ArticleTocEntry[] }) {
   const { t } = useLocalePreferences()
   return (
@@ -137,21 +144,34 @@ export function ArticleDetailPage() {
                 className="scroll-mt-28"
                 aria-labelledby={`${section.id}-heading`}
               >
-                <h2
-                  id={`${section.id}-heading`}
-                  className="type-card-title font-display text-left font-medium leading-snug tracking-[0.02em]"
+                {section.heading.trim() ? (
+                  <h2
+                    id={`${section.id}-heading`}
+                    className="type-card-title font-display text-left font-medium leading-snug tracking-[0.02em]"
+                  >
+                    {section.heading}
+                  </h2>
+                ) : null}
+                <div
+                  className={
+                    section.heading.trim()
+                      ? 'mt-5 w-full min-w-0 space-y-4'
+                      : 'w-full min-w-0 space-y-4'
+                  }
                 >
-                  {section.heading}
-                </h2>
-                <div className="mt-5 w-full min-w-0 space-y-4">
-                  {section.paragraphs.map((p, j) => (
-                    <p
-                      key={j}
-                      className="font-sans text-[length:var(--brand-font-body-lg)] font-normal leading-[1.65] text-[#6B3B34]/95"
-                    >
-                      {p}
-                    </p>
-                  ))}
+                  {section.paragraphs.map((p, j) =>
+                    looksLikeHtml(p) ? (
+                      <div
+                        key={j}
+                        className={articleBodyClass}
+                        dangerouslySetInnerHTML={{ __html: p }}
+                      />
+                    ) : (
+                      <p key={j} className={articleBodyClass}>
+                        {p}
+                      </p>
+                    ),
+                  )}
                   {article.slug === 'dubai-price-index-q1' && section.id === 'what-measured' ? (
                     <p className="font-sans text-[length:var(--brand-font-body-lg)] font-normal leading-[1.65] text-[#6B3B34]/95">
                       Where public series exist, we still read them against title-transfer

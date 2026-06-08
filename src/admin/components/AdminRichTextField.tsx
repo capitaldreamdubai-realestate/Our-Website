@@ -9,12 +9,18 @@ type Props = {
   value: string
   onChange: (html: string) => void
   minHeight?: number
+  placeholder?: string
 }
 
 const btn =
   'rounded-lg border border-ink/10 bg-white p-2 text-ink/70 transition hover:bg-ink/[0.04] hover:text-ink disabled:opacity-35'
 
-export function AdminRichTextField({ value, onChange, minHeight = 280 }: Props) {
+export function AdminRichTextField({
+  value,
+  onChange,
+  minHeight = 280,
+  placeholder = 'Write listing copy…',
+}: Props) {
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -26,7 +32,7 @@ export function AdminRichTextField({ value, onChange, minHeight = 280 }: Props) 
         HTMLAttributes: { class: 'text-[var(--admin-primary)] underline' },
       }),
       Placeholder.configure({
-        placeholder: 'Write listing copy…',
+        placeholder,
       }),
     ],
     content: value || '',

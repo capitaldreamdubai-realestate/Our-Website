@@ -23,7 +23,7 @@ import { getSupabase } from '@/integrations/supabase/client'
 import type { Database } from '@/integrations/supabase/database.types'
 import { propertyRowToUpsert } from '@/lib/cms/mapProperty'
 import { propertiesHasTagsColumn } from '@/lib/cms/propertiesSchema'
-import { propertyIdValidationMessage, slugifyPropertyKey } from '@/lib/propertyId'
+import { propertyIdFromTitle, slugifyPropertyKey } from '@/lib/propertyId'
 import {
   hasListingTag,
   normalizePropertyTags,
@@ -69,7 +69,7 @@ function formatPriceTableCell(r: Row): string {
 function createEmptyRow(): Row {
   const now = new Date().toISOString()
   return {
-    id: `vm-${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`,
+    id: '',
     slug: null,
     title: '',
     tag: 'For sale',
@@ -131,6 +131,10 @@ const steps = ['Basics', 'Specs', 'Media', 'Copy'] as const
 
 function fieldClass(extra = '') {
   return `mt-1 w-full rounded-2xl border border-ink/15 bg-white px-3 py-2 text-xs text-ink md:text-sm ${extra}`
+}
+
+function draftGallerySeedKey(title: string, id: string): string {
+  return slugifyPropertyKey(title) || id.trim() || 'draft'
 }
 
 export function AdminProperties() {
@@ -447,27 +451,26 @@ export function AdminProperties() {
   async function save() {
     if (!sb || !draft) return
     setSaveErr(null)
-    const propertyId = draft.id.trim()
-    const idErr = propertyIdValidationMessage(propertyId)
-    if (idErr) {
-      setSaveErr(idErr)
-      setStep(0)
-      return
-    }
-    if (isNewRecord) {
-      const { data: existing } = await sb
-        .from('properties')
-        .select('id')
-        .eq('id', propertyId)
-        .maybeSingle()
-      if (existing) {
-        setSaveErr('Another listing already uses this property ID. Choose a unique ID.')
-        setStep(0)
-        return
-      }
-    }
     if (!draft.title.trim()) {
       setSaveErr('Title is required.')
+      return
+    }
+    let propertyId = draft.id.trim()
+    if (isNewRecord) {
+      const { data: existingRows, error: idLoadErr } = await sb
+        .from('properties')
+        .select('id')
+      if (idLoadErr) {
+        setSaveErr(idLoadErr.message)
+        return
+      }
+      propertyId = propertyIdFromTitle(
+        draft.title,
+        (existingRows ?? []).map((r) => r.id),
+      )
+    } else if (!propertyId) {
+      setSaveErr('This listing is missing a URL key. Contact support.')
+      setStep(0)
       return
     }
     if (!draft.image_url.trim()) {
@@ -489,7 +492,9 @@ export function AdminProperties() {
       }
     }
     if (galleryPayload.length === 0) {
-      galleryPayload = gallerySixForPropertyId(draft.id) as GalleryImageItem[]
+      galleryPayload = gallerySixForPropertyId(
+        draftGallerySeedKey(draft.title, propertyId),
+      ) as GalleryImageItem[]
     }
     const tags = normalizePropertyTags(draft.tags, draft.tag)
     if (tags.length === 0) {
@@ -497,15 +502,10 @@ export function AdminProperties() {
       setStep(0)
       return
     }
-    const slugRaw = draft.slug?.trim() ?? ''
-    const slug =
-      slugRaw.length > 0
-        ? slugifyPropertyKey(slugRaw) || null
-        : slugifyPropertyKey(draft.title) || null
     const merged: Row = {
       ...draft,
       id: propertyId,
-      slug,
+      slug: null,
       tags,
       tag: syncLegacyTagField(tags),
       gallery: galleryPayload as Row['gallery'],
@@ -978,35 +978,27 @@ export function AdminProperties() {
             {step === 0 ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="sm:col-span-2">
-                  <label className="text-xs font-medium text-ink/70">ID (URL key)</label>
-                  <input
-                    value={draft.id}
-                    onChange={(e) => updateDraft('id', e.target.value)}
-                    disabled={!isNewRecord}
-                    className={fieldClass()}
-                  />
-                  <p className="mt-1 text-[0.6875rem] text-ink/45">
-                    Used in <code className="rounded bg-ink/5 px-1">/properties/{'{id}'}</code>. Use
-                    letters, numbers, and hyphens only (e.g.{' '}
-                    <code className="rounded bg-ink/5 px-1">knightsbridge-by-leos</code>). Cannot be
-                    changed after saving.
-                  </p>
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="text-xs font-medium text-ink/70">Slug (optional)</label>
-                  <input
-                    value={draft.slug ?? ''}
-                    onChange={(e) => updateDraft('slug', e.target.value || null)}
-                    className={fieldClass()}
-                  />
-                </div>
-                <div className="sm:col-span-2">
                   <label className="text-xs font-medium text-ink/70">Title</label>
                   <input
                     value={draft.title}
                     onChange={(e) => updateDraft('title', e.target.value)}
                     className={fieldClass()}
                   />
+                  {isNewRecord ? (
+                    <p className="mt-1 text-[0.6875rem] leading-relaxed text-ink/45">
+                      Public URL is created from the title on save, e.g.{' '}
+                      <code className="rounded bg-ink/5 px-1">
+                        /properties/{slugifyPropertyKey(draft.title) || 'your-listing-title'}
+                      </code>
+                      . If that URL is already taken, a number is added automatically.
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-[0.6875rem] leading-relaxed text-ink/45">
+                      Public URL:{' '}
+                      <code className="rounded bg-ink/5 px-1">/properties/{draft.id}</code> (fixed after
+                      publishing)
+                    </p>
+                  )}
                 </div>
                 <div className="sm:col-span-2">
                   <p className="text-xs font-medium text-ink/70">Listing tags</p>
@@ -1360,7 +1352,9 @@ export function AdminProperties() {
                 <button
                   type="button"
                   onClick={() => {
-                    const six = gallerySixForPropertyId(draft.id)
+                    const six = gallerySixForPropertyId(
+                      draftGallerySeedKey(draft.title, draft.id),
+                    )
                     const urls = six.map((g) => g.src)
                     const next = [...urls, '', '', '', '', '', ''].slice(0, 6)
                     setGallerySlots(next)

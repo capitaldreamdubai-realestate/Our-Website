@@ -14,7 +14,13 @@ import { AdminModal } from './components/AdminModal'
 import { EntityDetailSheet } from './components/EntityDetailSheet'
 import { AdminPageHeading } from './components/AdminPageHeading'
 import { ImageUploadField } from './components/ImageUploadField'
+import { AdminRichTextField } from './components/AdminRichTextField'
 import { getSupabase } from '@/integrations/supabase/client'
+import {
+  bodyHtmlToSections,
+  defaultArticleToc,
+  sectionsToBodyHtml,
+} from '@/lib/cms/articleBody'
 import {
   articleDetailToUpsert,
   mapArticleDetailRow,
@@ -34,14 +40,8 @@ function emptyArticle(): ArticleDetailFromDb {
     published: true,
     dateLong: '',
     lastUpdated: '',
-    toc: [{ id: 'overview', label: 'Overview' }],
-    sections: [
-      {
-        id: 'overview',
-        heading: 'Overview',
-        paragraphs: [''],
-      },
-    ],
+    toc: [{ id: 'body', label: 'Article' }],
+    sections: [{ id: 'body', heading: '', paragraphs: [''] }],
   }
 }
 
@@ -49,7 +49,7 @@ function fieldClass() {
   return 'mt-1 w-full rounded-2xl border border-ink/15 bg-white px-3 py-2 text-xs text-ink md:text-sm'
 }
 
-const steps = ['Basics', 'JSON structure'] as const
+const steps = ['Basics', 'Body'] as const
 
 export function AdminArticles() {
   const { refetch: refetchCms } = useCms()
@@ -58,8 +58,7 @@ export function AdminArticles() {
   const [err, setErr] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [draft, setDraft] = useState<ArticleDetailFromDb | null>(null)
-  const [tocText, setTocText] = useState('[]')
-  const [sectionsText, setSectionsText] = useState('[]')
+  const [bodyHtml, setBodyHtml] = useState('')
   const [step, setStep] = useState(0)
   const [saveErr, setSaveErr] = useState<string | null>(null)
   const [deleteSlug, setDeleteSlug] = useState<string | null>(null)
@@ -100,8 +99,7 @@ export function AdminArticles() {
   function openCreate() {
     const a = emptyArticle()
     setDraft(a)
-    setTocText(JSON.stringify(a.toc, null, 2))
-    setSectionsText(JSON.stringify(a.sections, null, 2))
+    setBodyHtml(sectionsToBodyHtml(a.sections))
     setSlugLocked(false)
     setSortOrder(rows.length)
     setStep(0)
@@ -111,8 +109,7 @@ export function AdminArticles() {
 
   function openEdit(a: ArticleDetailFromDb) {
     setDraft({ ...a })
-    setTocText(JSON.stringify(a.toc, null, 2))
-    setSectionsText(JSON.stringify(a.sections, null, 2))
+    setBodyHtml(sectionsToBodyHtml(a.sections))
     setSlugLocked(true)
     const ix = rows.findIndex((r) => r.slug === a.slug)
     setSortOrder(ix >= 0 ? ix : rows.length)
@@ -137,25 +134,15 @@ export function AdminArticles() {
       setSaveErr('Cover image is required.')
       return
     }
-    let toc: unknown
-    let sections: unknown
-    try {
-      toc = JSON.parse(tocText || '[]')
-      sections = JSON.parse(sectionsText || '[]')
-    } catch {
-      setSaveErr('TOC or sections JSON is invalid.')
-      setStep(1)
-      return
-    }
-    if (!Array.isArray(toc) || !Array.isArray(sections)) {
-      setSaveErr('TOC and sections must be JSON arrays.')
+    if (!bodyHtml.trim()) {
+      setSaveErr('Article body is required.')
       setStep(1)
       return
     }
     const merged: ArticleDetailFromDb = {
       ...draft,
-      toc: toc as ArticleDetailFromDb['toc'],
-      sections: sections as ArticleDetailFromDb['sections'],
+      toc: defaultArticleToc(draft.title),
+      sections: bodyHtmlToSections(bodyHtml),
     }
     const payload = articleDetailToUpsert(merged, sortOrder)
     const { error } = await sb.from('articles').upsert(payload, { onConflict: 'slug' })
@@ -244,8 +231,8 @@ export function AdminArticles() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <AdminPageHeading title="Articles" helpAriaLabel="About articles">
           <p>
-            Long-form editorial with table of contents and sections. Advanced structure is edited as JSON (validated on
-            save).
+            Long-form editorial for the public articles page. Add cover details on Basics, then write the article body
+            in the rich-text editor.
           </p>
         </AdminPageHeading>
         <button
@@ -528,27 +515,17 @@ export function AdminArticles() {
             ) : null}
 
             {step === 1 ? (
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-medium text-ink/70">TOC JSON</label>
-                  <textarea
-                    value={tocText}
-                    onChange={(e) => setTocText(e.target.value)}
-                    rows={8}
-                    className={`${fieldClass()} font-mono text-[0.6875rem] md:text-xs`}
-                    spellCheck={false}
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-ink/70">Sections JSON</label>
-                  <textarea
-                    value={sectionsText}
-                    onChange={(e) => setSectionsText(e.target.value)}
-                    rows={14}
-                    className={`${fieldClass()} font-mono text-[0.6875rem] md:text-xs`}
-                    spellCheck={false}
-                  />
-                </div>
+              <div>
+                <label className="text-xs font-medium text-ink/70">Article body</label>
+                <p className="mt-0.5 text-[0.6875rem] leading-relaxed text-ink/50">
+                  Use headings, lists, and links for the full article shown on the public page.
+                </p>
+                <AdminRichTextField
+                  value={bodyHtml}
+                  onChange={setBodyHtml}
+                  minHeight={360}
+                  placeholder="Write the article body…"
+                />
               </div>
             ) : null}
           </div>
