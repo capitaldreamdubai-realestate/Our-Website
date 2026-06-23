@@ -21,9 +21,9 @@ export function SiteLayout() {
     <>
       <ScrollToTopOnNavigate />
       <Noise patternAlpha={12} patternRefreshInterval={3} />
-      <div className="relative z-10">
+      <div className="relative z-10 flex min-h-svh flex-col">
         <Navbar />
-        <PageFrame>
+        <PageFrame className="min-h-0 flex-1">
           <Outlet />
         </PageFrame>
         <Footer />

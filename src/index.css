@@ -40,7 +40,7 @@
     @apply m-0 min-h-svh overflow-x-clip font-sans antialiased bg-terracotta text-ink;
   }
   #root {
-    @apply min-h-svh overflow-x-clip;
+    @apply flex min-h-svh flex-col overflow-x-clip;
   }
   * {
     @apply border-border outline-ring/50;
