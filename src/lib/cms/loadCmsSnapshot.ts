@@ -13,7 +13,9 @@ import {
 import { mapArticleDetailRow, mapArticleListRow } from './mapArticle'
 import { buildFaqSections, type FaqSection } from './mapFaq'
 import { mapExperienceRow } from './mapExperience'
+import { mapOffplanProjectRow, type PublicOffplanProject } from './mapOffplanProject'
 import { mapPropertyRow } from './mapProperty'
+import type { OffplanLaunchStatus } from '@/lib/offplanLaunchStatus'
 
 export type HeroNeighbourhoodItem = { id: string; label: string; to: string }
 
@@ -52,6 +54,7 @@ export type PublicDeveloper = {
 
 export type DeveloperWithListings = PublicDeveloper & {
   listingsCount: number
+  projectsCount: number
 }
 
 /** Published agent row exposed to the public site (property detail, forms). */
@@ -100,6 +103,10 @@ export type CmsSnapshot = {
   propertyDevelopersList: PublicDeveloper[]
   developersBySlug: Record<string, PublicDeveloper>
   developersWithListings: DeveloperWithListings[]
+  offplanProjects: PublicOffplanProject[]
+  offplanProjectsBySlug: Record<string, PublicOffplanProject>
+  offplanProjectsByStatus: Record<OffplanLaunchStatus, PublicOffplanProject[]>
+  offplanProjectsByDeveloperId: Record<string, PublicOffplanProject[]>
 }
 
 function mapPublicDeveloper(
@@ -119,19 +126,63 @@ function mapPublicDeveloper(
 function buildDevelopersWithListings(
   developers: PublicDeveloper[],
   catalog: Property[],
+  projects: PublicOffplanProject[],
 ): DeveloperWithListings[] {
-  const counts = new Map<string, number>()
+  const listingCounts = new Map<string, number>()
+  const projectCounts = new Map<string, number>()
   for (const p of catalog) {
     if (!p.developerId) continue
-    counts.set(p.developerId, (counts.get(p.developerId) ?? 0) + 1)
+    listingCounts.set(p.developerId, (listingCounts.get(p.developerId) ?? 0) + 1)
+  }
+  for (const project of projects) {
+    projectCounts.set(
+      project.developerId,
+      (projectCounts.get(project.developerId) ?? 0) + 1,
+    )
   }
   return developers
-    .filter((d) => counts.has(d.id))
+    .filter((d) => listingCounts.has(d.id) || projectCounts.has(d.id))
     .map((d) => ({
       ...d,
-      listingsCount: counts.get(d.id) ?? 0,
+      listingsCount: listingCounts.get(d.id) ?? 0,
+      projectsCount: projectCounts.get(d.id) ?? 0,
     }))
     .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
+}
+
+function buildOffplanProjectsByStatus(
+  projects: PublicOffplanProject[],
+): Record<OffplanLaunchStatus, PublicOffplanProject[]> {
+  const empty: Record<OffplanLaunchStatus, PublicOffplanProject[]> = {
+    new: [],
+    existing: [],
+    upcoming: [],
+  }
+  for (const project of projects) {
+    empty[project.launchStatus].push(project)
+  }
+  for (const status of Object.keys(empty) as OffplanLaunchStatus[]) {
+    empty[status].sort(
+      (a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name),
+    )
+  }
+  return empty
+}
+
+function buildOffplanProjectsByDeveloperId(
+  projects: PublicOffplanProject[],
+): Record<string, PublicOffplanProject[]> {
+  const map: Record<string, PublicOffplanProject[]> = {}
+  for (const project of projects) {
+    if (!map[project.developerId]) map[project.developerId] = []
+    map[project.developerId].push(project)
+  }
+  for (const id of Object.keys(map)) {
+    map[id].sort(
+      (a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name),
+    )
+  }
+  return map
 }
 
 async function loadSettings(
@@ -194,7 +245,7 @@ export function staticSalespeopleListForSite(): PublicSalesperson[] {
 export async function loadCmsSnapshot(
   supabase: SupabaseClient<Database>,
 ): Promise<CmsSnapshot | null> {
-  const [propRes, artRes, heroRes, emiratesRes, devRes, mktRes, spRes, expRes, faqTopRes, faqEntRes, testimonialRes] =
+  const [propRes, artRes, heroRes, emiratesRes, devRes, projectRes, mktRes, spRes, expRes, faqTopRes, faqEntRes, testimonialRes] =
     await Promise.all([
     supabase
       .from('properties')
@@ -214,6 +265,12 @@ export async function loadCmsSnapshot(
       .order('sort_order', { ascending: true }),
     supabase
       .from('property_developers')
+      .select('*')
+      .eq('published', true)
+      .order('sort_order', { ascending: true })
+      .order('name', { ascending: true }),
+    supabase
+      .from('offplan_projects')
       .select('*')
       .eq('published', true)
       .order('sort_order', { ascending: true })
@@ -255,6 +312,9 @@ export async function loadCmsSnapshot(
   if (devRes.error && devRes.error.code !== 'PGRST205') {
     console.error(devRes.error)
   }
+  if (projectRes.error && projectRes.error.code !== 'PGRST205') {
+    console.error(projectRes.error)
+  }
   if (mktRes.error) {
     console.error(mktRes.error)
   }
@@ -284,9 +344,20 @@ export async function loadCmsSnapshot(
   for (const d of propertyDevelopersList) {
     developersBySlug[d.slug] = d
   }
+
+  const projectRows = projectRes.error ? [] : (projectRes.data ?? [])
+  const offplanProjects = projectRows.map(mapOffplanProjectRow)
+  const offplanProjectsBySlug: Record<string, PublicOffplanProject> = {}
+  for (const project of offplanProjects) {
+    offplanProjectsBySlug[project.slug] = project
+  }
+  const offplanProjectsByStatus = buildOffplanProjectsByStatus(offplanProjects)
+  const offplanProjectsByDeveloperId = buildOffplanProjectsByDeveloperId(offplanProjects)
+
   const developersWithListings = buildDevelopersWithListings(
     propertyDevelopersList,
     catalogProperties,
+    offplanProjects,
   )
   const featuredProperties = propRows
     .filter((r) => r.home_section === 'featured')
@@ -373,5 +444,9 @@ export async function loadCmsSnapshot(
     propertyDevelopersList,
     developersBySlug,
     developersWithListings,
+    offplanProjects,
+    offplanProjectsBySlug,
+    offplanProjectsByStatus,
+    offplanProjectsByDeveloperId,
   }
 }

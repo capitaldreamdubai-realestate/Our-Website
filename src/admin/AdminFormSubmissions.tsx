@@ -30,12 +30,15 @@ function rowsToCsv(rows: Row[]): string {
     'source',
     'property_id',
     'property_title',
+    'project_id',
+    'project_name',
     'name',
     'email',
     'phone',
     'message',
     'salesperson_id',
     'salesperson_name',
+    'intent',
   ]
   const lines = [headers.join(',')]
   for (const r of rows) {
@@ -47,12 +50,15 @@ function rowsToCsv(rows: Row[]): string {
       r.source,
       r.property_id ?? '',
       r.property_title ?? '',
+      r.project_id ?? '',
+      r.project_name ?? '',
       r.name,
       r.email,
       r.phone ?? '',
       msg,
       m.salesperson_id ?? '',
       m.salesperson_name ?? '',
+      m.intent ?? '',
     ]
     lines.push(vals.map((v) => csvEscape(String(v))).join(','))
   }
@@ -226,8 +232,9 @@ export function AdminFormSubmissions() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <AdminPageHeading title="Form submissions" helpAriaLabel="About form submissions">
           <p>
-            Property enquiry leads. Click a row to open full contact details and message. Export respects the salesperson
-            filter, or the current selection when any rows are checked.
+            Property and off-plan project enquiry leads. Click a row to open full contact details
+            and message. Export respects the salesperson filter, or the current selection when any
+            rows are checked.
           </p>
         </AdminPageHeading>
         <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:items-end">
@@ -325,7 +332,7 @@ export function AdminFormSubmissions() {
                   <td className="px-3 py-2.5 md:px-4">{r.source}</td>
                   <td className="max-w-[200px] px-3 py-2.5 md:px-4">
                     <span className="line-clamp-2 font-medium text-ink">
-                      {r.property_title ?? r.property_id ?? '—'}
+                      {r.project_name ?? r.property_title ?? r.project_id ?? r.property_id ?? '—'}
                     </span>
                   </td>
                   <td className="max-w-[160px] px-3 py-2.5 text-ink/75 md:px-4">

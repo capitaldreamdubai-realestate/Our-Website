@@ -128,7 +128,7 @@ export const en: Record<string, string> = {
     'Find apartments, villas, and luxury homes for rent in Dubai and across the UAE with expert support from Capital Dreams.',
   'seo.newDevelopments.title': 'Off-Plan Properties in Dubai | Capital Dreams UAE',
   'seo.newDevelopments.description':
-    'Browse off-plan listings in Dubai and across the UAE with launch updates, pricing guidance, and expert advice from Capital Dreams.',
+    'Browse off-plan developer projects and launches in Dubai and across the UAE — request details or download brochures with Capital Dreams.',
   'seo.deals.title': 'Property Deals in Dubai | Capital Dreams UAE',
   'seo.deals.description':
     'Explore limited-time property deals and standout opportunities in Dubai and across the UAE with Capital Dreams.',
@@ -321,19 +321,60 @@ export const en: Record<string, string> = {
   'listing.emptyFiltered.deals':
     'No deals match these filters. Try clearing filters or broadening your search.',
 
+  'offplan.aria.main': 'Off-plan projects',
+  'offplan.heroAria': 'Off-plan overview',
+  'offplan.eyebrow': 'Off-plan',
+  'offplan.h1': 'Developer projects & launches',
+  'offplan.intro':
+    'Explore off-plan developer projects grouped by launch stage — new, existing, and upcoming. Request details or download a brochure for any project.',
+  'offplan.loading': 'Loading off-plan projects…',
+  'offplan.empty':
+    'No off-plan projects are available at the moment. Please check back soon.',
+  'offplan.emptyCms':
+    'Off-plan projects will appear here once published in the admin.',
+  'offplan.viewProject': 'View project',
+  'offplan.cardAria': 'View {name} project',
+  'offplan.section.new': 'New Launches',
+  'offplan.section.existing': 'Existing Launches',
+  'offplan.section.upcoming': 'Upcoming Launches',
+  'offplan.detail.seoTitle': '{name} Off-Plan Project | Capital Dreams UAE',
+  'offplan.detail.seoTitleMissing': 'Off-Plan Project | Capital Dreams UAE',
+  'offplan.detail.seoDesc': 'Explore {name} — an off-plan developer project with Capital Dreams UAE.',
+  'offplan.detail.seoDescMissing': 'Off-plan developer project at Capital Dreams UAE.',
+  'offplan.detail.back': 'All off-plan projects',
+
+  'projectLead.headlineBrochure': 'Download the {name} brochure',
+  'projectLead.headlineWithAgent': 'Speak with {name} about this project',
+  'projectLead.headlineGeneric': 'Enquire about {name}',
+  'projectLead.sendInquiry': 'Send inquiry',
+  'projectLead.downloadBrochure': 'Download brochure',
+  'projectLead.download': 'Submit & download',
+  'projectLead.send': 'Send inquiry',
+  'projectLead.thankYou':
+    'Thank you — your enquiry was sent. A member of our team will be in touch shortly.',
+  'projectLead.thankYouBrochure': 'Thank you — your brochure download will begin shortly.',
+  'projectLead.brochureDialogTitle': 'Download project brochure',
+  'projectLead.brochureDialogDesc':
+    'Share your details below. Once submitted, the brochure will be available to download.',
+  'projectLead.closeDialog': 'Close',
+  'projectLead.brochureError': 'Unable to download brochure. Please try again.',
+  'projectLead.preparing': 'Preparing download…',
+
   'developers.aria.main': 'Developers',
-  'developers.aria.grid': 'Developers with listings',
+  'developers.aria.grid': 'Developers with listings and projects',
   'developers.eyebrow': 'Developers',
   'developers.h1': 'UAE property developers',
   'developers.intro':
-    'Browse developer brands we currently represent. Only developers with at least one published listing appear here.',
+    'Browse developer brands we represent — with published property listings and/or off-plan projects.',
   'developers.loading': 'Loading developers…',
   'developers.empty':
     'No developers are listed at the moment. Please check back soon.',
   'developers.showMore': 'Show more',
   'developers.carouselAria': 'Developers carousel',
   'developers.listingsCount': '{count} listings',
-  'developers.cardAria': 'View {name} listings',
+  'developers.projectsCount': '{count} projects',
+  'developers.countsBoth': '{listings} listings · {projects} projects',
+  'developers.cardAria': 'View {name}',
 
   'developerDetail.seo.title': '{name} Properties | Capital Dreams Dubai',
   'developerDetail.seo.titleMissing': 'Developer | Capital Dreams Dubai',
@@ -352,6 +393,9 @@ export const en: Record<string, string> = {
     'Explore published {name} properties in our collection. Use filters to narrow by price, location, and layout.',
   'developerDetail.featured': 'Featured {name} listings',
   'developerDetail.grid': '{name} properties',
+  'developerDetail.projectsTitle': '{name} off-plan projects',
+  'developerDetail.projectsAria': 'Off-plan projects by {name}',
+  'developerDetail.listingsAria': 'Property listings by {name}',
   'developerDetail.emptyFiltered':
     'No {name} listings match these filters. Try clearing filters or broadening your search.',
   'developerDetail.emptyChannel':

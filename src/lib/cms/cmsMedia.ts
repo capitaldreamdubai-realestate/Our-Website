@@ -3,10 +3,11 @@ import type { Database } from '@/integrations/supabase/database.types'
 
 export const CMS_MEDIA_BUCKET = 'cms-media'
 
-export type CmsMediaKind = 'image' | 'video'
+export type CmsMediaKind = 'image' | 'video' | 'document'
 
 export function inferMediaKindFromMime(mime: string): CmsMediaKind {
   if (mime.startsWith('video/')) return 'video'
+  if (mime === 'application/pdf' || mime.startsWith('application/')) return 'document'
   return 'image'
 }
 

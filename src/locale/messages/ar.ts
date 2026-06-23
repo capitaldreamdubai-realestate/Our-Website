@@ -320,23 +320,60 @@ export const ar: Record<string, string> = {
   'listing.emptyFiltered.deals':
     'لا عروض تطابق هذه الفلاتر. جرّب مسح الفلاتر أو توسيع البحث.',
 
+  'offplan.aria.main': 'مشاريع على المخطط',
+  'offplan.heroAria': 'نظرة عامة على المخطط',
+  'offplan.eyebrow': 'على المخطط',
+  'offplan.h1': 'مشاريع وإطلاقات المطورين',
+  'offplan.intro':
+    'استكشف مشاريع المطورين على المخطط مصنفة حسب مرحلة الإطلاق — جديدة، قائمة، وقادمة. اطلب التفاصيل أو حمّل الكتيب لأي مشروع.',
+  'offplan.loading': 'جاري تحميل المشاريع…',
+  'offplan.empty': 'لا مشاريع على المخطط متاحة حالياً. يرجى المراجعة لاحقاً.',
+  'offplan.emptyCms': 'ستظهر المشاريع هنا بعد نشرها في لوحة الإدارة.',
+  'offplan.viewProject': 'عرض المشروع',
+  'offplan.cardAria': 'عرض مشروع {name}',
+  'offplan.section.new': 'إطلاقات جديدة',
+  'offplan.section.existing': 'إطلاقات قائمة',
+  'offplan.section.upcoming': 'إطلاقات قادمة',
+  'offplan.detail.seoTitle': 'مشروع {name} على المخطط | كابيتال دريمز',
+  'offplan.detail.seoTitleMissing': 'مشروع على المخطط | كابيتال دريمز',
+  'offplan.detail.seoDesc': 'استكشف {name} — مشروع مطور على المخطط مع كابيتال دريمز.',
+  'offplan.detail.seoDescMissing': 'مشروع مطور على المخطط لدى كابيتال دريمز.',
+  'offplan.detail.back': 'جميع مشاريع المخطط',
+
+  'projectLead.headlineBrochure': 'تحميل كتيب {name}',
+  'projectLead.headlineWithAgent': 'تحدث مع {name} عن هذا المشروع',
+  'projectLead.headlineGeneric': 'استفسر عن {name}',
+  'projectLead.sendInquiry': 'إرسال استفسار',
+  'projectLead.downloadBrochure': 'تحميل الكتيب',
+  'projectLead.download': 'إرسال وتحميل',
+  'projectLead.send': 'إرسال استفسار',
+  'projectLead.thankYou': 'شكراً — تم إرسال استفسارك. سيتواصل معك فريقنا قريباً.',
+  'projectLead.thankYouBrochure': 'شكراً — سيبدأ تحميل الكتيب قريباً.',
+  'projectLead.brochureDialogTitle': 'تحميل كتيب المشروع',
+  'projectLead.brochureDialogDesc': 'شارك بياناتك أدناه. بعد الإرسال، سيكون الكتيب متاحاً للتحميل.',
+  'projectLead.closeDialog': 'إغلاق',
+  'projectLead.brochureError': 'تعذر تحميل الكتيب. يرجى المحاولة مرة أخرى.',
+  'projectLead.preparing': 'جاري التحضير…',
+
   'seo.developers.title': 'مطورو العقارات في الإمارات | كابيتال دريمز دبي',
   'seo.developers.description':
     'استكشف مطوري العقارات في الإمارات مع عقارات منشورة لدى كابيتال دريمز — إعمار، داماك، سوبها والمزيد.',
 
   'developers.aria.main': 'المطورون',
-  'developers.aria.grid': 'مطورون لديهم عقارات',
+  'developers.aria.grid': 'مطورون لديهم عقارات ومشاريع',
   'developers.eyebrow': 'المطورون',
   'developers.h1': 'مطورو العقارات في الإمارات',
   'developers.intro':
-    'تصفح علامات المطورين التي نمثلها حالياً. يظهر هنا فقط المطورون الذين لديهم عقار منشور واحد على الأقل.',
+    'تصفح علامات المطورين التي نمثلها — مع عقارات منشورة و/أو مشاريع على المخطط.',
   'developers.loading': 'جاري تحميل المطورين…',
   'developers.empty':
     'لا يوجد مطورون معروضون في الوقت الحالي. يرجى المراجعة لاحقًا.',
   'developers.showMore': 'عرض المزيد',
   'developers.carouselAria': 'عرض المطورين',
   'developers.listingsCount': '{count} عقار',
-  'developers.cardAria': 'عرض عقارات {name}',
+  'developers.projectsCount': '{count} مشروع',
+  'developers.countsBoth': '{listings} عقار · {projects} مشروع',
+  'developers.cardAria': 'عرض {name}',
 
   'developerDetail.seo.title': 'عقارات {name} | كابيتال دريمز دبي',
   'developerDetail.seo.titleMissing': 'المطور | كابيتال دريمز دبي',
@@ -353,6 +390,9 @@ export const ar: Record<string, string> = {
     'استكشف عقارات {name} المنشورة في مجموعتنا. استخدم الفلاتر حسب السعر والموقع والتخطيط.',
   'developerDetail.featured': 'عقارات {name} المميزة',
   'developerDetail.grid': 'عقارات {name}',
+  'developerDetail.projectsTitle': 'مشاريع {name} على المخطط',
+  'developerDetail.projectsAria': 'مشاريع على المخطط من {name}',
+  'developerDetail.listingsAria': 'عقارات من {name}',
   'developerDetail.emptyFiltered':
     'لا عقارات لـ {name} تطابق هذه الفلاتر. جرّب مسح الفلاتر أو توسيع البحث.',
   'developerDetail.emptyChannel':

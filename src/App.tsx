@@ -9,6 +9,7 @@ import { AdminProperties } from './admin/AdminProperties'
 import { AdminPropertiesLayout } from './admin/AdminPropertiesLayout'
 import { AdminPropertyListingTags, AdminPropertyTypes } from './admin/AdminPropertyLookups'
 import { AdminUaeEmirates } from './admin/AdminUaeEmirates'
+import { AdminOffplanProjects } from './admin/AdminOffplanProjects'
 import { AdminDevelopers } from './admin/AdminDevelopers'
 import { AdminSalespeople } from './admin/AdminSalespeople'
 import { AdminUsers } from './admin/AdminUsers'
@@ -41,6 +42,7 @@ import { FaqPage } from './pages/FaqPage'
 import { TestimonialsPage } from './pages/TestimonialsPage'
 import { DevelopersPage } from './pages/DevelopersPage'
 import { DeveloperDetailPage } from './pages/DeveloperDetailPage'
+import { OffplanProjectDetailPage } from './pages/OffplanProjectDetailPage'
 
 function App() {
   return (
@@ -56,6 +58,7 @@ function App() {
           <Route path="property-types" element={<AdminPropertyTypes />} />
           <Route path="emirates" element={<AdminUaeEmirates />} />
           <Route path="developers" element={<AdminDevelopers />} />
+          <Route path="offplan-projects" element={<AdminOffplanProjects />} />
         </Route>
         <Route path="articles" element={<AdminArticles />} />
         <Route path="faqs" element={<AdminFaqs />} />
@@ -78,6 +81,7 @@ function App() {
         />
         <Route path="all-properties" element={<AllPropertiesPage />} />
         <Route path="offplan" element={<NewDevelopmentsPage />} />
+        <Route path="offplan/:slug" element={<OffplanProjectDetailPage />} />
         <Route
           path="new-developments"
           element={<Navigate to="/offplan" replace />}

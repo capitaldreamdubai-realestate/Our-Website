@@ -21,7 +21,6 @@ const PROPERTY_LISTING_PATHS = [
   '/all-properties',
   '/for-sale',
   '/for-rent',
-  '/offplan',
   '/deals',
 ] as const
 

@@ -10,6 +10,16 @@ export function DeveloperCard({ developer }: Props) {
   const { t } = useLocalePreferences()
   const logo = developer.logoUrl?.trim()
 
+  const countLabel =
+    developer.listingsCount > 0 && developer.projectsCount > 0
+      ? t('developers.countsBoth', {
+          listings: String(developer.listingsCount),
+          projects: String(developer.projectsCount),
+        })
+      : developer.projectsCount > 0
+        ? t('developers.projectsCount', { count: String(developer.projectsCount) })
+        : t('developers.listingsCount', { count: String(developer.listingsCount) })
+
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-[1.125rem] border border-ink/8 bg-white shadow-sm transition hover:border-terracotta/25 hover:shadow-md">
       <Link
@@ -35,9 +45,7 @@ export function DeveloperCard({ developer }: Props) {
         <p className="type-card-title font-compact font-normal uppercase tracking-[0.02em] text-ink">
           {developer.name}
         </p>
-        <p className="mt-1 text-sm text-ink/60">
-          {t('developers.listingsCount', { count: String(developer.listingsCount) })}
-        </p>
+        <p className="mt-1 text-sm text-ink/60">{countLabel}</p>
       </div>
     </article>
   )

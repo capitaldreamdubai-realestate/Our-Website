@@ -36,6 +36,8 @@ import {
   type PublicTestimonial,
   type SiteSettings,
 } from '@/lib/cms/loadCmsSnapshot'
+import type { PublicOffplanProject } from '@/lib/cms/mapOffplanProject'
+import type { OffplanLaunchStatus } from '@/lib/offplanLaunchStatus'
 import { DEFAULT_FLOATING_SOCIAL_LINKS } from '@/lib/socialFloatingLinks'
 
 type CmsMode = 'static' | 'live'
@@ -63,6 +65,10 @@ type CmsContextValue = {
   propertyDevelopersList: PublicDeveloper[]
   developersBySlug: Record<string, PublicDeveloper>
   developersWithListings: DeveloperWithListings[]
+  offplanProjects: PublicOffplanProject[]
+  offplanProjectsBySlug: Record<string, PublicOffplanProject>
+  offplanProjectsByStatus: Record<OffplanLaunchStatus, PublicOffplanProject[]>
+  offplanProjectsByDeveloperId: Record<string, PublicOffplanProject[]>
   refetch: () => Promise<void>
 }
 
@@ -133,6 +139,16 @@ export function CmsProvider({ children }: { children: ReactNode }) {
   const [developersWithListings, setDevelopersWithListings] = useState<
     DeveloperWithListings[]
   >([])
+  const [offplanProjects, setOffplanProjects] = useState<PublicOffplanProject[]>([])
+  const [offplanProjectsBySlug, setOffplanProjectsBySlug] = useState<
+    Record<string, PublicOffplanProject>
+  >({})
+  const [offplanProjectsByStatus, setOffplanProjectsByStatus] = useState<
+    Record<OffplanLaunchStatus, PublicOffplanProject[]>
+  >({ new: [], existing: [], upcoming: [] })
+  const [offplanProjectsByDeveloperId, setOffplanProjectsByDeveloperId] = useState<
+    Record<string, PublicOffplanProject[]>
+  >({})
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
     heroBannerUrl: isSupabaseConfigured ? null : bannerVillaDusk,
     fullBleedYoutubeId: FULL_BLEED_YOUTUBE_VIDEO_ID,
@@ -169,6 +185,10 @@ export function CmsProvider({ children }: { children: ReactNode }) {
         setPropertyDevelopersList([])
         setDevelopersBySlug({})
         setDevelopersWithListings([])
+        setOffplanProjects([])
+        setOffplanProjectsBySlug({})
+        setOffplanProjectsByStatus({ new: [], existing: [], upcoming: [] })
+        setOffplanProjectsByDeveloperId({})
         setSiteSettings({
           heroBannerUrl: null,
           fullBleedYoutubeId: FULL_BLEED_YOUTUBE_VIDEO_ID,
@@ -195,6 +215,10 @@ export function CmsProvider({ children }: { children: ReactNode }) {
         setPropertyDevelopersList([])
         setDevelopersBySlug({})
         setDevelopersWithListings([])
+        setOffplanProjects([])
+        setOffplanProjectsBySlug({})
+        setOffplanProjectsByStatus({ new: [], existing: [], upcoming: [] })
+        setOffplanProjectsByDeveloperId({})
         setSiteSettings({
           heroBannerUrl: bannerVillaDusk,
           fullBleedYoutubeId: FULL_BLEED_YOUTUBE_VIDEO_ID,
@@ -220,6 +244,10 @@ export function CmsProvider({ children }: { children: ReactNode }) {
       setPropertyDevelopersList(snap.propertyDevelopersList)
       setDevelopersBySlug(snap.developersBySlug)
       setDevelopersWithListings(snap.developersWithListings)
+      setOffplanProjects(snap.offplanProjects)
+      setOffplanProjectsBySlug(snap.offplanProjectsBySlug)
+      setOffplanProjectsByStatus(snap.offplanProjectsByStatus)
+      setOffplanProjectsByDeveloperId(snap.offplanProjectsByDeveloperId)
       setSiteSettings({
         heroBannerUrl:
           snap.siteSettings.heroBannerUrl ?? bannerVillaDusk,
@@ -270,6 +298,10 @@ export function CmsProvider({ children }: { children: ReactNode }) {
       propertyDevelopersList,
       developersBySlug,
       developersWithListings,
+      offplanProjects,
+      offplanProjectsBySlug,
+      offplanProjectsByStatus,
+      offplanProjectsByDeveloperId,
       refetch: fetchLive,
     }),
     [
@@ -294,6 +326,10 @@ export function CmsProvider({ children }: { children: ReactNode }) {
       propertyDevelopersList,
       developersBySlug,
       developersWithListings,
+      offplanProjects,
+      offplanProjectsBySlug,
+      offplanProjectsByStatus,
+      offplanProjectsByDeveloperId,
       fetchLive,
     ],
   )

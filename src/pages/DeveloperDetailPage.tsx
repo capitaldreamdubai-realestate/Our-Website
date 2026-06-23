@@ -1,20 +1,34 @@
+import { useMemo } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { buttonClassNames } from '@/components/Button'
+import { OffplanProjectCard } from '@/components/OffplanProjectCard'
+import { PropertyListingCard } from '@/components/PropertyListingCard'
 import { SectionShell } from '@/components/SectionShell'
 import { useCms } from '@/contexts/CmsContext'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
 import { usePageSeo } from '@/hooks/usePageSeo'
-import { PropertyListingPage } from './PropertyListingPage'
 
 export function DeveloperDetailPage() {
   const { slug } = useParams()
-  const { developersWithListings, developersBySlug, loading } = useCms()
+  const {
+    developersWithListings,
+    developersBySlug,
+    offplanProjectsByDeveloperId,
+    catalogProperties,
+    loading,
+  } = useCms()
   const { t } = useLocalePreferences()
 
   const developer = slug ? developersBySlug[slug] : undefined
-  const hasListings = developer
+  const hasContent = developer
     ? developersWithListings.some((d) => d.id === developer.id)
     : false
+
+  const projects = developer ? (offplanProjectsByDeveloperId[developer.id] ?? []) : []
+  const listings = useMemo(() => {
+    if (!developer) return []
+    return catalogProperties.filter((p) => p.developerId === developer.id)
+  }, [catalogProperties, developer])
 
   usePageSeo({
     title: developer
@@ -25,7 +39,7 @@ export function DeveloperDetailPage() {
       : t('developerDetail.seo.descriptionMissing'),
   })
 
-  if (!loading && (!developer || !hasListings)) {
+  if (!loading && (!developer || !hasContent)) {
     return <Navigate to="/developers" replace />
   }
 
@@ -46,7 +60,11 @@ export function DeveloperDetailPage() {
     t('developerDetail.hero.desc', { name: developer.name })
 
   return (
-    <>
+    <main
+      id="page-developer-detail"
+      className="flex w-full flex-col gap-[0.625rem]"
+      aria-label={developer.name}
+    >
       <SectionShell variant="cream" aria-label={t('developerDetail.profileAria')}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
@@ -74,6 +92,11 @@ export function DeveloperDetailPage() {
                   {t('developerDetail.website')}
                 </a>
               ) : null}
+              {heroDescription ? (
+                <p className="mt-4 max-w-2xl text-[length:var(--brand-font-body-lg)] leading-relaxed text-ink/75">
+                  {heroDescription}
+                </p>
+              ) : null}
             </div>
           </div>
           <Link
@@ -85,19 +108,31 @@ export function DeveloperDetailPage() {
         </div>
       </SectionShell>
 
-      <PropertyListingPage
-        variant="channel"
-        channelFilter={(p) => p.developerId === developer.id}
-        seoTitle={t('developerDetail.seo.title', { name: developer.name })}
-        seoDescription={heroDescription}
-        mainId="page-developer-detail"
-        heroTitle={t('developerDetail.hero.title', { name: developer.name })}
-        heroDescription={heroDescription}
-        featuredEyebrow={t('developerDetail.featured', { name: developer.name })}
-        gridTitle={t('developerDetail.grid', { name: developer.name })}
-        emptyFilteredMessage={t('developerDetail.emptyFiltered')}
-        emptyChannelMessage={t('developerDetail.emptyChannel')}
-      />
-    </>
+      {projects.length > 0 ? (
+        <SectionShell variant="cream" aria-label={t('developerDetail.projectsAria', { name: developer.name })}>
+          <h2 className="type-section-title font-display text-xl font-semibold text-ink sm:text-2xl">
+            {t('developerDetail.projectsTitle', { name: developer.name })}
+          </h2>
+          <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {projects.map((project) => (
+              <OffplanProjectCard key={project.id} project={project} developer={developer} />
+            ))}
+          </div>
+        </SectionShell>
+      ) : null}
+
+      {listings.length > 0 ? (
+        <SectionShell variant="cream" aria-label={t('developerDetail.listingsAria', { name: developer.name })}>
+          <h2 className="type-section-title font-display text-xl font-semibold text-ink sm:text-2xl">
+            {t('developerDetail.grid', { name: developer.name })}
+          </h2>
+          <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {listings.map((property) => (
+              <PropertyListingCard key={property.id} property={property} />
+            ))}
+          </div>
+        </SectionShell>
+      ) : null}
+    </main>
   )
 }

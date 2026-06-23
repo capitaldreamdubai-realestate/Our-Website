@@ -95,6 +95,13 @@ export function SubmissionDetailSheet({
               <p className="mt-0.5 font-mono text-xs text-ink/55">ID: {row.property_id}</p>
             ) : null}
           </Field>
+          <Field label="Off-plan project">
+            <p className="font-medium">{row.project_name ?? '—'}</p>
+            {row.project_id ? (
+              <p className="mt-0.5 font-mono text-xs text-ink/55">ID: {row.project_id}</p>
+            ) : null}
+          </Field>
+          {meta.intent ? <Field label="Intent">{meta.intent}</Field> : null}
           <Field label="Assigned salesperson">
             {meta.salesperson_name ? (
               <>

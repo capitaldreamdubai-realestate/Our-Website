@@ -276,6 +276,48 @@ export type Database = {
         Update: Partial<Database['public']['Tables']['hero_neighbourhoods']['Insert']>
         Relationships: []
       }
+      offplan_projects: {
+        Row: {
+          id: string
+          slug: string
+          name: string
+          short_description: string
+          description_html: string | null
+          hero_image_url: string | null
+          gallery: Json
+          brochure_url: string | null
+          brochure_storage_path: string | null
+          launch_status: 'new' | 'existing' | 'upcoming'
+          developer_id: string
+          salesperson_id: string | null
+          location: string | null
+          emirate: string | null
+          sort_order: number
+          published: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          slug: string
+          name: string
+          short_description?: string
+          description_html?: string | null
+          hero_image_url?: string | null
+          gallery?: Json
+          brochure_url?: string | null
+          brochure_storage_path?: string | null
+          launch_status?: 'new' | 'existing' | 'upcoming'
+          developer_id: string
+          salesperson_id?: string | null
+          location?: string | null
+          emirate?: string | null
+          sort_order?: number
+          published?: boolean
+        }
+        Update: Partial<Database['public']['Tables']['offplan_projects']['Insert']>
+        Relationships: []
+      }
       property_developers: {
         Row: {
           id: string
@@ -356,9 +398,11 @@ export type Database = {
         Row: {
           id: string
           created_at: string
-          source: 'property_enquiry' | 'campaign_popup'
+          source: 'property_enquiry' | 'campaign_popup' | 'project_enquiry' | 'project_brochure'
           property_id: string | null
           property_title: string | null
+          project_id: string | null
+          project_name: string | null
           popup_id: string | null
           name: string
           email: string
@@ -369,9 +413,11 @@ export type Database = {
         Insert: {
           id?: string
           created_at?: string
-          source: 'property_enquiry' | 'campaign_popup'
+          source: 'property_enquiry' | 'campaign_popup' | 'project_enquiry' | 'project_brochure'
           property_id?: string | null
           property_title?: string | null
+          project_id?: string | null
+          project_name?: string | null
           popup_id?: string | null
           name: string
           email: string
@@ -457,7 +503,7 @@ export type Database = {
           original_filename: string
           mime_type: string
           file_size_bytes: number | null
-          kind: 'image' | 'video'
+          kind: 'image' | 'video' | 'document'
           alt_text: string | null
           created_at: string
           updated_at: string
@@ -470,7 +516,7 @@ export type Database = {
           original_filename?: string
           mime_type?: string
           file_size_bytes?: number | null
-          kind?: 'image' | 'video'
+          kind?: 'image' | 'video' | 'document'
           alt_text?: string | null
         }
         Update: Partial<Database['public']['Tables']['cms_media']['Insert']>
