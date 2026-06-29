@@ -46,11 +46,11 @@ export function OffplanProjectDetailPage() {
       : t('offplan.detail.seoDescMissing'),
   })
 
-  async function handleBrochureUnlocked(submissionId: string) {
+  async function handleBrochureUnlocked(contact: { email: string; name: string }) {
     if (!project) return
     setBrochureBusy(true)
     setBrochureErr(null)
-    const { url, error } = await fetchProjectBrochureUrl(project.id, submissionId)
+    const { url, error } = await fetchProjectBrochureUrl(project.id, contact)
     setBrochureBusy(false)
     if (error || !url) {
       setBrochureErr(error ?? t('projectLead.brochureError'))

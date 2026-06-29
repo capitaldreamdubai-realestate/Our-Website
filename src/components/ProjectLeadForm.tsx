@@ -15,7 +15,7 @@ type Props = {
   salesperson: PublicSalesperson | null
   intent: ProjectLeadIntent
   submitLabel?: string
-  onSuccess?: (submissionId: string) => void
+  onSuccess?: (details: { email: string; name: string }) => void
   compact?: boolean
 }
 
@@ -71,31 +71,27 @@ export function ProjectLeadForm({
     }
     setBusy(true)
     const source = intent === 'brochure' ? 'project_brochure' : 'project_enquiry'
-    const { data, error } = await sb
-      .from('form_submissions')
-      .insert({
-        source,
-        project_id: projectId,
-        project_name: projectName,
-        name: n,
-        email: em,
-        phone: phone?.trim() || null,
-        message: message.trim() || null,
-        meta: {
-          intent,
-          salesperson_id: salesperson?.id ?? null,
-          salesperson_name: salesperson?.name ?? null,
-        },
-      })
-      .select('id')
-      .single()
+    const { error } = await sb.from('form_submissions').insert({
+      source,
+      project_id: projectId,
+      project_name: projectName,
+      name: n,
+      email: em,
+      phone: phone?.trim() || null,
+      message: message.trim() || null,
+      meta: {
+        intent,
+        salesperson_id: salesperson?.id ?? null,
+        salesperson_name: salesperson?.name ?? null,
+      },
+    })
     setBusy(false)
     if (error) {
       setErr(error.message)
       return
     }
     setDone(true)
-    onSuccess?.(data.id)
+    onSuccess?.({ email: em, name: n })
     if (intent === 'inquiry') {
       setName('')
       setEmail('')

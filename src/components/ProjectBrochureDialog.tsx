@@ -10,7 +10,7 @@ type Props = {
   projectId: string
   projectName: string
   salesperson: PublicSalesperson | null
-  onBrochureUnlocked: (submissionId: string) => void
+  onBrochureUnlocked: (details: { email: string; name: string }) => void
 }
 
 export function ProjectBrochureDialog({
@@ -80,8 +80,8 @@ export function ProjectBrochureDialog({
             projectId={projectId}
             projectName={projectName}
             salesperson={salesperson}
-            onSuccess={(submissionId) => {
-              onBrochureUnlocked(submissionId)
+            onSuccess={(details) => {
+              onBrochureUnlocked(details)
               onClose()
             }}
           />

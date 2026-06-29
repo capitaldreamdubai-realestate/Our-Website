@@ -1,19 +1,21 @@
 import { getSupabase, isSupabaseConfigured } from '@/integrations/supabase/client'
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
-
 export async function fetchProjectBrochureUrl(
   projectId: string,
-  submissionId: string,
+  contact: { email: string; name: string },
 ): Promise<{ url: string | null; error: string | null }> {
-  if (!isSupabaseConfigured || !url?.trim()) {
+  if (!isSupabaseConfigured) {
     return { url: null, error: 'Site is not connected.' }
   }
   const sb = getSupabase()
   if (!sb) return { url: null, error: 'Site is not connected.' }
 
   const { data, error } = await sb.functions.invoke('get-project-brochure', {
-    body: { project_id: projectId, submission_id: submissionId },
+    body: {
+      project_id: projectId,
+      email: contact.email.trim(),
+      name: contact.name.trim(),
+    },
   })
 
   if (error) {

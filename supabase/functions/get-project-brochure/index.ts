@@ -12,6 +12,10 @@ function json(body: unknown, status = 200) {
   })
 }
 
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase()
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') return json({ ok: false, error: 'Method not allowed.' }, 405)
@@ -25,30 +29,43 @@ Deno.serve(async (req) => {
       return json({ ok: false, error: 'Missing Supabase service env for function.' }, 500)
     }
 
-    const body = (await req.json()) as { project_id?: string; submission_id?: string }
+    const body = (await req.json()) as {
+      project_id?: string
+      email?: string
+      name?: string
+    }
     const projectId = body.project_id?.trim()
-    const submissionId = body.submission_id?.trim()
-    if (!projectId || !submissionId) {
-      return json({ ok: false, error: 'project_id and submission_id are required.' }, 400)
+    const email = normalizeEmail(body.email ?? '')
+    const name = body.name?.trim()
+    if (!projectId || !email || !name) {
+      return json({ ok: false, error: 'project_id, email, and name are required.' }, 400)
     }
 
     const admin = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     })
 
+    const since = new Date(Date.now() - 15 * 60 * 1000).toISOString()
     const { data: submission, error: subErr } = await admin
       .from('form_submissions')
-      .select('id, source, project_id')
-      .eq('id', submissionId)
+      .select('id, source, project_id, email')
+      .eq('project_id', projectId)
+      .eq('source', 'project_brochure')
+      .eq('email', email)
+      .gte('created_at', since)
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle()
 
     if (subErr) return json({ ok: false, error: subErr.message }, 500)
-    if (!submission) return json({ ok: false, error: 'Submission not found.' }, 404)
-    if (submission.source !== 'project_brochure') {
-      return json({ ok: false, error: 'Invalid submission type.' }, 403)
-    }
-    if (submission.project_id !== projectId) {
-      return json({ ok: false, error: 'Submission does not match project.' }, 403)
+    if (!submission) {
+      return json(
+        {
+          ok: false,
+          error: 'No recent brochure request found. Submit the form first, then try again.',
+        },
+        403,
+      )
     }
 
     const { data: project, error: projErr } = await admin
