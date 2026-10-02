@@ -1,4 +1,5 @@
 import { Bath, Bed, Building2, Maximize2, Square } from 'lucide-react'
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
 import { formatAreaFromM2 } from '../lib/formatArea'
@@ -7,11 +8,14 @@ import { PropertyLeafletMap } from '../components/PropertyLeafletMap'
 import { PropertyDetailHero } from '../components/PropertyDetailHero'
 import { PropertyLeadForm } from '../components/PropertyLeadForm'
 import { PropertyListingCard } from '../components/PropertyListingCard'
+import { PropertyBrochureDialog } from '../components/PropertyBrochureDialog'
 import { SectionShell } from '../components/SectionShell'
 import { buttonClassNames } from '../components/Button'
 import { usePropertyDetail } from '../hooks/usePropertyDetail'
+import { useListingMapCoords } from '../hooks/useListingMapCoords'
 import { usePageSeo } from '../hooks/usePageSeo'
 import { useRelatedProperties } from '../hooks/useRelatedProperties'
+import { downloadPropertyBrochure } from '../lib/propertyBrochure/downloadPropertyBrochure'
 import { resolveGallery } from '../lib/resolvePropertyDetail'
 import { agentWhatsappUrl } from '../lib/whatsapp'
 
@@ -19,7 +23,9 @@ export function PropertyDetailPage() {
   const { propertyId } = useParams<{ propertyId: string }>()
   const { property, salesperson, loading } = usePropertyDetail(propertyId)
   const related = useRelatedProperties(property, 3)
-  const { areaUnit, intlLocale, t } = useLocalePreferences()
+  const mapCoords = useListingMapCoords(property?.id)
+  const [brochureOpen, setBrochureOpen] = useState(false)
+  const { areaUnit, currency, rates, intlLocale, t } = useLocalePreferences()
   const listingMeta = property?.meta ?? ''
   usePageSeo({
     title: property
@@ -79,12 +85,9 @@ export function PropertyDetailPage() {
   const gallery = resolveGallery(property)
   const mapLabel =
     property.fullAddress ??
+    property.location ??
     [property.title, property.location].filter(Boolean).join(' · ')
-  const hasCoords =
-    typeof property.latitude === 'number' &&
-    typeof property.longitude === 'number' &&
-    Number.isFinite(property.latitude) &&
-    Number.isFinite(property.longitude)
+  const hasCoords = mapCoords != null
 
   const wa = agentWhatsappUrl(salesperson)
 
@@ -94,7 +97,11 @@ export function PropertyDetailPage() {
       className="flex w-full flex-col gap-[0.625rem]"
       aria-label={property.title}
     >
-      <PropertyDetailHero property={property} gallery={gallery} />
+      <PropertyDetailHero
+        property={property}
+        gallery={gallery}
+        onGetDetails={() => setBrochureOpen(true)}
+      />
 
       <SectionShell variant="cream">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -179,16 +186,12 @@ export function PropertyDetailPage() {
               {hasCoords ? (
                 <div className="mt-6">
                   <PropertyLeafletMap
-                    latitude={property.latitude!}
-                    longitude={property.longitude!}
+                    latitude={mapCoords.latitude}
+                    longitude={mapCoords.longitude}
                     label={mapLabel}
                   />
                 </div>
-              ) : (
-                <p className="mt-4 text-sm text-ink/55">
-                  Map preview appears when latitude and longitude are set for this listing.
-                </p>
-              )}
+              ) : null}
             </div>
 
             <div className="border-t border-ink/10 pt-8">
@@ -236,7 +239,14 @@ export function PropertyDetailPage() {
             aria-hidden
           />
 
-          <aside className="min-w-0 w-full lg:w-[35%] lg:max-w-[35%] lg:shrink-0 lg:sticky lg:top-28 lg:self-start">
+          <aside className="flex min-w-0 w-full flex-col gap-4 lg:w-[35%] lg:max-w-[35%] lg:shrink-0 lg:sticky lg:top-28 lg:self-start">
+            <button
+              type="button"
+              className={buttonClassNames('primary', 'w-full')}
+              onClick={() => setBrochureOpen(true)}
+            >
+              Get Property Details
+            </button>
             <PropertyLeadForm
               propertyId={property.id}
               propertyTitle={property.title}
@@ -258,6 +268,25 @@ export function PropertyDetailPage() {
           </div>
         </SectionShell>
       ) : null}
+
+      <PropertyBrochureDialog
+        open={brochureOpen}
+        onClose={() => setBrochureOpen(false)}
+        propertyId={property.id}
+        propertyTitle={property.title}
+        salesperson={salesperson}
+        onDownload={() =>
+          downloadPropertyBrochure({
+            property,
+            salesperson,
+            coords: mapCoords,
+            currency,
+            rates,
+            intlLocale,
+            areaUnit,
+          })
+        }
+      />
     </main>
   )
 }

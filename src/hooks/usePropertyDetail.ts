@@ -2,10 +2,7 @@ import { useMemo } from 'react'
 import type { Property } from '@/components/PropertyCard'
 import { useCms } from '@/contexts/CmsContext'
 import type { PublicSalesperson } from '@/lib/cms/loadCmsSnapshot'
-import {
-  mergeDefaultCoords,
-  resolvePropertyDetail,
-} from '@/lib/resolvePropertyDetail'
+import { resolvePropertyDetail } from '@/lib/resolvePropertyDetail'
 
 export function usePropertyDetail(paramId: string | undefined): {
   property: Property | null
@@ -32,7 +29,7 @@ export function usePropertyDetail(paramId: string | undefined): {
     if (!found) {
       return { property: null, salesperson: null, loading: cmsLoading }
     }
-    const property = mergeDefaultCoords(found)
+    const property = found
     const sid = property.salespersonId
     const salesperson = sid ? (salespeopleById[sid] ?? null) : null
     return { property, salesperson, loading: cmsLoading }

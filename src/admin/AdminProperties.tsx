@@ -2,8 +2,6 @@ import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useCms } from '@/contexts/CmsContext'
 import type { TerracottaDropdownOption } from '@/components/TerracottaDropdown'
-import { TerracottaDropdown } from '@/components/TerracottaDropdown'
-import { AdminSearchableTerracottaDropdown } from './components/AdminSearchableTerracottaDropdown'
 import {
   adminBtnGhost,
   adminBtnPrimary,
@@ -12,7 +10,12 @@ import {
   adminStepInactive,
 } from './adminClassNames'
 import { AdminTablePagination } from './components/AdminTablePagination'
-import { AdminModal } from './components/AdminModal'
+import { AdminConfirmDialog } from './components/AdminConfirmDialog'
+import { AdminEditorSheet } from './components/AdminEditorSheet'
+import { SearchableCombobox } from './components/SearchableCombobox'
+import { Field, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { EntityDetailSheet } from './components/EntityDetailSheet'
 import { AdminPageHeading } from './components/AdminPageHeading'
 import { ImageUploadField } from './components/ImageUploadField'
@@ -89,6 +92,7 @@ function createEmptyRow(): Row {
     plot_m2: null,
     latitude: null,
     longitude: null,
+    location_geocode_query: null,
     full_address: null,
     description_html: null,
     property_ref_id: null,
@@ -909,7 +913,7 @@ export function AdminProperties() {
         ) : null}
       </div>
 
-      <AdminModal
+      <AdminEditorSheet
         open={modalOpen && !!draft}
         wide
         title={
@@ -977,9 +981,9 @@ export function AdminProperties() {
 
             {step === 0 ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                  <label className="text-xs font-medium text-ink/70">Title</label>
-                  <input
+                <Field className="sm:col-span-2">
+<FieldLabel>Title</FieldLabel>
+<Input
                     value={draft.title}
                     onChange={(e) => updateDraft('title', e.target.value)}
                     className={fieldClass()}
@@ -999,9 +1003,10 @@ export function AdminProperties() {
                       publishing)
                     </p>
                   )}
-                </div>
+                </Field>
                 <div className="sm:col-span-2">
-                  <p className="text-xs font-medium text-ink/70">Listing tags</p>
+                  <Field>
+                    <FieldLabel>Listing tags</FieldLabel>
                   <p className="mt-0.5 text-[0.6875rem] leading-relaxed text-ink/50">
                     Select all that apply — e.g. <strong>New</strong> and <strong>Offplan</strong>{' '}
                     together. Channel pages (/for-sale, /for-rent, /offplan) filter by these tags.
@@ -1037,65 +1042,48 @@ export function AdminProperties() {
                       })
                     )}
                   </div>
+                  </Field>
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-ink/70">Property type</label>
-                  <TerracottaDropdown
-                    variant="admin"
-                    listPortal
+                  <SearchableCombobox
                     label="Property type"
+                    searchPlaceholder="Search property types…"
                     options={propertyTypeDropdownOptions}
                     value={draft.property_type ?? ''}
                     onChange={(v) => updateDraft('property_type', v || null)}
-                    className="mt-1"
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="text-xs font-medium text-ink/70">Developer</label>
-                  <AdminSearchableTerracottaDropdown
+                  <SearchableCombobox
                     label="Developer"
                     searchPlaceholder="Search developers…"
                     options={developerDropdownOptions}
                     value={draft.developer_id ?? ''}
-                    onChange={(v) => {
-                      const id = v.trim() || null
-                      updateDraft('developer_id', id)
-                    }}
+                    onChange={(v) => updateDraft('developer_id', v.trim() || null)}
+                    description="From Properties → Developers. The developer appears on /developers when this listing is published."
                   />
-                  <p className="mt-1 text-[0.6875rem] text-ink/45">
-                    From <strong>Properties → Developers</strong>. Developer appears on{' '}
-                    <strong>/developers</strong> when this listing is published.
-                  </p>
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="text-xs font-medium text-ink/70">Assigned agent</label>
-                  <TerracottaDropdown
-                    variant="admin"
-                    listPortal
+                  <SearchableCombobox
                     label="Assigned agent"
+                    searchPlaceholder="Search agents…"
                     options={salespersonDropdownOptions}
                     value={draft.salesperson_id ?? ''}
                     onChange={(v) => updateDraft('salesperson_id', v || null)}
-                    className="mt-1"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-ink/70">Home section</label>
-                  <TerracottaDropdown
-                    variant="admin"
-                    listPortal
+                  <SearchableCombobox
                     label="Home section"
+                    searchPlaceholder="Search sections…"
                     options={homeSectionDropdownOptions}
                     value={draft.home_section}
-                    onChange={(v) =>
-                      updateDraft('home_section', v as Row['home_section'])
-                    }
-                    className="mt-1"
+                    onChange={(v) => updateDraft('home_section', v as Row['home_section'])}
                   />
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-ink/70">Sort (home)</label>
-                  <input
+                <Field>
+<FieldLabel>Sort (home)</FieldLabel>
+<Input
                     type="number"
                     value={draft.sort_order_home}
                     onChange={(e) =>
@@ -1103,7 +1091,7 @@ export function AdminProperties() {
                     }
                     className={fieldClass()}
                   />
-                </div>
+</Field>
                 <div className="flex items-center gap-2 sm:col-span-2">
                   <input
                     id="pub"
@@ -1112,42 +1100,42 @@ export function AdminProperties() {
                     onChange={(e) => updateDraft('published', e.target.checked)}
                     className="size-4 rounded border-ink/20"
                   />
-                  <label htmlFor="pub" className="text-xs font-medium text-ink/70">
+                  <FieldLabel htmlFor="pub" >
                     Published (visible on public site)
-                  </label>
+                  </FieldLabel>
                 </div>
-                <div className="sm:col-span-2">
-                  <label className="text-xs font-medium text-ink/70">Meta line</label>
-                  <input
+                <Field className="sm:col-span-2">
+<FieldLabel>Meta line</FieldLabel>
+<Input
                     value={draft.meta ?? ''}
                     onChange={(e) => updateDraft('meta', e.target.value || null)}
                     className={fieldClass()}
                   />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="text-xs font-medium text-ink/70">Detail line</label>
-                  <input
+</Field>
+                <Field className="sm:col-span-2">
+<FieldLabel>Detail line</FieldLabel>
+<Input
                     value={draft.detail ?? ''}
                     onChange={(e) => updateDraft('detail', e.target.value || null)}
                     className={fieldClass()}
                   />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="text-xs font-medium text-ink/70">Image alt</label>
-                  <input
+</Field>
+                <Field className="sm:col-span-2">
+<FieldLabel>Image alt</FieldLabel>
+<Input
                     value={draft.alt}
                     onChange={(e) => updateDraft('alt', e.target.value)}
                     className={fieldClass()}
                   />
-                </div>
+</Field>
               </div>
             ) : null}
 
             {step === 1 ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="text-xs font-medium text-ink/70">Price (AED)</label>
-                  <input
+                <Field>
+<FieldLabel>Price (AED)</FieldLabel>
+<Input
                     type="number"
                     value={draft.price_aed ?? ''}
                     onChange={(e) =>
@@ -1158,10 +1146,10 @@ export function AdminProperties() {
                     }
                     className={fieldClass()}
                   />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-ink/70">Beds</label>
-                  <input
+</Field>
+                <Field>
+<FieldLabel>Beds</FieldLabel>
+<Input
                     type="number"
                     value={draft.beds ?? ''}
                     onChange={(e) =>
@@ -1169,10 +1157,10 @@ export function AdminProperties() {
                     }
                     className={fieldClass()}
                   />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-ink/70">Baths</label>
-                  <input
+</Field>
+                <Field>
+<FieldLabel>Baths</FieldLabel>
+<Input
                     type="number"
                     value={draft.baths ?? ''}
                     onChange={(e) =>
@@ -1180,10 +1168,10 @@ export function AdminProperties() {
                     }
                     className={fieldClass()}
                   />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-ink/70">Interior m²</label>
-                  <input
+</Field>
+                <Field>
+<FieldLabel>Interior m²</FieldLabel>
+<Input
                     type="number"
                     value={draft.interior_m2 ?? ''}
                     onChange={(e) =>
@@ -1194,10 +1182,10 @@ export function AdminProperties() {
                     }
                     className={fieldClass()}
                   />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-ink/70">Plot m²</label>
-                  <input
+</Field>
+                <Field>
+<FieldLabel>Plot m²</FieldLabel>
+<Input
                     type="number"
                     value={draft.plot_m2 ?? ''}
                     onChange={(e) =>
@@ -1208,10 +1196,10 @@ export function AdminProperties() {
                     }
                     className={fieldClass()}
                   />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-ink/70">Year built</label>
-                  <input
+</Field>
+                <Field>
+<FieldLabel>Year built</FieldLabel>
+<Input
                     type="number"
                     value={draft.year_built ?? ''}
                     onChange={(e) =>
@@ -1222,66 +1210,58 @@ export function AdminProperties() {
                     }
                     className={fieldClass()}
                   />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-ink/70">Ref ID</label>
-                  <input
+</Field>
+                <Field>
+<FieldLabel>Ref ID</FieldLabel>
+<Input
                     value={draft.property_ref_id ?? ''}
                     onChange={(e) =>
                       updateDraft('property_ref_id', e.target.value || null)
                     }
                     className={fieldClass()}
                   />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="text-xs font-medium text-ink/70">Location</label>
-                  <input
+</Field>
+                <Field className="sm:col-span-2">
+<FieldLabel>Location</FieldLabel>
+<Input
                     value={draft.location ?? ''}
                     onChange={(e) => updateDraft('location', e.target.value || null)}
                     className={fieldClass()}
                   />
-                </div>
+</Field>
                 <div className="sm:col-span-2">
-                  <AdminSearchableTerracottaDropdown
-                    label="Neighbourhood (featured list)"
+                  <SearchableCombobox
+                    label="Neighbourhood"
                     searchPlaceholder="Search neighbourhoods…"
                     options={neighbourhoodFieldOptions}
                     value={draft.neighbourhood ?? ''}
                     onChange={(v) => updateDraft('neighbourhood', v || null)}
+                    description="Pulled from Properties → Featured neighbourhoods. Pick a card label or keep a synced value shown as (current)."
                   />
-                  <p className="mt-1 text-[0.6875rem] text-ink/45">
-                    Pulled from <strong>Properties → Featured neighbourhoods</strong>. Pick a card label or keep a
-                    synced value shown as &quot;(current)&quot;.
-                  </p>
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="text-xs font-medium text-ink/70">Emirate (UAE)</label>
-                  <TerracottaDropdown
-                    variant="admin"
-                    listPortal
+                  <SearchableCombobox
                     label="Emirate"
+                    searchPlaceholder="Search emirates…"
                     options={geoLookup.emirates}
                     value={draft.emirate ?? ''}
                     onChange={(v) => updateDraft('emirate', v || null)}
-                    className="mt-1"
+                    description="Options from Properties → Emirates. Aligns with public filters."
                   />
-                  <p className="mt-1 text-[0.6875rem] text-ink/45">
-                    Options from <strong>Properties → Emirates</strong>. Aligns with public filters.
-                  </p>
                 </div>
-                <div className="sm:col-span-2">
-                  <label className="text-xs font-medium text-ink/70">Full address</label>
-                  <input
+                <Field className="sm:col-span-2">
+<FieldLabel>Full address</FieldLabel>
+<Input
                     value={draft.full_address ?? ''}
                     onChange={(e) =>
                       updateDraft('full_address', e.target.value || null)
                     }
                     className={fieldClass()}
                   />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-ink/70">Latitude</label>
-                  <input
+</Field>
+                <Field>
+<FieldLabel>Latitude</FieldLabel>
+<Input
                     type="number"
                     step="any"
                     value={draft.latitude ?? ''}
@@ -1293,10 +1273,10 @@ export function AdminProperties() {
                     }
                     className={fieldClass()}
                   />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-ink/70">Longitude</label>
-                  <input
+</Field>
+                <Field>
+<FieldLabel>Longitude</FieldLabel>
+<Input
                     type="number"
                     step="any"
                     value={draft.longitude ?? ''}
@@ -1308,7 +1288,7 @@ export function AdminProperties() {
                     }
                     className={fieldClass()}
                   />
-                </div>
+</Field>
                 <div className="flex items-center gap-2 sm:col-span-2">
                   <input
                     id="excl"
@@ -1319,9 +1299,9 @@ export function AdminProperties() {
                     }
                     className="size-4 rounded border-ink/20"
                   />
-                  <label htmlFor="excl" className="text-xs font-medium text-ink/70">
+                  <FieldLabel htmlFor="excl" >
                     Exclusive with us
-                  </label>
+                  </FieldLabel>
                 </div>
               </div>
             ) : null}
@@ -1365,14 +1345,14 @@ export function AdminProperties() {
                   Fill 6 slots from default seed set
                 </button>
                 <div>
-                  <label className="text-xs font-medium text-ink/70">
+                  <FieldLabel>
                     Advanced: gallery JSON (optional override)
-                  </label>
-                  <textarea
+                  </FieldLabel>
+                  <Textarea
                     value={galleryText}
                     onChange={(e) => setGalleryText(e.target.value)}
                     rows={6}
-                    className={`${fieldClass()} font-mono text-[0.6875rem] leading-relaxed md:text-xs`}
+                    className="font-mono"
                     spellCheck={false}
                   />
                 </div>
@@ -1381,9 +1361,9 @@ export function AdminProperties() {
 
             {step === 3 ? (
               <div>
-                <label className="text-xs font-medium text-ink/70">
+                <FieldLabel>
                   Listing copy (rich text)
-                </label>
+                </FieldLabel>
                 <AdminRichTextField
                   value={draft.description_html ?? ''}
                   onChange={(html) =>
@@ -1395,9 +1375,9 @@ export function AdminProperties() {
             ) : null}
           </div>
         ) : null}
-      </AdminModal>
+      </AdminEditorSheet>
 
-      <AdminModal
+      <AdminEditorSheet
         open={bulkSalesOpen}
         title="Assign agent to selected listings"
         onClose={() => setBulkSalesOpen(false)}
@@ -1421,18 +1401,16 @@ export function AdminProperties() {
           </>
         }
       >
-        <p className="mb-2 text-xs font-medium text-ink/70">Agent</p>
-        <TerracottaDropdown
-          variant="admin"
-          listPortal
-          label="Agent"
+        <SearchableCombobox
+          label="Assigned agent"
+          searchPlaceholder="Search agents…"
           options={bulkSalesDropdownOptions}
           value={bulkSalespersonId}
           onChange={setBulkSalespersonId}
         />
-      </AdminModal>
+      </AdminEditorSheet>
 
-      <AdminModal
+      <AdminEditorSheet
         open={bulkHomeOpen}
         title="Set home section for selected"
         onClose={() => setBulkHomeOpen(false)}
@@ -1456,18 +1434,16 @@ export function AdminProperties() {
           </>
         }
       >
-        <p className="mb-2 text-xs font-medium text-ink/70">Home section</p>
-        <TerracottaDropdown
-          variant="admin"
-          listPortal
+        <SearchableCombobox
           label="Home section"
+          searchPlaceholder="Search sections…"
           options={bulkHomeSectionOptions}
           value={bulkHomeSection}
           onChange={(v) => setBulkHomeSection(v as Row['home_section'])}
         />
-      </AdminModal>
+      </AdminEditorSheet>
 
-      <AdminModal
+      <AdminConfirmDialog
         open={bulkDeleteOpen}
         title={`Delete ${selectedList.length} listings?`}
         onClose={() => setBulkDeleteOpen(false)}
@@ -1494,9 +1470,9 @@ export function AdminProperties() {
         <p className="text-sm text-ink/75">
           This cannot be undone. URLs to these properties will stop working.
         </p>
-      </AdminModal>
+      </AdminConfirmDialog>
 
-      <AdminModal
+      <AdminConfirmDialog
         open={!!deleteId}
         title={
           deleteTarget?.title
@@ -1544,7 +1520,7 @@ export function AdminProperties() {
             'This removes the listing from the database. Links to this property will stop working.'
           )}
         </p>
-      </AdminModal>
+      </AdminConfirmDialog>
 
       <EntityDetailSheet
         open={!!viewRow}

@@ -67,6 +67,8 @@ export type PublicSalesperson = {
   listings_count: number
   phone: string | null
   email: string | null
+  agency_name: string | null
+  broker_license: string | null
   profile_image_url: string
   social_links: Record<string, unknown>
 }
@@ -225,6 +227,8 @@ function mapPublicSalesperson(
     listings_count: row.listings_count,
     phone: row.phone,
     email: row.email,
+    agency_name: row.agency_name ?? null,
+    broker_license: row.broker_license ?? null,
     profile_image_url: row.profile_image_url,
     social_links: social,
   }

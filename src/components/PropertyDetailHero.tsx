@@ -7,13 +7,15 @@ import { CarouselNav } from './CarouselNav'
 import { ImagePrimaryOverlay } from './ImagePrimaryOverlay'
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
 import { formatPriceFromAed } from '../lib/formatCurrency'
+import { buttonClassNames } from './Button'
 
 type Props = {
   property: Property
   gallery: PropertyGalleryItem[]
+  onGetDetails?: () => void
 }
 
-export function PropertyDetailHero({ property, gallery }: Props) {
+export function PropertyDetailHero({ property, gallery, onGetDetails }: Props) {
   const { currency, rates, intlLocale } = useLocalePreferences()
   const [selectedIndex, setSelectedIndex] = useState(0)
 
@@ -118,6 +120,15 @@ export function PropertyDetailHero({ property, gallery }: Props) {
               <p className="mt-2 max-w-xl font-light leading-relaxed text-cream/90 [text-shadow:0_1px_12px_rgba(28,20,18,0.45)]">
                 {locationText}
               </p>
+            ) : null}
+            {onGetDetails ? (
+              <button
+                type="button"
+                className={buttonClassNames('whiteSolid', 'mt-6 w-full sm:w-auto')}
+                onClick={onGetDetails}
+              >
+                Get Property Details
+              </button>
             ) : null}
           </div>
         </div>

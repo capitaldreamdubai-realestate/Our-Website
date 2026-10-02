@@ -31,6 +31,7 @@ export type Database = {
           plot_m2: number | null
           latitude: number | null
           longitude: number | null
+          location_geocode_query: string | null
           full_address: string | null
           description_html: string | null
           property_ref_id: string | null
@@ -88,6 +89,7 @@ export type Database = {
           plot_m2?: number | null
           latitude?: number | null
           longitude?: number | null
+          location_geocode_query?: string | null
           full_address?: string | null
           description_html?: string | null
           property_ref_id?: string | null
@@ -168,6 +170,8 @@ export type Database = {
           listings_count: number
           phone: string | null
           email: string | null
+          agency_name: string | null
+          broker_license: string | null
           social_links: Json
           pf_public_profile_id: string | null
           pf_user_id: string | null
@@ -186,6 +190,8 @@ export type Database = {
           listings_count?: number
           phone?: string | null
           email?: string | null
+          agency_name?: string | null
+          broker_license?: string | null
           social_links?: Json
           pf_public_profile_id?: string | null
           pf_user_id?: string | null
@@ -398,7 +404,12 @@ export type Database = {
         Row: {
           id: string
           created_at: string
-          source: 'property_enquiry' | 'campaign_popup' | 'project_enquiry' | 'project_brochure'
+          source:
+            | 'property_enquiry'
+            | 'campaign_popup'
+            | 'project_enquiry'
+            | 'project_brochure'
+            | 'property_brochure'
           property_id: string | null
           property_title: string | null
           project_id: string | null
@@ -413,7 +424,12 @@ export type Database = {
         Insert: {
           id?: string
           created_at?: string
-          source: 'property_enquiry' | 'campaign_popup' | 'project_enquiry' | 'project_brochure'
+          source:
+            | 'property_enquiry'
+            | 'campaign_popup'
+            | 'project_enquiry'
+            | 'project_brochure'
+            | 'property_brochure'
           property_id?: string | null
           property_title?: string | null
           project_id?: string | null

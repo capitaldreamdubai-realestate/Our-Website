@@ -10,6 +10,7 @@ import { SubmissionDetailSheet } from './components/SubmissionDetailSheet'
 import { useAdminTablePagination } from './useAdminTablePagination'
 import { getSupabase } from '@/integrations/supabase/client'
 import type { Database } from '@/integrations/supabase/database.types'
+import { formSubmissionSourceLabel } from '@/lib/formSubmissionSource'
 import { parseSubmissionMeta } from '@/lib/submissionMeta'
 
 type Row = Database['public']['Tables']['form_submissions']['Row']
@@ -329,7 +330,7 @@ export function AdminFormSubmissions() {
                   <td className="whitespace-nowrap px-3 py-2.5 text-ink/70 md:px-4">
                     {new Date(r.created_at).toLocaleString()}
                   </td>
-                  <td className="px-3 py-2.5 md:px-4">{r.source}</td>
+                  <td className="px-3 py-2.5 md:px-4">{formSubmissionSourceLabel(r.source)}</td>
                   <td className="max-w-[200px] px-3 py-2.5 md:px-4">
                     <span className="line-clamp-2 font-medium text-ink">
                       {r.project_name ?? r.property_title ?? r.project_id ?? r.property_id ?? '—'}

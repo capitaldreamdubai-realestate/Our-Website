@@ -2,6 +2,7 @@ import { X } from 'lucide-react'
 import { useEffect, type ReactNode } from 'react'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import type { Database } from '@/integrations/supabase/database.types'
+import { formSubmissionSourceLabel } from '@/lib/formSubmissionSource'
 import { parseSubmissionMeta } from '@/lib/submissionMeta'
 import { adminModalCloseBtn } from '@/admin/adminClassNames'
 
@@ -88,7 +89,7 @@ export function SubmissionDetailSheet({
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 md:px-5 md:py-4">
           <Field label="Received">{new Date(row.created_at).toLocaleString()}</Field>
-          <Field label="Source">{row.source}</Field>
+          <Field label="Source">{formSubmissionSourceLabel(row.source)}</Field>
           <Field label="Property">
             <p className="font-medium">{row.property_title ?? '—'}</p>
             {row.property_id ? (

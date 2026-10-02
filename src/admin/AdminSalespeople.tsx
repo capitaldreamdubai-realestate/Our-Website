@@ -8,7 +8,11 @@ import {
   adminStepInactive,
 } from './adminClassNames'
 import { AdminTablePagination } from './components/AdminTablePagination'
-import { AdminModal } from './components/AdminModal'
+import { AdminConfirmDialog } from './components/AdminConfirmDialog'
+import { AdminEditorSheet } from './components/AdminEditorSheet'
+import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { EntityDetailSheet } from './components/EntityDetailSheet'
 import { AdminPageHeading } from './components/AdminPageHeading'
 import { useAdminTablePagination } from './useAdminTablePagination'
@@ -31,6 +35,8 @@ function emptyRow(): Row {
     listings_count: 0,
     phone: null,
     email: null,
+    agency_name: null,
+    broker_license: null,
     social_links: {},
     pf_public_profile_id: null,
     pf_user_id: null,
@@ -147,6 +153,8 @@ export function AdminSalespeople() {
       listings_count: draft.listings_count,
       phone: draft.phone?.trim() || null,
       email: draft.email?.trim() || null,
+      agency_name: draft.agency_name?.trim() || null,
+      broker_license: draft.broker_license?.trim() || null,
       social_links: social as Row['social_links'],
       pf_public_profile_id: draft.pf_public_profile_id?.trim() || null,
       pf_user_id: draft.pf_user_id?.trim() || null,
@@ -396,7 +404,7 @@ export function AdminSalespeople() {
         ) : null}
       </div>
 
-      <AdminModal
+      <AdminEditorSheet
         open={modalOpen && !!draft}
         wide
         title={draft?.name ? `Team · ${draft.name}` : 'New team member'}
@@ -532,15 +540,34 @@ export function AdminSalespeople() {
                     placeholder="Phone number"
                   />
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-ink/70">Email</label>
-                  <input
+                <Field>
+                  <FieldLabel htmlFor="sp-email">Email</FieldLabel>
+                  <Input
+                    id="sp-email"
                     type="email"
                     value={draft.email ?? ''}
                     onChange={(e) => upd('email', e.target.value || null)}
-                    className={fieldClass()}
                   />
-                </div>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="sp-agency">Agency name</FieldLabel>
+                  <Input
+                    id="sp-agency"
+                    value={draft.agency_name ?? ''}
+                    onChange={(e) => upd('agency_name', e.target.value || null)}
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="sp-license">Broker license</FieldLabel>
+                  <Input
+                    id="sp-license"
+                    value={draft.broker_license ?? ''}
+                    onChange={(e) => upd('broker_license', e.target.value || null)}
+                  />
+                  <FieldDescription>
+                    Printed on property brochures for listings assigned to this agent.
+                  </FieldDescription>
+                </Field>
                 <div>
                   <label className="text-xs font-medium text-ink/70">PF public profile ID</label>
                   <input
@@ -560,12 +587,13 @@ export function AdminSalespeople() {
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="text-xs font-medium text-ink/70">Social links (JSON)</label>
-                  <textarea
+                  <Field className="sm:col-span-2">
+                  <FieldLabel>Social links (JSON)</FieldLabel>
+                  <Textarea
                     value={socialText}
                     onChange={(e) => setSocialText(e.target.value)}
                     rows={8}
-                    className={`${fieldClass()} font-mono text-[0.6875rem] md:text-xs`}
+                    className="font-mono"
                     spellCheck={false}
                   />
                   <p className="mt-1 text-[0.6875rem] text-ink/45">
@@ -574,12 +602,13 @@ export function AdminSalespeople() {
                       {`{"linkedin":"https://...","instagram":"https://..."}`}
                     </code>
                   </p>
+                  </Field>
                 </div>
               </div>
             ) : null}
           </div>
         ) : null}
-      </AdminModal>
+      </AdminEditorSheet>
 
       <EntityDetailSheet
         open={!!viewRow}
@@ -591,6 +620,8 @@ export function AdminSalespeople() {
                 { label: 'Title', value: viewRow.title || '—' },
                 { label: 'Email', value: viewRow.email || '—' },
                 { label: 'Phone', value: viewRow.phone || '—' },
+                { label: 'Agency', value: viewRow.agency_name || '—' },
+                { label: 'Broker license', value: viewRow.broker_license || '—' },
                 { label: 'PF public profile ID', value: viewRow.pf_public_profile_id || '—' },
                 { label: 'PF user ID', value: viewRow.pf_user_id || '—' },
                 { label: 'Listings count', value: String(viewRow.listings_count) },
@@ -602,7 +633,7 @@ export function AdminSalespeople() {
         }
       />
 
-      <AdminModal
+      <AdminConfirmDialog
         open={bulkDeleteOpen}
         title={`Delete ${selectedList.length} team members?`}
         onClose={() => setBulkDeleteOpen(false)}
@@ -629,9 +660,9 @@ export function AdminSalespeople() {
         <p className="text-sm text-ink/75">
           Listings assigned to them will have salesperson cleared (database rule).
         </p>
-      </AdminModal>
+      </AdminConfirmDialog>
 
-      <AdminModal
+      <AdminConfirmDialog
         open={!!deleteId}
         title="Delete team member?"
         onClose={() => setDeleteId(null)}
@@ -655,7 +686,7 @@ export function AdminSalespeople() {
         }
       >
         <p className="text-sm text-ink/75">Assigned listings will lose this contact link.</p>
-      </AdminModal>
+      </AdminConfirmDialog>
     </div>
   )
 }

@@ -12,6 +12,7 @@
     "generate-faq-seed": "node scripts/generate-faq-seed-sql.mjs"
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.9.0",
     "@supabase/supabase-js": "^2.101.1",
     "@tiptap/extension-link": "^3.22.2",
     "@tiptap/extension-placeholder": "^3.22.2",
@@ -20,6 +21,8 @@
     "@tiptap/starter-kit": "^3.22.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
+    "cn": "^0.4.0",
     "embla-carousel-react": "^8.6.0",
     "gsap": "^3.15.0",
     "leaflet": "^1.9.4",

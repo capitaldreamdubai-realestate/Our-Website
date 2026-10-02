@@ -3,3 +3,6 @@
 
 [functions.sync-property-finder]
 verify_jwt = false
+
+[functions.geocode-property-location]
+verify_jwt = false
