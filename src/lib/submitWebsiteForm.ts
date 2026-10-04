@@ -1,4 +1,5 @@
 import { getSupabase } from '@/integrations/supabase/client'
+import type { Json } from '@/integrations/supabase/database.types'
 
 export type WebsiteFormSource =
   | 'property_enquiry'
@@ -16,7 +17,7 @@ export type WebsiteFormPayload = {
   email?: string | null
   phone?: string | null
   message?: string | null
-  meta?: Record<string, unknown>
+  meta?: Json
   propertyId?: string | null
   propertyTitle?: string | null
   projectId?: string | null
