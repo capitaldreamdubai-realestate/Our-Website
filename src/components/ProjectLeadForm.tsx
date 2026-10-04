@@ -4,14 +4,16 @@ import { Link } from 'react-router-dom'
 import { buttonClassNames } from '@/components/Button'
 import { PhoneInputField } from '@/components/PhoneInputField'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
-import { getSupabase } from '@/integrations/supabase/client'
 import type { PublicSalesperson } from '@/lib/cms/loadCmsSnapshot'
+import { submitWebsiteForm } from '@/lib/submitWebsiteForm'
 
 export type ProjectLeadIntent = 'inquiry' | 'brochure'
 
 type Props = {
   projectId: string
   projectName: string
+  /** Public off-plan slug for CRM deep links (/offplan/:slug). */
+  projectSlug?: string | null
   salesperson: PublicSalesperson | null
   intent: ProjectLeadIntent
   submitLabel?: string
@@ -26,6 +28,7 @@ function isValidEmail(s: string) {
 export function ProjectLeadForm({
   projectId,
   projectName,
+  projectSlug,
   salesperson,
   intent,
   submitLabel,
@@ -64,30 +67,26 @@ export function ProjectLeadForm({
     const em = email.trim()
     if (!n || !em || !isValidEmail(em)) return
 
-    const sb = getSupabase()
-    if (!sb) {
-      setErr(t('lead.errorNotConnected'))
-      return
-    }
     setBusy(true)
     const source = intent === 'brochure' ? 'project_brochure' : 'project_enquiry'
-    const { error } = await sb.from('form_submissions').insert({
+    const { error } = await submitWebsiteForm({
       source,
-      project_id: projectId,
-      project_name: projectName,
+      projectId,
+      projectName,
       name: n,
       email: em,
       phone: phone?.trim() || null,
       message: message.trim() || null,
       meta: {
         intent,
+        project_slug: projectSlug?.trim() || null,
         salesperson_id: salesperson?.id ?? null,
         salesperson_name: salesperson?.name ?? null,
       },
     })
     setBusy(false)
     if (error) {
-      setErr(error.message)
+      setErr(error.message === 'Supabase not configured' ? t('lead.errorNotConnected') : error.message)
       return
     }
     setDone(true)

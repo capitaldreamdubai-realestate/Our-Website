@@ -10,6 +10,12 @@ export function formSubmissionSourceLabel(source: string): string {
       return 'Project enquiry'
     case 'project_brochure':
       return 'Project brochure'
+    case 'contact':
+      return 'Contact form'
+    case 'newsletter':
+      return 'Newsletter'
+    case 'whatsapp_click':
+      return 'WhatsApp'
     default:
       return source
   }

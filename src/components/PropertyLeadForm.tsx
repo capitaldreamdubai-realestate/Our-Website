@@ -4,9 +4,9 @@ import { Link } from 'react-router-dom'
 import { buttonClassNames } from '@/components/Button'
 import { PhoneInputField } from '@/components/PhoneInputField'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
-import { getSupabase } from '@/integrations/supabase/client'
 import type { PublicSalesperson } from '@/lib/cms/loadCmsSnapshot'
-import { agentWhatsappUrl } from '@/lib/whatsapp'
+import { submitWebsiteForm } from '@/lib/submitWebsiteForm'
+import { agentWhatsappUrl, openAgentWhatsapp } from '@/lib/whatsapp'
 
 type Props = {
   propertyId: string
@@ -53,16 +53,11 @@ export function PropertyLeadForm({
     const em = email.trim()
     if (!n || !em || !isValidEmail(em)) return
 
-    const sb = getSupabase()
-    if (!sb) {
-      setErr(t('lead.errorNotConnected'))
-      return
-    }
     setBusy(true)
-    const { error } = await sb.from('form_submissions').insert({
+    const { error } = await submitWebsiteForm({
       source: 'property_enquiry',
-      property_id: propertyId,
-      property_title: propertyTitle,
+      propertyId,
+      propertyTitle,
       name: n,
       email: em,
       phone: phone?.trim() || null,
@@ -74,7 +69,7 @@ export function PropertyLeadForm({
     })
     setBusy(false)
     if (error) {
-      setErr(error.message)
+      setErr(error.message === 'Supabase not configured' ? t('lead.errorNotConnected') : error.message)
       return
     }
     setDone(true)
@@ -107,14 +102,19 @@ export function PropertyLeadForm({
           </p>
           <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs font-medium uppercase tracking-wider text-ink/55">
             {wa ? (
-              <a
-                href={wa}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                type="button"
+                onClick={() =>
+                  void openAgentWhatsapp(salesperson, {
+                    propertyId,
+                    propertyTitle,
+                    pagePath: typeof window !== 'undefined' ? window.location.pathname : undefined,
+                  })
+                }
                 className="text-terracotta underline-offset-2 hover:underline"
               >
                 {t('lead.whatsapp')}
-              </a>
+              </button>
             ) : null}
             {salesperson ? (
               <Link

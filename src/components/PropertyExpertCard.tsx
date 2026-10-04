@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { buttonClassNames } from './Button'
 import type { PublicSalesperson } from '@/lib/cms/loadCmsSnapshot'
-import { agentWhatsappUrl } from '@/lib/whatsapp'
+import { agentWhatsappUrl, openAgentWhatsapp } from '@/lib/whatsapp'
 
 type Props = {
   salesperson: PublicSalesperson | null
@@ -74,14 +74,13 @@ export function PropertyExpertCard({ salesperson }: Props) {
           ) : null}
         </div>
         {wa ? (
-          <a
-            href={wa}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={() => void openAgentWhatsapp(salesperson)}
             className={`mt-4 w-full sm:mt-3 sm:w-auto ${buttonClassNames('outlineTerracotta', 'justify-center')}`}
           >
             Contact on WhatsApp
-          </a>
+          </button>
         ) : null}
       </div>
     </div>

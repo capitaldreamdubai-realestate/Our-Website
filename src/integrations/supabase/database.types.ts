@@ -410,13 +410,16 @@ export type Database = {
             | 'project_enquiry'
             | 'project_brochure'
             | 'property_brochure'
+            | 'contact'
+            | 'newsletter'
+            | 'whatsapp_click'
           property_id: string | null
           property_title: string | null
           project_id: string | null
           project_name: string | null
           popup_id: string | null
           name: string
-          email: string
+          email: string | null
           phone: string | null
           message: string | null
           meta: Json
@@ -430,13 +433,16 @@ export type Database = {
             | 'project_enquiry'
             | 'project_brochure'
             | 'property_brochure'
+            | 'contact'
+            | 'newsletter'
+            | 'whatsapp_click'
           property_id?: string | null
           property_title?: string | null
           project_id?: string | null
           project_name?: string | null
           popup_id?: string | null
           name: string
-          email: string
+          email?: string | null
           phone?: string | null
           message?: string | null
           meta?: Json
@@ -610,6 +616,23 @@ export type Database = {
       }
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      submit_website_form: {
+        Args: {
+          p_source: string
+          p_name: string
+          p_email?: string | null
+          p_phone?: string | null
+          p_message?: string | null
+          p_meta?: Json
+          p_property_id?: string | null
+          p_property_title?: string | null
+          p_project_id?: string | null
+          p_project_name?: string | null
+          p_popup_id?: string | null
+        }
+        Returns: string
+      }
+    }
   }
 }

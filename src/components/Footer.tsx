@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { submitWebsiteForm } from '@/lib/submitWebsiteForm'
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
 import { cn } from '../lib/utils'
 import { Button } from './Button'
@@ -32,6 +33,9 @@ export function Footer() {
   const { t } = useLocalePreferences()
   const [email, setEmail] = useState('')
   const [attempted, setAttempted] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [done, setDone] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const trimmed = email.trim()
   const emptyError = Boolean(attempted && trimmed.length === 0)
   const formatError = Boolean(attempted && trimmed.length > 0 && !isValidEmail(trimmed))
@@ -85,14 +89,34 @@ export function Footer() {
     [t],
   )
 
-  function handleNewsletterSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleNewsletterSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setAttempted(true)
+    setSubmitError(null)
     if (!trimmed || !isValidEmail(trimmed)) return
 
-    const subj = encodeURIComponent(t('follow.mailSubject'))
-    const body = encodeURIComponent(t('follow.mailBody', { email: trimmed }))
-    window.location.href = `mailto:Info@capitaldreamdubai.com?subject=${subj}&body=${body}`
+    setBusy(true)
+    const { error } = await submitWebsiteForm({
+      source: 'newsletter',
+      name: 'Newsletter',
+      email: trimmed,
+      phone: null,
+      message: null,
+      meta: {
+        intent: 'newsletter',
+        page_path: typeof window !== 'undefined' ? window.location.pathname : null,
+      },
+    })
+    setBusy(false)
+    if (error) {
+      setSubmitError(
+        error.message === 'Supabase not configured' ? t('lead.errorNotConnected') : error.message,
+      )
+      return
+    }
+    setDone(true)
+    setEmail('')
+    setAttempted(false)
   }
 
   return (
@@ -172,52 +196,62 @@ export function Footer() {
             <p className="text-xs font-sans font-semibold uppercase tracking-wide text-white sm:text-sm">
               {t('footer.newsletter')}
             </p>
-            <form
-              onSubmit={handleNewsletterSubmit}
-              className="mt-3 flex w-full flex-col gap-3 sm:mt-4"
-              noValidate
-            >
-              <div className="flex min-w-0 w-full flex-col gap-1.5">
-                <label htmlFor="footer-subscribe-email" className="sr-only">
-                  {t('follow.emailLabel')}
-                </label>
-                <input
-                  id="footer-subscribe-email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  inputMode="email"
-                  placeholder={t('follow.emailPlaceholder')}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  aria-invalid={showError || undefined}
-                  aria-describedby={
-                    showError ? 'footer-subscribe-email-error' : undefined
-                  }
-                  className={`min-h-12 w-full rounded-xl border bg-white/90 px-4 py-3 text-base leading-snug font-sans font-normal normal-case tracking-normal text-ink placeholder:text-ink/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta/35 sm:min-h-[3.75rem] sm:px-6 sm:py-3.5 sm:text-lg ${
-                    showError
-                      ? 'border-terracotta'
-                      : 'border-terracotta/35 focus-visible:border-terracotta/60'
-                  }`}
-                />
-                {showError ? (
-                  <p
-                    id="footer-subscribe-email-error"
-                    className="px-2 text-sm text-terracotta"
-                    role="alert"
-                  >
-                    {emptyError ? t('follow.errorEmpty') : t('follow.errorFormat')}
-                  </p>
-                ) : null}
-              </div>
-              <Button
-                type="submit"
-                variant="inkSolid"
-                className="btn-hover-subscribe h-auto min-h-12 w-full whitespace-normal border border-ink px-4 py-3 text-center text-sm font-medium normal-case leading-snug tracking-normal sm:min-h-14 sm:px-5 sm:py-3.5 sm:text-base"
+            {done ? (
+              <p className="mt-3 text-sm text-cream/90 sm:mt-4">{t('lead.thanks')}</p>
+            ) : (
+              <form
+                onSubmit={handleNewsletterSubmit}
+                className="mt-3 flex w-full flex-col gap-3 sm:mt-4"
+                noValidate
               >
-                {t('follow.ctaSubscribe')}
-              </Button>
-            </form>
+                <div className="flex min-w-0 w-full flex-col gap-1.5">
+                  <label htmlFor="footer-subscribe-email" className="sr-only">
+                    {t('follow.emailLabel')}
+                  </label>
+                  <input
+                    id="footer-subscribe-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    inputMode="email"
+                    placeholder={t('follow.emailPlaceholder')}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    aria-invalid={showError || undefined}
+                    aria-describedby={
+                      showError ? 'footer-subscribe-email-error' : undefined
+                    }
+                    className={`min-h-12 w-full rounded-xl border bg-white/90 px-4 py-3 text-base leading-snug font-sans font-normal normal-case tracking-normal text-ink placeholder:text-ink/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta/35 sm:min-h-[3.75rem] sm:px-6 sm:py-3.5 sm:text-lg ${
+                      showError
+                        ? 'border-terracotta'
+                        : 'border-terracotta/35 focus-visible:border-terracotta/60'
+                    }`}
+                  />
+                  {showError ? (
+                    <p
+                      id="footer-subscribe-email-error"
+                      className="px-2 text-sm text-terracotta"
+                      role="alert"
+                    >
+                      {emptyError ? t('follow.errorEmpty') : t('follow.errorFormat')}
+                    </p>
+                  ) : null}
+                  {submitError ? (
+                    <p className="px-2 text-sm text-terracotta" role="alert">
+                      {submitError}
+                    </p>
+                  ) : null}
+                </div>
+                <Button
+                  type="submit"
+                  variant="inkSolid"
+                  disabled={busy}
+                  className="btn-hover-subscribe h-auto min-h-12 w-full whitespace-normal border border-ink px-4 py-3 text-center text-sm font-medium normal-case leading-snug tracking-normal sm:min-h-14 sm:px-5 sm:py-3.5 sm:text-base"
+                >
+                  {busy ? '…' : t('follow.ctaSubscribe')}
+                </Button>
+              </form>
+            )}
           </div>
         </div>
         <div className="mt-12 flex flex-col gap-4 border-t border-cream/15 pt-8 text-cream/70 sm:mt-14 sm:flex-row sm:items-center sm:justify-between">

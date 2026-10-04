@@ -147,6 +147,7 @@ export function OffplanProjectDetailPage() {
               intent="inquiry"
               projectId={project.id}
               projectName={project.name}
+              projectSlug={project.slug}
               salesperson={salesperson}
             />
           </aside>
@@ -158,6 +159,7 @@ export function OffplanProjectDetailPage() {
         onClose={() => setBrochureOpen(false)}
         projectId={project.id}
         projectName={project.name}
+        projectSlug={project.slug}
         salesperson={salesperson}
         onBrochureUnlocked={handleBrochureUnlocked}
       />

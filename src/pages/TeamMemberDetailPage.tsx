@@ -7,7 +7,7 @@ import { SectionShell } from '@/components/SectionShell'
 import { useCms } from '@/contexts/CmsContext'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
 import { usePageSeo } from '@/hooks/usePageSeo'
-import { agentWhatsappUrl } from '@/lib/whatsapp'
+import { agentWhatsappUrl, openAgentWhatsapp } from '@/lib/whatsapp'
 
 function socialHref(
   socialLinks: Record<string, unknown>,
@@ -190,14 +190,13 @@ export function TeamMemberDetailPage() {
 
             <div className="mt-8 flex flex-wrap gap-3">
               {waHref ? (
-                <a
-                  href={waHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() => void openAgentWhatsapp(person)}
                   className={buttonClassNames('primary')}
                 >
                   {t('teamMember.speakCta')}
-                </a>
+                </button>
               ) : null}
               <Link to="/team" className={buttonClassNames('outlineTerracotta')}>
                 {t('teamMember.backTeam')}

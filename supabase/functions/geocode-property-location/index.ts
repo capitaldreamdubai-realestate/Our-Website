@@ -26,7 +26,14 @@ function locationQuery(row: {
   return [...new Set(parts)].join(', ')
 }
 
-async function geocode(query: string): Promise<{ latitude: number; longitude: number } | null> {
+function finitePair(latitude: unknown, longitude: unknown) {
+  const lat = Number(latitude)
+  const lng = Number(longitude)
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+  return { latitude: lat, longitude: lng }
+}
+
+async function geocodeNominatim(query: string) {
   const url = new URL('https://nominatim.openstreetmap.org/search')
   url.searchParams.set('format', 'jsonv2')
   url.searchParams.set('limit', '1')
@@ -41,10 +48,30 @@ async function geocode(query: string): Promise<{ latitude: number; longitude: nu
   const rows = (await response.json()) as Array<{ lat?: string; lon?: string }>
   const first = rows[0]
   if (!first) return null
-  const latitude = Number(first.lat)
-  const longitude = Number(first.lon)
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null
-  return { latitude, longitude }
+  return finitePair(first.lat, first.lon)
+}
+
+async function geocodePhoton(query: string) {
+  const url = new URL('https://photon.komoot.io/api/')
+  url.searchParams.set('limit', '1')
+  url.searchParams.set('q', query)
+  const response = await fetch(url, {
+    headers: {
+      Accept: 'application/json',
+      'User-Agent': 'CapitalDreamWebsite/1.0 (https://capitaldreamdubai.com)',
+    },
+  })
+  if (!response.ok) return null
+  const body = (await response.json()) as {
+    features?: Array<{ geometry?: { coordinates?: [number, number] } }>
+  }
+  const coordinates = body.features?.[0]?.geometry?.coordinates
+  if (!coordinates) return null
+  return finitePair(coordinates[1], coordinates[0])
+}
+
+async function geocode(query: string): Promise<{ latitude: number; longitude: number } | null> {
+  return (await geocodeNominatim(query)) ?? (await geocodePhoton(query))
 }
 
 Deno.serve(async (req) => {
@@ -82,17 +109,9 @@ Deno.serve(async (req) => {
     const query = locationQuery(property)
     if (!query) return json({ ok: false, error: 'This listing has no location.' }, 422)
 
-    if (
-      property.location_geocode_query === query &&
-      typeof property.latitude === 'number' &&
-      typeof property.longitude === 'number'
-    ) {
-      return json({
-        ok: true,
-        latitude: property.latitude,
-        longitude: property.longitude,
-        cached: true,
-      })
+    const cached = finitePair(property.latitude, property.longitude)
+    if (property.location_geocode_query === query && cached) {
+      return json({ ok: true, ...cached, cached: true })
     }
 
     const coords = await geocode(query)

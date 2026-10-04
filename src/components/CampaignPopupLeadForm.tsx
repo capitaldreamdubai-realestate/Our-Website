@@ -2,7 +2,7 @@ import { useMemo, useState, type FormEvent } from 'react'
 import { buttonClassNames } from '@/components/Button'
 import { PhoneInputField } from '@/components/PhoneInputField'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
-import { getSupabase } from '@/integrations/supabase/client'
+import { submitWebsiteForm } from '@/lib/submitWebsiteForm'
 
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
@@ -58,16 +58,10 @@ export function CampaignPopupLeadForm({
     setErr(null)
     if (hasErrors) return
 
-    const sb = getSupabase()
-    if (!sb) {
-      setErr(t('popup.errorNotConnected'))
-      return
-    }
-
     setBusy(true)
-    const { error } = await sb.from('form_submissions').insert({
+    const { error } = await submitWebsiteForm({
       source: 'campaign_popup',
-      popup_id: popupId,
+      popupId,
       name: name.trim(),
       email: email.trim(),
       phone: phone?.trim() || null,
@@ -77,7 +71,7 @@ export function CampaignPopupLeadForm({
     setBusy(false)
 
     if (error) {
-      setErr(error.message)
+      setErr(error.message === 'Supabase not configured' ? t('popup.errorNotConnected') : error.message)
       return
     }
 
@@ -89,13 +83,8 @@ export function CampaignPopupLeadForm({
     onSuccess?.()
   }
 
-  if (done) {
-    return (
-      <p className="text-sm leading-relaxed text-terracotta/90" role="status">
-        {t('popup.thankYou')}
-      </p>
-    )
-  }
+  // Success UI is owned by CampaignPopupOverlay so image + copy stay balanced.
+  if (done) return null
 
   return (
     <form className="space-y-3" noValidate onSubmit={handleSubmit}>

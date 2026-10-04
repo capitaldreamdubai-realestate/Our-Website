@@ -117,12 +117,16 @@ export function SubmissionDetailSheet({
           </Field>
           <Field label="Name">{row.name}</Field>
           <Field label="Email">
-            <a
-              href={`mailto:${encodeURIComponent(row.email)}`}
-              className="break-all text-[var(--admin-primary)] hover:underline"
-            >
-              {row.email}
-            </a>
+            {row.email ? (
+              <a
+                href={`mailto:${encodeURIComponent(row.email)}`}
+                className="break-all text-[var(--admin-primary)] hover:underline"
+              >
+                {row.email}
+              </a>
+            ) : (
+              <span className="text-ink/45">—</span>
+            )}
           </Field>
           <Field label="Phone">
             {row.phone ? (

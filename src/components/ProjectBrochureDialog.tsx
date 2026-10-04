@@ -9,6 +9,7 @@ type Props = {
   onClose: () => void
   projectId: string
   projectName: string
+  projectSlug?: string | null
   salesperson: PublicSalesperson | null
   onBrochureUnlocked: (details: { email: string; name: string }) => void
 }
@@ -18,6 +19,7 @@ export function ProjectBrochureDialog({
   onClose,
   projectId,
   projectName,
+  projectSlug,
   salesperson,
   onBrochureUnlocked,
 }: Props) {
@@ -79,6 +81,7 @@ export function ProjectBrochureDialog({
             intent="brochure"
             projectId={projectId}
             projectName={projectName}
+            projectSlug={projectSlug}
             salesperson={salesperson}
             onSuccess={(details) => {
               onBrochureUnlocked(details)

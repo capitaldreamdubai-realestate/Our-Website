@@ -17,7 +17,7 @@ import { usePageSeo } from '../hooks/usePageSeo'
 import { useRelatedProperties } from '../hooks/useRelatedProperties'
 import { downloadPropertyBrochure } from '../lib/propertyBrochure/downloadPropertyBrochure'
 import { resolveGallery } from '../lib/resolvePropertyDetail'
-import { agentWhatsappUrl } from '../lib/whatsapp'
+import { agentWhatsappUrl, openAgentWhatsapp } from '../lib/whatsapp'
 
 export function PropertyDetailPage() {
   const { propertyId } = useParams<{ propertyId: string }>()
@@ -208,14 +208,19 @@ export function PropertyDetailPage() {
                     <>
                       {' '}
                       or{' '}
-                      <a
-                        href={wa}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        type="button"
+                        onClick={() =>
+                          void openAgentWhatsapp(salesperson, {
+                            propertyId: property.id,
+                            propertyTitle: property.title,
+                            pagePath: typeof window !== 'undefined' ? window.location.pathname : undefined,
+                          })
+                        }
                         className="font-medium text-terracotta underline-offset-2 hover:underline"
                       >
                         message on WhatsApp
-                      </a>
+                      </button>
                     </>
                   ) : null}
                   .

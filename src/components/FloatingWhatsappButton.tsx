@@ -3,16 +3,15 @@ import { useEffect, useRef, useState } from 'react'
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaTiktok, FaYoutube } from 'react-icons/fa6'
 import { useCms } from '@/contexts/CmsContext'
 import type { FloatingSocialPlatform } from '@/lib/socialFloatingLinks'
-import { whatsappHref } from '../lib/whatsapp'
+import { buildWhatsappPrefill, openWhatsappWithLead } from '../lib/whatsapp'
 
 const COMPANY_WHATSAPP = '+971 50 108 3541'
 
 export function FloatingWhatsappButton() {
   const { siteSettings } = useCms()
   const [socialOpen, setSocialOpen] = useState(false)
+  const [waBusy, setWaBusy] = useState(false)
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const href = whatsappHref(COMPANY_WHATSAPP)
-  if (!href) return null
   const socialLinks = siteSettings.floatingSocialLinks
 
   useEffect(() => {
@@ -58,6 +57,18 @@ export function FloatingWhatsappButton() {
     return 'bg-[#155AA8] hover:bg-[#124c8b]'
   }
 
+  async function handleWhatsappClick() {
+    if (waBusy) return
+    setWaBusy(true)
+    const path = typeof window !== 'undefined' ? window.location.pathname : '/'
+    await openWhatsappWithLead({
+      phone: COMPANY_WHATSAPP,
+      text: buildWhatsappPrefill({ pagePath: path }),
+      pagePath: path,
+    })
+    setWaBusy(false)
+  }
+
   return (
     <div
       ref={containerRef}
@@ -97,12 +108,12 @@ export function FloatingWhatsappButton() {
           </button>
         </div>
       ) : null}
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
+      <button
+        type="button"
+        onClick={() => void handleWhatsappClick()}
+        disabled={waBusy}
         aria-label="Chat with us on WhatsApp"
-        className="group relative inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-black/20 transition-[transform,background-color] duration-300 ease-out hover:scale-105 hover:bg-[#1ebe5d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        className="group relative inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-black/20 transition-[transform,background-color] duration-300 ease-out hover:scale-105 hover:bg-[#1ebe5d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:opacity-70"
       >
         <span
           className="pointer-events-none absolute inset-0 rounded-full bg-[#25D366]/60 animate-ping"
@@ -113,7 +124,7 @@ export function FloatingWhatsappButton() {
           aria-hidden
         />
         <MessageCircle className="relative z-10 size-7" strokeWidth={2.2} />
-      </a>
+      </button>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { buttonClassNames } from '@/components/Button'
 import { PhoneInputField } from '@/components/PhoneInputField'
+import { submitWebsiteForm } from '@/lib/submitWebsiteForm'
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
 import { usePageSeo } from '../hooks/usePageSeo'
 
@@ -29,6 +30,9 @@ export function ContactUsPage() {
   const { t } = useLocalePreferences()
   const [values, setValues] = useState<ContactFormState>(initialState)
   const [attempted, setAttempted] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [done, setDone] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   usePageSeo({
     title: t('seo.contact.title'),
@@ -47,27 +51,42 @@ export function ContactUsPage() {
     }
   }, [attempted, values])
 
-  const hasErrors = errors.name || errors.emailRequired || errors.emailFormat || errors.message
-
   function updateField<Key extends keyof ContactFormState>(key: Key, value: ContactFormState[Key]) {
     setValues((prev) => ({ ...prev, [key]: value }))
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setAttempted(true)
-    if (hasErrors) return
+    setSubmitError(null)
 
-    const subject = encodeURIComponent(t('contact.mailSubject'))
-    const body = encodeURIComponent(
-      t('contact.mailBody', {
-        name: values.name.trim(),
-        email: values.email.trim(),
-        phone: values.phone.trim() || '-',
-        message: values.message.trim(),
-      }),
-    )
-    window.location.href = `mailto:Info@capitaldreamdubai.com?subject=${subject}&body=${body}`
+    const name = values.name.trim()
+    const email = values.email.trim()
+    const message = values.message.trim()
+    if (!name || !email || !isValidEmail(email) || !message) return
+
+    setBusy(true)
+    const { error } = await submitWebsiteForm({
+      source: 'contact',
+      name,
+      email,
+      phone: values.phone.trim() || null,
+      message,
+      meta: {
+        page_path: typeof window !== 'undefined' ? window.location.pathname : '/contact-us',
+        intent: 'contact',
+      },
+    })
+    setBusy(false)
+    if (error) {
+      setSubmitError(
+        error.message === 'Supabase not configured' ? t('lead.errorNotConnected') : error.message,
+      )
+      return
+    }
+    setDone(true)
+    setValues(initialState)
+    setAttempted(false)
   }
 
   return (
@@ -109,72 +128,88 @@ export function ContactUsPage() {
           className="rounded-2xl border border-[#6B3B34]/14 bg-white/60 p-5 shadow-sm sm:p-6"
           aria-label={t('contact.formAria')}
         >
-          <form className="space-y-4" noValidate onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field
-                id="contact-name"
-                label={t('contact.name')}
-                value={values.name}
-                onChange={(value) => updateField('name', value)}
-                error={errors.name ? t('contact.errorName') : null}
-              />
-              <Field
-                id="contact-email"
-                label={t('contact.email')}
-                type="email"
-                value={values.email}
-                onChange={(value) => updateField('email', value)}
-                error={
-                  errors.emailRequired
-                    ? t('contact.errorEmailRequired')
-                    : errors.emailFormat
-                      ? t('contact.errorEmailFormat')
-                      : null
-                }
-              />
-            </div>
+          {done ? (
+            <p className="font-sans text-base leading-relaxed text-terracotta">
+              {t('lead.thanks')}
+            </p>
+          ) : (
+            <form className="space-y-4" noValidate onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field
+                  id="contact-name"
+                  label={t('contact.name')}
+                  value={values.name}
+                  onChange={(value) => updateField('name', value)}
+                  error={errors.name ? t('contact.errorName') : null}
+                />
+                <Field
+                  id="contact-email"
+                  label={t('contact.email')}
+                  type="email"
+                  value={values.email}
+                  onChange={(value) => updateField('email', value)}
+                  error={
+                    errors.emailRequired
+                      ? t('contact.errorEmailRequired')
+                      : errors.emailFormat
+                        ? t('contact.errorEmailFormat')
+                        : null
+                  }
+                />
+              </div>
 
-            <div className="space-y-1.5">
-              <label htmlFor="contact-phone" className="font-sans text-sm font-medium text-terracotta/90">
-                {t('contact.phone')}
-              </label>
-              <PhoneInputField
-                id="contact-phone"
-                value={values.phone}
-                onChange={(value) => updateField('phone', value ?? '')}
-                variant="public"
-                defaultCountry="AE"
-                placeholder={t('contact.phone')}
-              />
-            </div>
+              <div className="space-y-1.5">
+                <label htmlFor="contact-phone" className="font-sans text-sm font-medium text-terracotta/90">
+                  {t('contact.phone')}
+                </label>
+                <PhoneInputField
+                  id="contact-phone"
+                  value={values.phone}
+                  onChange={(value) => updateField('phone', value ?? '')}
+                  variant="public"
+                  defaultCountry="AE"
+                  placeholder={t('contact.phone')}
+                />
+              </div>
 
-            <div className="space-y-1.5">
-              <label
-                htmlFor="contact-message"
-                className="font-sans text-sm font-medium text-terracotta/90"
-              >
-                {t('contact.message')}
-              </label>
-              <textarea
-                id="contact-message"
-                value={values.message}
-                onChange={(event) => updateField('message', event.target.value)}
-                rows={5}
-                aria-invalid={errors.message || undefined}
-                aria-describedby={errors.message ? 'contact-message-error' : undefined}
-                className="w-full rounded-xl border border-[#6B3B34]/28 bg-white px-4 py-3 text-base text-ink outline-none transition focus:border-[#6B3B34]/55 focus:ring-2 focus:ring-[#6B3B34]/20"
-              />
-              {errors.message ? (
-                <p id="contact-message-error" className="text-sm text-terracotta" role="alert">
-                  {t('contact.errorMessage')}
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="contact-message"
+                  className="font-sans text-sm font-medium text-terracotta/90"
+                >
+                  {t('contact.message')}
+                </label>
+                <textarea
+                  id="contact-message"
+                  value={values.message}
+                  onChange={(event) => updateField('message', event.target.value)}
+                  rows={5}
+                  aria-invalid={errors.message || undefined}
+                  aria-describedby={errors.message ? 'contact-message-error' : undefined}
+                  className="w-full rounded-xl border border-[#6B3B34]/28 bg-white px-4 py-3 text-base text-ink outline-none transition focus:border-[#6B3B34]/55 focus:ring-2 focus:ring-[#6B3B34]/20"
+                />
+                {errors.message ? (
+                  <p id="contact-message-error" className="text-sm text-terracotta" role="alert">
+                    {t('contact.errorMessage')}
+                  </p>
+                ) : null}
+              </div>
+
+              {submitError ? (
+                <p className="text-sm text-terracotta" role="alert">
+                  {submitError}
                 </p>
               ) : null}
-            </div>
 
-            <button type="submit" className={buttonClassNames('primary', 'min-h-11 px-5 py-2.5')}>
-              {t('contact.submit')}
-            </button>
-          </form>
+              <button
+                type="submit"
+                disabled={busy}
+                className={buttonClassNames('primary', 'min-h-11 px-5 py-2.5')}
+              >
+                {busy ? '…' : t('contact.submit')}
+              </button>
+            </form>
+          )}
         </section>
       </div>
     </main>

@@ -2,7 +2,7 @@ import { Phone } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { ImagePrimaryOverlay } from './ImagePrimaryOverlay'
 import type { PublicSalesperson } from '@/lib/cms/loadCmsSnapshot'
-import { agentWhatsappUrl } from '@/lib/whatsapp'
+import { agentWhatsappUrl, openAgentWhatsapp } from '@/lib/whatsapp'
 
 function WhatsAppIcon({ className }: { className?: string }) {
   return (
@@ -87,15 +87,14 @@ export function SalesTeamMemberCard({ person, profileHref }: Props) {
                   </a>
                 ) : null}
                 {waHref ? (
-                  <a
-                    href={waHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    type="button"
+                    onClick={() => void openAgentWhatsapp(person)}
                     className="inline-flex size-10 items-center justify-center rounded-full text-terracotta transition hover:bg-terracotta/12 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta"
                     aria-label={`WhatsApp ${person.name}`}
                   >
                     <WhatsAppIcon className="size-[1.125rem]" />
-                  </a>
+                  </button>
                 ) : null}
               </div>
             </div>

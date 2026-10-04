@@ -3,8 +3,8 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { buttonClassNames } from '@/components/Button'
 import { PhoneInputField } from '@/components/PhoneInputField'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
-import { getSupabase } from '@/integrations/supabase/client'
 import type { PublicSalesperson } from '@/lib/cms/loadCmsSnapshot'
+import { submitWebsiteForm } from '@/lib/submitWebsiteForm'
 
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
@@ -98,17 +98,11 @@ export function PropertyBrochureDialog({
       return
     }
 
-    const sb = getSupabase()
-    if (!sb) {
-      setErr(t('popup.errorNotConnected'))
-      return
-    }
-
     setBusy(true)
-    const { error } = await sb.from('form_submissions').insert({
+    const { error } = await submitWebsiteForm({
       source: 'property_brochure',
-      property_id: propertyId,
-      property_title: propertyTitle,
+      propertyId,
+      propertyTitle,
       name: name.trim(),
       email: email.trim(),
       phone: phone.trim() || null,
@@ -121,7 +115,7 @@ export function PropertyBrochureDialog({
     })
     setBusy(false)
     if (error) {
-      setErr(error.message)
+      setErr(error.message === 'Supabase not configured' ? t('popup.errorNotConnected') : error.message)
       return
     }
     setSaved(true)
