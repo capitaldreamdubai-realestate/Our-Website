@@ -131,6 +131,67 @@
   }
 }
 
+@keyframes form-success-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes form-success-mark-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes form-success-tick-draw {
+  from {
+    stroke-dashoffset: 28;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.form-success-panel {
+  animation: form-success-panel-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.form-success-mark {
+  animation: form-success-mark-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.form-success-tick {
+  stroke-dasharray: 28;
+  stroke-dashoffset: 28;
+  animation: form-success-tick-draw 0.45s 0.18s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .form-success-panel,
+  .form-success-mark,
+  .form-success-tick {
+    animation: none;
+  }
+
+  .form-success-tick {
+    stroke-dashoffset: 0;
+  }
+}
+
 @keyframes cool-button-sheen {
   0% {
     transform: translateX(-140%) skewX(-20deg);

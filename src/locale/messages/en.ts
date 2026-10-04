@@ -463,8 +463,31 @@ export const en: Record<string, string> = {
   'popup.closeAria': 'Close popup',
   'popup.submit': 'Submit',
   'popup.sending': 'Sending…',
-  'popup.thankYou': 'Thank you. Our team will be in touch shortly.',
+  'popup.thankYou': 'You’re in. A Capital Dream specialist will follow up shortly.',
+  'popup.closeContinue': 'Continue browsing',
   'popup.errorNotConnected': 'Unable to submit right now. Please try again later.',
+
+  'formSuccess.contact.eyebrow': 'Message received',
+  'formSuccess.contact.title': 'We’ll be in touch soon',
+  'formSuccess.contact.body':
+    'Your enquiry is with our team. Expect a clear next step from a Capital Dream specialist shortly.',
+  'formSuccess.contact.whatsapp': 'Prefer WhatsApp?',
+  'formSuccess.newsletter.eyebrow': 'Subscribed',
+  'formSuccess.newsletter.title': 'You’re on the list',
+  'formSuccess.newsletter.body':
+    'Market notes and new opportunities will land in your inbox — curated, not cluttered.',
+  'formSuccess.popup.eyebrow': 'You’re registered',
+  'formSuccess.popup.title': 'Thank you',
+  'formSuccess.popup.body':
+    'We’ve received your details. A Capital Dream advisor will reach out with the next step.',
+  'formSuccess.enquiry.eyebrow': 'Enquiry sent',
+  'formSuccess.enquiry.title': 'We’ve received your request',
+  'formSuccess.enquiry.body':
+    'A member of our team will follow up shortly with tailored guidance on this opportunity.',
+  'formSuccess.brochure.eyebrow': 'Ready',
+  'formSuccess.brochure.title': 'Your brochure is on its way',
+  'formSuccess.brochure.body':
+    'The download should begin momentarily. Keep an eye on your device if it doesn’t start automatically.',
 
   'testimonials.aria.main': 'Testimonials',
   'testimonials.eyebrow': 'Testimonials',
@@ -515,7 +538,9 @@ export const en: Record<string, string> = {
   'lead.agentDetails': 'Agent details',
   'lead.aboutBroker': 'About Capital Dream',
   'lead.thankYou':
-    'Thank you — your enquiry was sent. A member of our team will be in touch shortly.',
+    'We’ve received your enquiry. A Capital Dream specialist will be in touch shortly.',
+  'lead.thanks':
+    'We’ve received your message. A Capital Dream specialist will be in touch shortly.',
   'lead.name': 'Name',
   'lead.namePh': 'Name',
   'lead.nameRequired': 'Name is required.',

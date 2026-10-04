@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { FormSuccessPanel } from '@/components/FormSuccessPanel'
 import { submitWebsiteForm } from '@/lib/submitWebsiteForm'
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
 import { cn } from '../lib/utils'
@@ -197,7 +198,7 @@ export function Footer() {
               {t('footer.newsletter')}
             </p>
             {done ? (
-              <p className="mt-3 text-sm text-cream/90 sm:mt-4">{t('lead.thanks')}</p>
+              <FormSuccessPanel variant="newsletter" tone="onDark" className="mt-3 sm:mt-4" />
             ) : (
               <form
                 onSubmit={handleNewsletterSubmit}

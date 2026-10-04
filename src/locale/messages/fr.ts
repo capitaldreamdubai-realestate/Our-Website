@@ -465,8 +465,31 @@ export const fr: Record<string, string> = {
   'popup.closeAria': 'Fermer la fenêtre',
   'popup.submit': 'Envoyer',
   'popup.sending': 'Envoi…',
-  'popup.thankYou': 'Merci. Notre équipe vous contactera très bientôt.',
+  'popup.thankYou': 'C’est noté. Un spécialiste Capital Dream vous recontactera sous peu.',
+  'popup.closeContinue': 'Continuer la navigation',
   'popup.errorNotConnected': 'Envoi impossible pour le moment. Veuillez réessayer plus tard.',
+
+  'formSuccess.contact.eyebrow': 'Message reçu',
+  'formSuccess.contact.title': 'Nous vous recontacterons bientôt',
+  'formSuccess.contact.body':
+    'Votre demande est entre les mains de notre équipe. Un spécialiste Capital Dream vous indiquera clairement la suite.',
+  'formSuccess.contact.whatsapp': 'Préférez WhatsApp ?',
+  'formSuccess.newsletter.eyebrow': 'Abonnement confirmé',
+  'formSuccess.newsletter.title': 'Vous êtes sur la liste',
+  'formSuccess.newsletter.body':
+    'Notes de marché et nouvelles opportunités arriveront dans votre boîte — sélectionnées, sans surplus.',
+  'formSuccess.popup.eyebrow': 'Inscription reçue',
+  'formSuccess.popup.title': 'Merci',
+  'formSuccess.popup.body':
+    'Nous avons bien reçu vos coordonnées. Un conseiller Capital Dream vous contactera pour la suite.',
+  'formSuccess.enquiry.eyebrow': 'Demande envoyée',
+  'formSuccess.enquiry.title': 'Nous avons reçu votre demande',
+  'formSuccess.enquiry.body':
+    'Un membre de notre équipe vous recontactera bientôt avec des conseils adaptés à cette opportunité.',
+  'formSuccess.brochure.eyebrow': 'Prêt',
+  'formSuccess.brochure.title': 'Votre brochure arrive',
+  'formSuccess.brochure.body':
+    'Le téléchargement devrait commencer sous peu. Surveillez votre appareil s’il ne démarre pas automatiquement.',
 
   'testimonials.aria.main': 'Témoignages',
   'testimonials.eyebrow': 'Témoignages',
@@ -518,7 +541,9 @@ export const fr: Record<string, string> = {
   'lead.agentDetails': 'Fiche conseiller',
   'lead.aboutBroker': 'À propos de Capital Dream',
   'lead.thankYou':
-    'Merci — votre demande a été envoyée. Un membre de notre équipe vous contactera sous peu.',
+    'Nous avons bien reçu votre demande. Un spécialiste Capital Dream vous recontactera sous peu.',
+  'lead.thanks':
+    'Nous avons bien reçu votre message. Un spécialiste Capital Dream vous recontactera sous peu.',
   'lead.name': 'Nom',
   'lead.namePh': 'Nom',
   'lead.nameRequired': 'Le nom est obligatoire.',

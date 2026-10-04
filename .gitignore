@@ -27,3 +27,5 @@ dist-ssr
 
 # Supabase migrations (excluded from public repo)
 supabase/migrations/
+
+capital-dream-dist.zip

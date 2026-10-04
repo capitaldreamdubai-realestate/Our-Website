@@ -3,7 +3,9 @@ import { X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation } from 'react-router-dom'
+import { buttonClassNames } from '@/components/Button'
 import { CampaignPopupLeadForm } from '@/components/CampaignPopupLeadForm'
+import { FormSuccessPanel } from '@/components/FormSuccessPanel'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
 import { getSupabase } from '@/integrations/supabase/client'
 import type { CampaignPopup } from '@/lib/campaignPopup'
@@ -148,16 +150,22 @@ export function CampaignPopupOverlay() {
             )}
           >
             {submitted ? (
-              <div className="space-y-3 pr-10" role="status">
-                <h2
-                  id="campaign-popup-title"
-                  className="type-section-title font-display text-xl font-semibold leading-tight text-terracotta sm:text-2xl"
-                >
+              <div className="pr-10">
+                <p id="campaign-popup-title" className="sr-only">
                   {active.title}
-                </h2>
-                <p className="font-sans text-base leading-relaxed text-terracotta/90 sm:text-[1.05rem]">
-                  {t('popup.thankYou')}
                 </p>
+                <FormSuccessPanel
+                  variant="popup"
+                  actions={
+                    <button
+                      type="button"
+                      onClick={close}
+                      className={buttonClassNames('primary', 'min-h-11 px-5 py-2.5')}
+                    >
+                      {t('popup.closeContinue')}
+                    </button>
+                  }
+                />
               </div>
             ) : (
               <>

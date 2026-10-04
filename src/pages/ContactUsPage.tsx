@@ -1,9 +1,13 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { buttonClassNames } from '@/components/Button'
+import { FormSuccessPanel } from '@/components/FormSuccessPanel'
 import { PhoneInputField } from '@/components/PhoneInputField'
 import { submitWebsiteForm } from '@/lib/submitWebsiteForm'
+import { buildWhatsappPrefill, openWhatsappWithLead } from '@/lib/whatsapp'
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
 import { usePageSeo } from '../hooks/usePageSeo'
+
+const COMPANY_WHATSAPP = '+971 50 108 3541'
 
 const panelBg = '#FAF7F2'
 const panelInk = '#6B3B34'
@@ -129,9 +133,25 @@ export function ContactUsPage() {
           aria-label={t('contact.formAria')}
         >
           {done ? (
-            <p className="font-sans text-base leading-relaxed text-terracotta">
-              {t('lead.thanks')}
-            </p>
+            <FormSuccessPanel
+              variant="contact"
+              className="py-2"
+              actions={
+                <button
+                  type="button"
+                  className={buttonClassNames('outlineTerracotta', 'min-h-11 px-5 py-2.5')}
+                  onClick={() => {
+                    void openWhatsappWithLead({
+                      phone: COMPANY_WHATSAPP,
+                      text: buildWhatsappPrefill({ pagePath: '/contact-us' }),
+                      pagePath: '/contact-us',
+                    })
+                  }}
+                >
+                  {t('formSuccess.contact.whatsapp')}
+                </button>
+              }
+            />
           ) : (
             <form className="space-y-4" noValidate onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

@@ -2,6 +2,7 @@ import clsx from 'clsx'
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { buttonClassNames } from '@/components/Button'
+import { FormSuccessPanel } from '@/components/FormSuccessPanel'
 import { PhoneInputField } from '@/components/PhoneInputField'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
 import type { PublicSalesperson } from '@/lib/cms/loadCmsSnapshot'
@@ -146,11 +147,10 @@ export function ProjectLeadForm({
       )}
 
       {done ? (
-        <p className={compact ? 'text-sm leading-relaxed text-ink/75' : 'mt-6 text-sm leading-relaxed text-ink/75'}>
-          {intent === 'brochure'
-            ? t('projectLead.thankYouBrochure')
-            : t('projectLead.thankYou')}
-        </p>
+        <FormSuccessPanel
+          variant={intent === 'brochure' ? 'brochure' : 'enquiry'}
+          className={compact ? undefined : 'mt-6'}
+        />
       ) : (
         <form
           className={clsx('flex flex-col gap-4', compact ? '' : 'mt-5')}

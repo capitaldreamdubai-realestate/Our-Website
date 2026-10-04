@@ -460,8 +460,31 @@ export const ar: Record<string, string> = {
   'popup.closeAria': 'إغلاق النافذة',
   'popup.submit': 'إرسال',
   'popup.sending': 'جارٍ الإرسال…',
-  'popup.thankYou': 'شكراً لك. سيتواصل معك فريقنا قريباً.',
+  'popup.thankYou': 'تم التسجيل. سيتابع معك مختص من كابيتال دريم قريباً.',
+  'popup.closeContinue': 'متابعة التصفح',
   'popup.errorNotConnected': 'تعذر الإرسال حالياً. يرجى المحاولة لاحقاً.',
+
+  'formSuccess.contact.eyebrow': 'تم استلام الرسالة',
+  'formSuccess.contact.title': 'سنتواصل معك قريباً',
+  'formSuccess.contact.body':
+    'وصلت رسالتك إلى فريقنا. ستصلك خطوة تالية واضحة من مختص كابيتال دريم قريباً.',
+  'formSuccess.contact.whatsapp': 'تفضّل واتساب؟',
+  'formSuccess.newsletter.eyebrow': 'تم الاشتراك',
+  'formSuccess.newsletter.title': 'أنت الآن على القائمة',
+  'formSuccess.newsletter.body':
+    'ستصلك ملاحظات السوق والفرص الجديدة في بريدك — مختارة بعناية دون إزعاج.',
+  'formSuccess.popup.eyebrow': 'تم تسجيلك',
+  'formSuccess.popup.title': 'شكراً لك',
+  'formSuccess.popup.body':
+    'استلمنا بياناتك. سيتواصل معك مستشار من كابيتال دريم بالخطوة التالية.',
+  'formSuccess.enquiry.eyebrow': 'تم إرسال الاستفسار',
+  'formSuccess.enquiry.title': 'استلمنا طلبك',
+  'formSuccess.enquiry.body':
+    'سيتابع معك أحد أعضاء فريقنا قريباً بإرشاد مخصص حول هذه الفرصة.',
+  'formSuccess.brochure.eyebrow': 'جاهز',
+  'formSuccess.brochure.title': 'كتيبك في الطريق',
+  'formSuccess.brochure.body':
+    'سيبدأ التحميل خلال لحظات. راقب جهازك إذا لم يبدأ تلقائياً.',
 
   'testimonials.aria.main': 'آراء العملاء',
   'testimonials.eyebrow': 'آراء العملاء',
@@ -512,7 +535,9 @@ export const ar: Record<string, string> = {
   'lead.agentDetails': 'تفاصيل الوكيل',
   'lead.aboutBroker': 'عن كابيتال دريم',
   'lead.thankYou':
-    'شكرًا — تم إرسال استفسارك. سيتواصل معك أحد أعضاء فريقنا قريبًا.',
+    'استلمنا استفسارك. سيتواصل معك مختص من كابيتال دريم قريباً.',
+  'lead.thanks':
+    'استلمنا رسالتك. سيتواصل معك مختص من كابيتال دريم قريباً.',
   'lead.name': 'الاسم',
   'lead.namePh': 'الاسم',
   'lead.nameRequired': 'الاسم مطلوب.',
