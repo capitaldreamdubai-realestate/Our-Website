@@ -52,6 +52,24 @@ export function Navbar() {
   const centerSlotRef = useRef<HTMLDivElement>(null)
   const measureUlRef = useRef<HTMLUListElement>(null)
   const [desktopOverflow, setDesktopOverflow] = useState(false)
+  const [aboutMenuOpen, setAboutMenuOpen] = useState(false)
+  const aboutCloseTimer = useRef<number | null>(null)
+
+  const openAboutMenu = () => {
+    if (aboutCloseTimer.current != null) {
+      window.clearTimeout(aboutCloseTimer.current)
+      aboutCloseTimer.current = null
+    }
+    setAboutMenuOpen(true)
+  }
+
+  const closeAboutMenuSoon = () => {
+    if (aboutCloseTimer.current != null) window.clearTimeout(aboutCloseTimer.current)
+    aboutCloseTimer.current = window.setTimeout(() => {
+      setAboutMenuOpen(false)
+      aboutCloseTimer.current = null
+    }, 280)
+  }
 
   useEffect(() => {
     const update = () => {
@@ -93,7 +111,14 @@ export function Navbar() {
 
   useEffect(() => {
     setOpen(false)
+    setAboutMenuOpen(false)
   }, [pathname])
+
+  useEffect(() => {
+    return () => {
+      if (aboutCloseTimer.current != null) window.clearTimeout(aboutCloseTimer.current)
+    }
+  }, [])
 
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : ''
@@ -214,10 +239,23 @@ export function Navbar() {
                     </NavLink>
                   </li>
                 ) : (
-                  <li key={item.aboutTo} className="group relative shrink-0">
+                  <li
+                    key={item.aboutTo}
+                    className="relative shrink-0"
+                    onMouseEnter={openAboutMenu}
+                    onMouseLeave={closeAboutMenuSoon}
+                    onFocus={openAboutMenu}
+                    onBlur={(event) => {
+                      const next = event.relatedTarget
+                      if (next instanceof Node && event.currentTarget.contains(next)) return
+                      closeAboutMenuSoon()
+                    }}
+                  >
                     <NavLink
                       to={item.aboutTo}
                       end
+                      aria-haspopup="menu"
+                      aria-expanded={aboutMenuOpen}
                       className={({ isActive }) => {
                         const subItemOn = item.subItems.some((subItem) =>
                           subItemPathActive(pathname, subItem.to),
@@ -231,25 +269,45 @@ export function Navbar() {
                       }}
                     >
                       {t(item.aboutKey)}
-                      <ChevronDown className="size-3.5 shrink-0 opacity-90" aria-hidden />
+                      <ChevronDown
+                        className={clsx(
+                          'size-3.5 shrink-0 opacity-90 transition-transform duration-200',
+                          aboutMenuOpen && 'rotate-180',
+                        )}
+                        aria-hidden
+                      />
                     </NavLink>
-                    <div className="pointer-events-none invisible absolute left-0 top-full z-[120] mt-1 min-w-[11rem] rounded-lg border border-white/20 bg-terracotta/95 py-1.5 opacity-0 shadow-lg transition-[opacity,visibility] duration-150 group-hover:pointer-events-auto group-hover:visible group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:visible group-focus-within:opacity-100">
-                      {item.subItems.map((subItem) => (
-                        <NavLink
-                          key={subItem.to}
-                          to={subItem.to}
-                          className={({ isActive }) =>
-                            clsx(
-                              linkClassFlyout,
-                              'block whitespace-nowrap px-4 py-2.5 text-[0.7rem] transition-colors sm:text-[0.72rem]',
-                              isActive && 'bg-white/15 text-white',
-                              !isActive && 'hover:bg-white/10 hover:text-white',
-                            )
-                          }
-                        >
-                          {t(subItem.key)}
-                        </NavLink>
-                      ))}
+                    {/* pt-3 is a hover bridge so the pointer can travel into the menu */}
+                    <div
+                      className={clsx(
+                        'absolute left-0 top-full z-[120] pt-3 transition-[opacity,visibility] duration-150',
+                        aboutMenuOpen
+                          ? 'pointer-events-auto visible opacity-100'
+                          : 'pointer-events-none invisible opacity-0',
+                      )}
+                    >
+                      <div
+                        role="menu"
+                        className="min-w-[11rem] rounded-lg border border-white/20 bg-terracotta/95 py-1.5 shadow-lg"
+                      >
+                        {item.subItems.map((subItem) => (
+                          <NavLink
+                            key={subItem.to}
+                            to={subItem.to}
+                            role="menuitem"
+                            className={({ isActive }) =>
+                              clsx(
+                                linkClassFlyout,
+                                'block whitespace-nowrap px-4 py-2.5 text-[0.7rem] transition-colors sm:text-[0.72rem]',
+                                isActive && 'bg-white/15 text-white',
+                                !isActive && 'hover:bg-white/10 hover:text-white',
+                              )
+                            }
+                          >
+                            {t(subItem.key)}
+                          </NavLink>
+                        ))}
+                      </div>
                     </div>
                   </li>
                 ),

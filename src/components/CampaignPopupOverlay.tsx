@@ -134,12 +134,12 @@ export function CampaignPopupOverlay() {
           <X className="size-5" strokeWidth={2} aria-hidden />
         </button>
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto md:grid-cols-2 md:overflow-hidden">
-          <div className="relative flex shrink-0 items-center justify-center bg-ink/[0.04] md:min-h-0 md:shrink md:overflow-hidden">
+        <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto md:grid-cols-2 md:grid-rows-1 md:overflow-hidden">
+          <div className="relative h-[min(42vh,300px)] overflow-hidden bg-ink md:h-auto md:self-stretch">
             <img
               src={active.image_url}
               alt=""
-              className="block h-auto max-h-[min(46vh,360px)] w-full object-contain object-center md:absolute md:inset-0 md:h-full md:max-h-none md:w-full"
+              className="absolute inset-0 h-full w-full object-cover object-center"
             />
           </div>
 
