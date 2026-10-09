@@ -3,6 +3,8 @@
  * so Hostinger can serve HTML without waiting for JavaScript.
  *
  * Uses installed Google Chrome when Playwright's Chromium download is absent.
+ * Hostinger has no Chrome, so a missing browser skips snapshots and leaves the
+ * Vite shell in dist. That shell still includes Google Tag Manager.
  * Set SKIP_PRERENDER=1 to build the SPA shell without snapshots.
  */
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
@@ -94,11 +96,20 @@ function dropShellDuplicates(source: string): string {
   return html
 }
 
-async function launchBrowser(): Promise<Browser> {
+async function launchBrowser(): Promise<Browser | null> {
   try {
     return await chromium.launch({ channel: 'chrome', headless: true })
-  } catch {
-    return await chromium.launch({ headless: true })
+  } catch (chromeError) {
+    try {
+      return await chromium.launch({ headless: true })
+    } catch (bundledError) {
+      const chromeMessage = chromeError instanceof Error ? chromeError.message : String(chromeError)
+      const bundledMessage = bundledError instanceof Error ? bundledError.message : String(bundledError)
+      console.warn('Prerender skipped: no Chrome or Playwright browser is installed.')
+      console.warn(chromeMessage)
+      console.warn(bundledMessage)
+      return null
+    }
   }
 }
 
@@ -176,10 +187,12 @@ async function main() {
   const routes = pathsFromSitemap(xml)
   if (routes.length === 0) throw new Error('Sitemap has no URLs to prerender.')
 
+  const browser = await launchBrowser()
+  if (!browser) return
+
   const server = await preview({
     preview: { host: '127.0.0.1', port: PORT, strictPort: true },
   })
-  const browser = await launchBrowser()
   const failures: string[] = []
   const skipped: string[] = []
 
