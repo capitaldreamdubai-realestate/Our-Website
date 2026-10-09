@@ -6,17 +6,13 @@ import { DeveloperCard } from '@/components/DeveloperCard'
 import { SectionShell } from '@/components/SectionShell'
 import { useCms } from '@/contexts/CmsContext'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
-import { usePageSeo } from '@/hooks/usePageSeo'
+import { Seo } from '@/components/Seo'
 
 const PAGE_SIZE = 12
 
 export function DevelopersPage() {
   const { developersWithListings, loading } = useCms()
   const { t } = useLocalePreferences()
-  usePageSeo({
-    title: t('seo.developers.title'),
-    description: t('seo.developers.description'),
-  })
 
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const visible = useMemo(
@@ -41,6 +37,7 @@ export function DevelopersPage() {
       aria-label={t('developers.aria.main')}
       className="flex w-full flex-col gap-[0.625rem]"
     >
+      <Seo title={t('seo.developers.title')} description={t('seo.developers.description')} />
       <SectionShell variant="cream" id="developers-grid" aria-label={t('developers.aria.grid')}>
         <div className="w-full">
           <div className="mb-8 flex items-center justify-between gap-3 sm:mb-10">

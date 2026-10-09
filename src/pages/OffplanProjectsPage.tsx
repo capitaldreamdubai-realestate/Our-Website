@@ -5,7 +5,7 @@ import { OffplanProjectCard } from '@/components/OffplanProjectCard'
 import { SectionShell } from '@/components/SectionShell'
 import { useCms } from '@/contexts/CmsContext'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
-import { usePageSeo } from '@/hooks/usePageSeo'
+import { Seo } from '@/components/Seo'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import {
   OFFPLAN_LAUNCH_STATUSES,
@@ -109,11 +109,6 @@ export function OffplanProjectsPage() {
   const { offplanProjectsByStatus, loading, cmsEmpty } = useCms()
   const { t } = useLocalePreferences()
 
-  usePageSeo({
-    title: t('seo.newDevelopments.title'),
-    description: t('seo.newDevelopments.description'),
-  })
-
   const totalProjects = OFFPLAN_LAUNCH_STATUSES.reduce(
     (sum, status) => sum + offplanProjectsByStatus[status].length,
     0,
@@ -125,6 +120,10 @@ export function OffplanProjectsPage() {
       aria-label={t('offplan.aria.main')}
       className="flex w-full flex-col gap-[0.625rem]"
     >
+      <Seo
+        title={t('seo.newDevelopments.title')}
+        description={t('seo.newDevelopments.description')}
+      />
       <SectionShell variant="cream" aria-label={t('offplan.heroAria')}>
         <p className="type-card-title font-compact uppercase tracking-[0.02em] text-ink/70">
           {t('listing.hero.new.title')}

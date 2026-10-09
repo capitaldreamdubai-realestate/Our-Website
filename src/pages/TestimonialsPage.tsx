@@ -5,7 +5,7 @@ import { CarouselNav } from '@/components/CarouselNav'
 import { useCms } from '@/contexts/CmsContext'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
 import { getSupabase } from '@/integrations/supabase/client'
-import { usePageSeo } from '@/hooks/usePageSeo'
+import { Seo } from '@/components/Seo'
 import type { Database } from '@/integrations/supabase/database.types'
 
 const panelBg = '#FAF7F2'
@@ -35,10 +35,6 @@ export function TestimonialsPage() {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [submitErr, setSubmitErr] = useState<string | null>(null)
-  usePageSeo({
-    title: t('seo.testimonials.title'),
-    description: t('seo.testimonials.description'),
-  })
 
   const errors = useMemo(
     () => ({
@@ -94,6 +90,10 @@ export function TestimonialsPage() {
       className="w-full min-w-0 rounded-2xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-10 xl:px-12 xl:py-12"
       style={{ backgroundColor: panelBg, color: panelInk }}
     >
+      <Seo
+        title={t('seo.testimonials.title')}
+        description={t('seo.testimonials.description')}
+      />
       <div className="space-y-10">
         <header className="max-w-3xl space-y-3">
           <p className="font-compact text-[0.6875rem] font-semibold uppercase tracking-[0.22em] text-terracotta/75">

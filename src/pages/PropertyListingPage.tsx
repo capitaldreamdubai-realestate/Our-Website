@@ -12,7 +12,7 @@ import { SectionShell } from '../components/SectionShell'
 import { useCms } from '../contexts/CmsContext'
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
 import { usePropertyFilterDock } from '../contexts/PropertyFilterDockContext'
-import { usePageSeo } from '../hooks/usePageSeo'
+import { Seo } from '../components/Seo'
 import { useMediaQuery } from '../hooks/useMediaQuery'
 import {
   filterParamsFromSearchParams,
@@ -148,13 +148,13 @@ export function PropertyListingPage(props: PropertyListingPageProps) {
     emptyFilteredMessage,
     mainId,
   } = props
-  usePageSeo({ title: seoTitle, description: seoDescription })
 
   return (
     <main
       id={mainId}
       className="flex w-full flex-col gap-[0.625rem]"
     >
+      <Seo title={seoTitle} description={seoDescription} />
       <SectionShell variant="cream">
         <div className="relative w-full">
           <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-8">

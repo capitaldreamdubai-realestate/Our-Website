@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import type { Article } from '../data/articles'
 import { useCms } from '../contexts/CmsContext'
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
-import { usePageSeo } from '../hooks/usePageSeo'
+import { Seo } from '../components/Seo'
 
 const panelBg = '#FAF7F2'
 const panelInk = '#6B3B34'
@@ -10,10 +10,6 @@ const panelInk = '#6B3B34'
 export function ArticlesPage() {
   const { articles } = useCms()
   const { t } = useLocalePreferences()
-  usePageSeo({
-    title: t('seo.articles.title'),
-    description: t('seo.articles.description'),
-  })
   const featured = articles.slice(0, 2)
   const standard = articles.slice(2)
 
@@ -23,6 +19,7 @@ export function ArticlesPage() {
       aria-label={t('articles.aria')}
       className="w-full min-w-0 pb-8 pt-0 sm:pb-10 lg:pb-12"
     >
+      <Seo title={t('seo.articles.title')} description={t('seo.articles.description')} />
       <section
         aria-label={t('articles.aria')}
         className="w-full min-w-0 rounded-2xl px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-10"

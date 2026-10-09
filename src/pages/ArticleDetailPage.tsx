@@ -2,7 +2,8 @@ import { ChevronDown } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { useCms } from '../contexts/CmsContext'
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
-import { usePageSeo } from '../hooks/usePageSeo'
+import { Seo } from '../components/Seo'
+import { articleJsonLd, breadcrumbJsonLd } from '../lib/seo/site'
 import type { ArticleTocEntry } from '../data/articleDetails'
 import { resolveArticleDetail } from '../lib/cms/resolveArticleDetail'
 
@@ -73,14 +74,20 @@ export function ArticleDetailPage() {
   const { mode, articleDetailsBySlug } = useCms()
   const { t } = useLocalePreferences()
   const article = resolveArticleDetail(slug, mode, articleDetailsBySlug)
-  usePageSeo({
-    title: article
-      ? `${article.title}${t('article.titleSuffix')}`
-      : t('seo.articleMissing.title'),
-    description: article
-      ? article.excerpt
-      : t('seo.articleMissing.description'),
-  })
+  const title = article
+    ? `${article.title}${t('article.titleSuffix')}`
+    : t('seo.articleMissing.title')
+  const description = article ? article.excerpt : t('seo.articleMissing.description')
+  const jsonLd = article
+    ? [
+        articleJsonLd(article),
+        breadcrumbJsonLd([
+          { name: t('nav.home'), path: '/' },
+          { name: t('nav.articles'), path: '/articles' },
+          { name: article.title, path: `/articles/${article.slug}` },
+        ]),
+      ]
+    : null
 
   if (!article) {
     return (
@@ -89,6 +96,7 @@ export function ArticleDetailPage() {
         style={{ backgroundColor: panelBg, color: panelInk }}
         aria-label={t('article.notFound.aria')}
       >
+        <Seo title={title} description={description} />
         <div className="flex w-full min-w-0 flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <h1 className="type-heading-founders font-display font-medium leading-tight tracking-[0.02em]">
             {t('article.notFound.title')}
@@ -111,6 +119,14 @@ export function ArticleDetailPage() {
       className="w-full min-w-0 rounded-2xl px-4 py-8 sm:px-6 sm:py-10 lg:px-10 lg:py-12"
       style={{ backgroundColor: panelBg, color: panelInk }}
     >
+      <Seo
+        title={title}
+        description={description}
+        type="article"
+        image={article.image}
+        path={`/articles/${article.slug}`}
+        jsonLd={jsonLd}
+      />
       <div className="flex w-full min-w-0 flex-col gap-8 lg:grid lg:grid-cols-[minmax(12.5rem,22%)_minmax(0,1fr)] lg:gap-x-12 lg:gap-y-10 xl:gap-x-16">
         <div className="flex justify-end lg:col-span-2">
           <Link

@@ -7,7 +7,8 @@ import { ProjectLeadForm } from '@/components/ProjectLeadForm'
 import { SectionShell } from '@/components/SectionShell'
 import { useCms } from '@/contexts/CmsContext'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
-import { usePageSeo } from '@/hooks/usePageSeo'
+import { Seo } from '@/components/Seo'
+import { breadcrumbJsonLd, realEstateListingJsonLd } from '@/lib/seo/site'
 import {
   fetchProjectBrochureUrl,
   triggerBrochureDownload,
@@ -37,14 +38,28 @@ export function OffplanProjectDetailPage() {
     ? salespeopleById[project.salespersonId] ?? null
     : null
 
-  usePageSeo({
-    title: project
-      ? t('offplan.detail.seoTitle', { name: project.name })
-      : t('offplan.detail.seoTitleMissing'),
-    description: project
-      ? project.shortDescription || t('offplan.detail.seoDesc', { name: project.name })
-      : t('offplan.detail.seoDescMissing'),
-  })
+  const seoTitle = project
+    ? t('offplan.detail.seoTitle', { name: project.name })
+    : t('offplan.detail.seoTitleMissing')
+  const seoDescription = project
+    ? project.shortDescription || t('offplan.detail.seoDesc', { name: project.name })
+    : t('offplan.detail.seoDescMissing')
+  const jsonLd = project
+    ? [
+        realEstateListingJsonLd({
+          name: project.name,
+          path: `/offplan/${project.slug}`,
+          description: project.shortDescription,
+          image: project.heroImageUrl,
+          addressLocality: project.location || project.emirate,
+        }),
+        breadcrumbJsonLd([
+          { name: t('nav.home'), path: '/' },
+          { name: t('nav.newDevelopments'), path: '/offplan' },
+          { name: project.name, path: `/offplan/${project.slug}` },
+        ]),
+      ]
+    : null
 
   async function handleBrochureUnlocked(contact: { email: string; name: string }) {
     if (!project) return
@@ -66,6 +81,7 @@ export function OffplanProjectDetailPage() {
   if (!project) {
     return (
       <main className="flex w-full flex-col gap-[0.625rem]">
+        <Seo title={seoTitle} description={seoDescription} />
         <SectionShell variant="cream">
           <p className="text-[length:var(--brand-font-body-lg)] text-ink/70">
             {t('offplan.loading')}
@@ -81,6 +97,13 @@ export function OffplanProjectDetailPage() {
       className="flex w-full flex-col gap-[0.625rem]"
       aria-label={project.name}
     >
+      <Seo
+        title={seoTitle}
+        description={seoDescription}
+        image={project.heroImageUrl}
+        path={`/offplan/${project.slug}`}
+        jsonLd={jsonLd}
+      />
       <ProjectGalleryHero title={project.name} gallery={project.gallery} />
 
       <SectionShell variant="cream">

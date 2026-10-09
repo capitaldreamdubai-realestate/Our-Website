@@ -1,11 +1,16 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+  Options -Indexes -MultiViews
+  DirectorySlash Off
 
-  # Keep existing files/directories accessible.
-  RewriteCond %{REQUEST_FILENAME} -f [OR]
-  RewriteCond %{REQUEST_FILENAME} -d
+  # Keep existing files accessible (assets, robots.txt, sitemap.xml, llms.txt).
+  RewriteCond %{REQUEST_FILENAME} -f
   RewriteRule ^ - [L]
+
+  # Prerendered route HTML, without a trailing-slash redirect.
+  RewriteCond %{DOCUMENT_ROOT}/$1/index.html -f
+  RewriteRule ^(.+?)/?$ /$1/index.html [L]
 
   # Route all other paths to the SPA entry point.
   RewriteRule ^ index.html [L]

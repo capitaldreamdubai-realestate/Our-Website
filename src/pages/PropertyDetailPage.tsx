@@ -13,7 +13,8 @@ import { SectionShell } from '../components/SectionShell'
 import { buttonClassNames } from '../components/Button'
 import { usePropertyDetail } from '../hooks/usePropertyDetail'
 import { useListingMapCoords } from '../hooks/useListingMapCoords'
-import { usePageSeo } from '../hooks/usePageSeo'
+import { Seo } from '../components/Seo'
+import { breadcrumbJsonLd, plainText, realEstateListingJsonLd } from '../lib/seo/site'
 import { useRelatedProperties } from '../hooks/useRelatedProperties'
 import { downloadPropertyBrochure } from '../lib/propertyBrochure/downloadPropertyBrochure'
 import { resolveGallery } from '../lib/resolvePropertyDetail'
@@ -27,18 +28,37 @@ export function PropertyDetailPage() {
   const [brochureOpen, setBrochureOpen] = useState(false)
   const { areaUnit, currency, rates, intlLocale, t } = useLocalePreferences()
   const listingMeta = property?.meta ?? ''
-  usePageSeo({
-    title: property
-      ? t('property.seo.listingTitle', { title: property.title })
-      : t('property.seo.fallbackTitle'),
-    description: property
-      ? t('property.seo.descWith', {
-          title: property.title,
-          location: property.location || 'Dubai, UAE',
-          meta: listingMeta,
-        })
-      : t('property.seo.descFallback'),
-  })
+  const seoTitle = property
+    ? t('property.seo.listingTitle', { title: property.title })
+    : t('property.seo.fallbackTitle')
+  const seoDescription = property
+    ? t('property.seo.descWith', {
+        title: property.title,
+        location: property.location || 'Dubai, UAE',
+        meta: listingMeta,
+      })
+    : t('property.seo.descFallback')
+  const jsonLd = property
+    ? [
+        realEstateListingJsonLd({
+          name: property.title,
+          path: `/properties/${property.id}`,
+          description:
+            plainText(property.detail) ||
+            plainText(property.descriptionHtml) ||
+            seoDescription,
+          image: property.image,
+          streetAddress: property.fullAddress,
+          addressLocality: property.neighbourhood || property.location || property.emirate,
+          priceAed: property.priceAed,
+        }),
+        breadcrumbJsonLd([
+          { name: t('nav.home'), path: '/' },
+          { name: t('nav.allProperties'), path: '/all-properties' },
+          { name: property.title, path: `/properties/${property.id}` },
+        ]),
+      ]
+    : null
 
   if (loading && !property) {
     return (
@@ -48,6 +68,7 @@ export function PropertyDetailPage() {
         aria-busy="true"
         aria-label={t('property.loading.aria')}
       >
+        <Seo title={seoTitle} description={seoDescription} />
         <SectionShell variant="cream">
           <p className="text-sm text-ink/70">{t('property.loading.body')}</p>
         </SectionShell>
@@ -62,6 +83,7 @@ export function PropertyDetailPage() {
         className="flex w-full flex-col gap-[0.625rem]"
         aria-label={t('property.notFound.aria')}
       >
+        <Seo title={seoTitle} description={seoDescription} />
         <SectionShell variant="cream">
           <h1 className="type-section-title font-display text-2xl font-semibold text-ink">
             {t('property.notFound.title')}
@@ -97,6 +119,13 @@ export function PropertyDetailPage() {
       className="flex w-full flex-col gap-[0.625rem]"
       aria-label={property.title}
     >
+      <Seo
+        title={seoTitle}
+        description={seoDescription}
+        image={property.image}
+        path={`/properties/${property.id}`}
+        jsonLd={jsonLd}
+      />
       <PropertyDetailHero
         property={property}
         gallery={gallery}

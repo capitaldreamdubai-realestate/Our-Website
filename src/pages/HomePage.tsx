@@ -2,7 +2,8 @@ import { useMemo } from 'react'
 import { FULL_BLEED_YOUTUBE_VIDEO_ID } from '../config/fullBleedYoutube'
 import { useCms } from '../contexts/CmsContext'
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
-import { usePageSeo } from '../hooks/usePageSeo'
+import { Seo } from '../components/Seo'
+import { realEstateAgentJsonLd, websiteJsonLd } from '../lib/seo/site'
 import { isForRentListing, isForSaleListing } from '../lib/propertyChannels'
 import { FoundersSection } from '../sections/FoundersSection'
 import { FullBleedYouTube } from '../sections/FullBleedYouTube'
@@ -16,10 +17,6 @@ import { LogoMarqueeSection } from '../sections/LogoMarqueeSection'
 export function HomePage() {
   const { catalogProperties, siteSettings } = useCms()
   const { t } = useLocalePreferences()
-  usePageSeo({
-    title: t('seo.home.title'),
-    description: t('seo.home.description'),
-  })
   const forSaleHomes = useMemo(
     () => catalogProperties.filter(isForSaleListing),
     [catalogProperties],
@@ -34,6 +31,11 @@ export function HomePage() {
       aria-label={t('aria.home.main')}
       className="flex w-full flex-col gap-[0.625rem]"
     >
+      <Seo
+        title={t('seo.home.title')}
+        description={t('seo.home.description')}
+        jsonLd={[realEstateAgentJsonLd, websiteJsonLd]}
+      />
       <HeroSection heroImageUrl={siteSettings.heroBannerUrl} />
       <IntroStatementSection
         id="about"

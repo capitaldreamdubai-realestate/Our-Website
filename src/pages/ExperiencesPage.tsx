@@ -3,7 +3,7 @@ import type { ConciergeService } from '../data/conciergeServices'
 import { conciergeServices as staticConcierge } from '../data/conciergeServices'
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
 import { useCms } from '../contexts/CmsContext'
-import { usePageSeo } from '../hooks/usePageSeo'
+import { Seo } from '../components/Seo'
 
 const panelBg = '#FAF7F2'
 const panelInk = '#6B3B34'
@@ -11,11 +11,6 @@ const panelInk = '#6B3B34'
 export function ExperiencesPage() {
   const { t } = useLocalePreferences()
   const { mode, loading, experiences } = useCms()
-  usePageSeo({
-    title: t('seo.experiences.title'),
-    description: t('seo.experiences.description'),
-  })
-
   const list: ConciergeService[] | null =
     mode === 'static' ? staticConcierge : loading ? null : experiences
 
@@ -28,6 +23,10 @@ export function ExperiencesPage() {
       aria-label={t('nav.experiences')}
       className="w-full min-w-0 pb-8 pt-0 sm:pb-10 lg:pb-12"
     >
+      <Seo
+        title={t('seo.experiences.title')}
+        description={t('seo.experiences.description')}
+      />
       <section
         aria-label={t('nav.experiences')}
         className="w-full min-w-0 rounded-2xl px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-10"

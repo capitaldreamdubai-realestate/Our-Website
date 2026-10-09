@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && tsx scripts/generate-sitemap.ts && vite build && tsx scripts/prerender.ts",
+    "sitemap": "tsx scripts/generate-sitemap.ts",
+    "prerender": "tsx scripts/prerender.ts",
     "lint": "eslint .",
     "preview": "vite preview",
     "seed": "tsx --tsconfig tsconfig.seed.json scripts/seed-cms.ts",
@@ -51,6 +53,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
+    "playwright": "^1.64.0",
     "tailwindcss": "^4.2.2",
     "tsx": "^4.19.3",
     "typescript": "~5.9.3",

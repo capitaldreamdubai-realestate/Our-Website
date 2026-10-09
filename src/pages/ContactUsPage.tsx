@@ -5,7 +5,7 @@ import { PhoneInputField } from '@/components/PhoneInputField'
 import { submitWebsiteForm } from '@/lib/submitWebsiteForm'
 import { buildWhatsappPrefill, openWhatsappWithLead } from '@/lib/whatsapp'
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
-import { usePageSeo } from '../hooks/usePageSeo'
+import { Seo } from '../components/Seo'
 
 const COMPANY_WHATSAPP = '+971 50 108 3541'
 
@@ -37,11 +37,6 @@ export function ContactUsPage() {
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-
-  usePageSeo({
-    title: t('seo.contact.title'),
-    description: t('seo.contact.description'),
-  })
 
   const errors = useMemo(() => {
     const name = values.name.trim()
@@ -99,6 +94,7 @@ export function ContactUsPage() {
       className="w-full min-w-0 rounded-2xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-10 xl:px-12 xl:py-12"
       style={{ backgroundColor: panelBg, color: panelInk }}
     >
+      <Seo title={t('seo.contact.title')} description={t('seo.contact.description')} />
       <div className="grid w-full min-w-0 grid-cols-1 gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-x-10 xl:gap-x-14">
         <section className="space-y-4">
           <p className="font-compact text-[0.6875rem] font-semibold uppercase tracking-[0.22em] text-terracotta/75">

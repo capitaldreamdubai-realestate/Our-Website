@@ -3,7 +3,7 @@ import { useMemo, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { useCms } from '@/contexts/CmsContext'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
-import { usePageSeo } from '@/hooks/usePageSeo'
+import { Seo } from '@/components/Seo'
 import type { FaqSection } from '@/lib/cms/mapFaq'
 
 const panelBg = '#FAF7F2'
@@ -54,12 +54,7 @@ function AnswerBody({ text }: { text: string }) {
 
 export function FaqPage() {
   const { faqSections, loading } = useCms()
-  const { t, language } = useLocalePreferences()
-  usePageSeo({
-    title: t('seo.faq.title'),
-    description: t('seo.faq.description'),
-  })
-
+  const { t } = useLocalePreferences()
   const jsonLd = useMemo(() => {
     if (faqSections.length === 0) return null
     const mainEntity = faqSections.flatMap((s) =>
@@ -79,17 +74,15 @@ export function FaqPage() {
       description: t('faq.schema.description'),
       mainEntity,
     }
-  }, [faqSections, language, t])
+  }, [faqSections, t])
 
   return (
     <>
-      {jsonLd ? (
-        <script
-          type="application/ld+json"
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-      ) : null}
+      <Seo
+        title={t('seo.faq.title')}
+        description={t('seo.faq.description')}
+        jsonLd={jsonLd}
+      />
       <main
         aria-label={t('faq.aria.main')}
         className="w-full min-w-0 max-w-none rounded-2xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-10 xl:px-12 xl:py-12"

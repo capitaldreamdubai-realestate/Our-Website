@@ -6,7 +6,8 @@ import { ImagePrimaryOverlay } from '@/components/ImagePrimaryOverlay'
 import { SectionShell } from '@/components/SectionShell'
 import { useCms } from '@/contexts/CmsContext'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
-import { usePageSeo } from '@/hooks/usePageSeo'
+import { Seo } from '@/components/Seo'
+import { breadcrumbJsonLd } from '@/lib/seo/site'
 import { agentWhatsappUrl, openAgentWhatsapp } from '@/lib/whatsapp'
 
 function socialHref(
@@ -71,20 +72,27 @@ export function TeamMemberDetailPage() {
   const { salespeopleList, loading } = useCms()
   const person = salespeopleList.find((item) => item.slug === slug)
   const { t } = useLocalePreferences()
-
-  usePageSeo({
-    title: person
-      ? t('teamMember.seo.title', { name: person.name })
-      : t('teamMember.seo.titleMissing'),
-    description: person
-      ? person.title?.trim()
-        ? t('teamMember.seo.descWithTitle', {
-            name: person.name,
-            title: person.title.trim(),
-          })
-        : t('teamMember.seo.descNoTitle', { name: person.name })
-      : t('teamMember.seo.descMissing'),
-  })
+  const seoTitle = person
+    ? t('teamMember.seo.title', { name: person.name })
+    : t('teamMember.seo.titleMissing')
+  const seoDescription = person
+    ? person.title?.trim()
+      ? t('teamMember.seo.descWithTitle', {
+          name: person.name,
+          title: person.title.trim(),
+        })
+      : t('teamMember.seo.descNoTitle', { name: person.name })
+    : t('teamMember.seo.descMissing')
+  const jsonLd =
+    person && slug
+      ? [
+          breadcrumbJsonLd([
+            { name: t('nav.home'), path: '/' },
+            { name: t('nav.team'), path: '/team' },
+            { name: person.name, path: `/team/${slug}` },
+          ]),
+        ]
+      : null
 
   if (!loading && !person) {
     return <Navigate to="/team" replace />
@@ -93,6 +101,7 @@ export function TeamMemberDetailPage() {
   if (!person) {
     return (
       <main className="flex w-full flex-col gap-[0.625rem]">
+        <Seo title={seoTitle} description={seoDescription} />
         <SectionShell variant="cream" aria-label={t('teamMember.loadingAria')}>
           <p className="text-[length:var(--brand-font-body-lg)] text-ink/70">
             {t('teamMember.loadingProfile')}
@@ -119,6 +128,12 @@ export function TeamMemberDetailPage() {
       aria-label={t('teamMember.mainAria')}
       className="flex w-full flex-col gap-[0.625rem]"
     >
+      <Seo
+        title={seoTitle}
+        description={seoDescription}
+        path={slug ? `/team/${slug}` : undefined}
+        jsonLd={jsonLd}
+      />
       <SectionShell
         variant="cream"
         id="team-member-card"

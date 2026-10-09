@@ -1,6 +1,6 @@
 import { useCms } from '../contexts/CmsContext'
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
-import { usePageSeo } from '../hooks/usePageSeo'
+import { Seo } from '../components/Seo'
 
 type Props = {
   title: string
@@ -15,13 +15,13 @@ export function SimpleMarketingPage({ title, slug = 'experiences' }: Props) {
   const displayTitle = page?.title?.trim() ? page.title : title
   const bodyHtml = page?.body_html?.trim()
   const heroUrl = page?.hero_image_url?.trim()
-  usePageSeo({
-    title: `${displayTitle} | ${t('seo.brandSuffix')}`,
-    description: t('seo.simpleMarketing.description'),
-  })
 
   return (
     <main className="flex min-h-[50vh] w-full flex-col justify-center gap-4 py-16 text-cream [text-shadow:0_1px_2px_rgba(28,20,18,0.35)]">
+      <Seo
+        title={`${displayTitle} | ${t('seo.brandSuffix')}`}
+        description={t('seo.simpleMarketing.description')}
+      />
       {mode === 'live' && heroUrl ? (
         <div className="overflow-hidden rounded-2xl ring-1 ring-cream/25">
           <img

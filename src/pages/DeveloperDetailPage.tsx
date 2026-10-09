@@ -6,7 +6,8 @@ import { PropertyListingCard } from '@/components/PropertyListingCard'
 import { SectionShell } from '@/components/SectionShell'
 import { useCms } from '@/contexts/CmsContext'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
-import { usePageSeo } from '@/hooks/usePageSeo'
+import { Seo } from '@/components/Seo'
+import { breadcrumbJsonLd } from '@/lib/seo/site'
 
 export function DeveloperDetailPage() {
   const { slug } = useParams()
@@ -30,14 +31,22 @@ export function DeveloperDetailPage() {
     return catalogProperties.filter((p) => p.developerId === developer.id)
   }, [catalogProperties, developer])
 
-  usePageSeo({
-    title: developer
-      ? t('developerDetail.seo.title', { name: developer.name })
-      : t('developerDetail.seo.titleMissing'),
-    description: developer
-      ? t('developerDetail.seo.description', { name: developer.name })
-      : t('developerDetail.seo.descriptionMissing'),
-  })
+  const seoTitle = developer
+    ? t('developerDetail.seo.title', { name: developer.name })
+    : t('developerDetail.seo.titleMissing')
+  const seoDescription = developer
+    ? t('developerDetail.seo.description', { name: developer.name })
+    : t('developerDetail.seo.descriptionMissing')
+  const jsonLd =
+    developer && slug
+      ? [
+          breadcrumbJsonLd([
+            { name: t('nav.home'), path: '/' },
+            { name: t('nav.developers'), path: '/developers' },
+            { name: developer.name, path: `/developers/${slug}` },
+          ]),
+        ]
+      : null
 
   if (!loading && (!developer || !hasContent)) {
     return <Navigate to="/developers" replace />
@@ -46,6 +55,7 @@ export function DeveloperDetailPage() {
   if (!developer) {
     return (
       <main className="flex w-full flex-col gap-[0.625rem]">
+        <Seo title={seoTitle} description={seoDescription} />
         <SectionShell variant="cream" aria-label={t('developerDetail.loadingAria')}>
           <p className="text-[length:var(--brand-font-body-lg)] text-ink/70">
             {t('developerDetail.loading')}
@@ -65,6 +75,7 @@ export function DeveloperDetailPage() {
       className="flex w-full flex-col gap-[0.625rem]"
       aria-label={developer.name}
     >
+      <Seo title={seoTitle} description={seoDescription} path={`/developers/${slug}`} jsonLd={jsonLd} />
       <SectionShell variant="cream" aria-label={t('developerDetail.profileAria')}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">

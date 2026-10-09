@@ -6,17 +6,13 @@ import { SalesTeamMemberCard } from '@/components/SalesTeamMemberCard'
 import { SectionShell } from '@/components/SectionShell'
 import { useCms } from '@/contexts/CmsContext'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
-import { usePageSeo } from '@/hooks/usePageSeo'
+import { Seo } from '@/components/Seo'
 
 const PAGE_SIZE = 8
 
 export function TeamPage() {
   const { salespeopleList, loading } = useCms()
   const { t } = useLocalePreferences()
-  usePageSeo({
-    title: t('seo.team.title'),
-    description: t('seo.team.description'),
-  })
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const visiblePeople = useMemo(
     () => salespeopleList.slice(0, visibleCount),
@@ -40,6 +36,7 @@ export function TeamPage() {
       aria-label={t('team.aria.main')}
       className="flex w-full flex-col gap-[0.625rem]"
     >
+      <Seo title={t('seo.team.title')} description={t('seo.team.description')} />
       <SectionShell variant="cream" id="team-grid" aria-label={t('team.aria.grid')}>
         <div className="w-full">
           <div className="mb-8 flex items-center justify-between gap-3 sm:mb-10">
