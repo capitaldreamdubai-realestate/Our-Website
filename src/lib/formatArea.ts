@@ -7,6 +7,10 @@ export function squareMetresToSqFt(m2: number): number {
   return m2 * M2_TO_SQFT
 }
 
+export function sqFtToSquareMetres(sqft: number): number {
+  return sqft / M2_TO_SQFT
+}
+
 export function formatAreaFromM2(
   m2: number,
   mode: AreaDisplayMode,

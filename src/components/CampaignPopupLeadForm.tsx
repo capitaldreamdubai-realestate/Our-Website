@@ -12,6 +12,11 @@ type Props = {
   popupId: string
   popupTitle: string
   submitLabel?: string | null
+  projectId?: string | null
+  projectName?: string | null
+  projectSlug?: string | null
+  salespersonId?: string | null
+  salespersonName?: string | null
   onSuccess?: () => void
   compact?: boolean
 }
@@ -20,6 +25,11 @@ export function CampaignPopupLeadForm({
   popupId,
   popupTitle,
   submitLabel,
+  projectId,
+  projectName,
+  projectSlug,
+  salespersonId,
+  salespersonName,
   onSuccess,
   compact,
 }: Props) {
@@ -62,11 +72,18 @@ export function CampaignPopupLeadForm({
     const { error } = await submitWebsiteForm({
       source: 'campaign_popup',
       popupId,
+      projectId: projectId ?? null,
+      projectName: projectName ?? null,
       name: name.trim(),
       email: email.trim(),
       phone: phone?.trim() || null,
       message: null,
-      meta: { popup_title: popupTitle },
+      meta: {
+        popup_title: popupTitle,
+        project_slug: projectSlug?.trim() || null,
+        salesperson_id: salespersonId ?? null,
+        salesperson_name: salespersonName ?? null,
+      },
     })
     setBusy(false)
 

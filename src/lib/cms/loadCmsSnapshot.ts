@@ -13,7 +13,11 @@ import {
 import { mapArticleDetailRow, mapArticleListRow } from './mapArticle'
 import { buildFaqSections, type FaqSection } from './mapFaq'
 import { mapExperienceRow } from './mapExperience'
-import { mapOffplanProjectRow, type PublicOffplanProject } from './mapOffplanProject'
+import {
+  attachLaunchContent,
+  mapOffplanProjectRow,
+  type PublicOffplanProject,
+} from './mapOffplanProject'
 import { mapPropertyRow } from './mapProperty'
 import type { OffplanLaunchStatus } from '@/lib/offplanLaunchStatus'
 
@@ -249,7 +253,7 @@ export function staticSalespeopleListForSite(): PublicSalesperson[] {
 export async function loadCmsSnapshot(
   supabase: SupabaseClient<Database>,
 ): Promise<CmsSnapshot | null> {
-  const [propRes, artRes, heroRes, emiratesRes, devRes, projectRes, mktRes, spRes, expRes, faqTopRes, faqEntRes, testimonialRes] =
+  const [propRes, artRes, heroRes, emiratesRes, devRes, projectRes, floorRes, planRes, milestoneRes, mktRes, spRes, expRes, faqTopRes, faqEntRes, testimonialRes] =
     await Promise.all([
     supabase
       .from('properties')
@@ -279,6 +283,19 @@ export async function loadCmsSnapshot(
       .eq('published', true)
       .order('sort_order', { ascending: true })
       .order('name', { ascending: true }),
+    supabase
+      .from('offplan_floor_plans')
+      .select('*')
+      .eq('published', true)
+      .order('sort_order', { ascending: true }),
+    supabase
+      .from('offplan_payment_plans')
+      .select('*')
+      .order('sort_order', { ascending: true }),
+    supabase
+      .from('offplan_payment_milestones')
+      .select('*')
+      .order('sort_order', { ascending: true }),
     supabase.from('marketing_pages').select('*'),
     supabase
       .from('salespeople')
@@ -319,6 +336,15 @@ export async function loadCmsSnapshot(
   if (projectRes.error && projectRes.error.code !== 'PGRST205') {
     console.error(projectRes.error)
   }
+  if (floorRes.error && floorRes.error.code !== 'PGRST205') {
+    console.error(floorRes.error)
+  }
+  if (planRes.error && planRes.error.code !== 'PGRST205') {
+    console.error(planRes.error)
+  }
+  if (milestoneRes.error && milestoneRes.error.code !== 'PGRST205') {
+    console.error(milestoneRes.error)
+  }
   if (mktRes.error) {
     console.error(mktRes.error)
   }
@@ -350,7 +376,12 @@ export async function loadCmsSnapshot(
   }
 
   const projectRows = projectRes.error ? [] : (projectRes.data ?? [])
-  const offplanProjects = projectRows.map(mapOffplanProjectRow)
+  const floorRows = floorRes.error ? [] : (floorRes.data ?? [])
+  const planRows = planRes.error ? [] : (planRes.data ?? [])
+  const milestoneRows = milestoneRes.error ? [] : (milestoneRes.data ?? [])
+  const offplanProjects = projectRows.map((row) =>
+    attachLaunchContent(mapOffplanProjectRow(row), floorRows, planRows, milestoneRows),
+  )
   const offplanProjectsBySlug: Record<string, PublicOffplanProject> = {}
   for (const project of offplanProjects) {
     offplanProjectsBySlug[project.slug] = project

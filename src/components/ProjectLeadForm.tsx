@@ -17,6 +17,12 @@ type Props = {
   projectSlug?: string | null
   salesperson: PublicSalesperson | null
   intent: ProjectLeadIntent
+  floorPlan?: {
+    id: string
+    name: string
+    bedrooms: number
+    priceAed: number | null
+  } | null
   submitLabel?: string
   onSuccess?: (details: { email: string; name: string }) => void
   compact?: boolean
@@ -32,6 +38,7 @@ export function ProjectLeadForm({
   projectSlug,
   salesperson,
   intent,
+  floorPlan,
   submitLabel,
   onSuccess,
   compact,
@@ -83,6 +90,14 @@ export function ProjectLeadForm({
         project_slug: projectSlug?.trim() || null,
         salesperson_id: salesperson?.id ?? null,
         salesperson_name: salesperson?.name ?? null,
+        ...(floorPlan
+          ? {
+              floor_plan_id: floorPlan.id,
+              floor_plan_name: floorPlan.name,
+              bedrooms: String(floorPlan.bedrooms),
+              price_aed: floorPlan.priceAed,
+            }
+          : {}),
       },
     })
     setBusy(false)

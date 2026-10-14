@@ -282,6 +282,82 @@ export type Database = {
         Update: Partial<Database['public']['Tables']['hero_neighbourhoods']['Insert']>
         Relationships: []
       }
+      offplan_floor_plans: {
+        Row: {
+          id: string
+          project_id: string
+          name: string
+          bedrooms: number
+          bathrooms: number | null
+          area_sqft: number
+          starting_price_aed: number | null
+          layout_image_url: string
+          render_image_url: string
+          alt_text: string
+          sort_order: number
+          published: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          name?: string
+          bedrooms?: number
+          bathrooms?: number | null
+          area_sqft?: number
+          starting_price_aed?: number | null
+          layout_image_url?: string
+          render_image_url?: string
+          alt_text?: string
+          sort_order?: number
+          published?: boolean
+        }
+        Update: Partial<Database['public']['Tables']['offplan_floor_plans']['Insert']>
+        Relationships: []
+      }
+      offplan_payment_milestones: {
+        Row: {
+          id: string
+          plan_id: string
+          label: string
+          percent: number
+          phase: 'booking' | 'construction' | 'handover' | 'post_handover'
+          sort_order: number
+        }
+        Insert: {
+          id?: string
+          plan_id: string
+          label: string
+          percent: number
+          phase: 'booking' | 'construction' | 'handover' | 'post_handover'
+          sort_order?: number
+        }
+        Update: Partial<Database['public']['Tables']['offplan_payment_milestones']['Insert']>
+        Relationships: []
+      }
+      offplan_payment_plans: {
+        Row: {
+          id: string
+          project_id: string
+          name: string
+          is_default: boolean
+          dld_fee_payer: 'buyer' | 'shared' | 'developer' | 'excluded'
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          name: string
+          is_default?: boolean
+          dld_fee_payer?: 'buyer' | 'shared' | 'developer' | 'excluded'
+          sort_order?: number
+        }
+        Update: Partial<Database['public']['Tables']['offplan_payment_plans']['Insert']>
+        Relationships: []
+      }
       offplan_projects: {
         Row: {
           id: string
@@ -298,6 +374,15 @@ export type Database = {
           salesperson_id: string | null
           location: string | null
           emirate: string | null
+          starting_price_aed: number | null
+          handover: string | null
+          community: string | null
+          dld_project_number: string | null
+          escrow_bank: string | null
+          amenities: string[]
+          faqs: Json
+          seo_title: string | null
+          seo_description: string | null
           sort_order: number
           published: boolean
           created_at: string
@@ -318,6 +403,15 @@ export type Database = {
           salesperson_id?: string | null
           location?: string | null
           emirate?: string | null
+          starting_price_aed?: number | null
+          handover?: string | null
+          community?: string | null
+          dld_project_number?: string | null
+          escrow_bank?: string | null
+          amenities?: string[]
+          faqs?: Json
+          seo_title?: string | null
+          seo_description?: string | null
           sort_order?: number
           published?: boolean
         }
@@ -467,6 +561,7 @@ export type Database = {
           show_once_per_session: boolean
           submit_button_label: string | null
           sort_order: number
+          project_id: string | null
         }
         Insert: {
           id?: string
@@ -482,6 +577,7 @@ export type Database = {
           show_once_per_session?: boolean
           submit_button_label?: string | null
           sort_order?: number
+          project_id?: string | null
         }
         Update: Partial<Database['public']['Tables']['campaign_popups']['Insert']>
         Relationships: []

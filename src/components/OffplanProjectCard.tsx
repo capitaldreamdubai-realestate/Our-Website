@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
 import { projectCardImage, type PublicOffplanProject } from '@/lib/cms/mapOffplanProject'
+import { formatPriceFromAed } from '@/lib/formatCurrency'
 import type { PublicDeveloper } from '@/lib/cms/loadCmsSnapshot'
 
 type Props = {
@@ -9,8 +10,12 @@ type Props = {
 }
 
 export function OffplanProjectCard({ project, developer }: Props) {
-  const { t } = useLocalePreferences()
+  const { t, currency, rates, intlLocale } = useLocalePreferences()
   const image = projectCardImage(project)
+  const fromPrice =
+    project.startingPriceAed != null && project.startingPriceAed > 0
+      ? formatPriceFromAed(project.startingPriceAed, currency, rates, intlLocale)
+      : null
 
   return (
     <article className="group relative flex h-full flex-col overflow-hidden rounded-[1.125rem] border border-ink/8 bg-white shadow-sm transition hover:border-terracotta/25 hover:shadow-md">
@@ -49,6 +54,9 @@ export function OffplanProjectCard({ project, developer }: Props) {
         <h3 className="font-display text-lg font-semibold leading-snug text-ink">
           {project.name}
         </h3>
+        {fromPrice ? (
+          <p className="text-sm font-medium text-ink">{t('offplan.detail.fromPrice', { price: fromPrice })}</p>
+        ) : null}
         {project.shortDescription ? (
           <p className="line-clamp-3 text-sm leading-relaxed text-ink/70">
             {project.shortDescription}

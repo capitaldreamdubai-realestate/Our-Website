@@ -157,3 +157,72 @@ export function realEstateListingJsonLd(input: {
   }
   return data
 }
+
+export function faqPageJsonLd(faqs: { question: string; answer: string }[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer,
+      },
+    })),
+  }
+}
+
+export function floorPlanListJsonLd(
+  plans: {
+    name: string
+    bedrooms: number
+    bathrooms: number | null
+    areaSqft: number
+    startingPriceAed: number | null
+    layoutImageUrl: string
+    renderImageUrl: string
+    altText: string
+  }[],
+  pagePath: string,
+) {
+  const url = absoluteUrl(pagePath)
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    numberOfItems: plans.length,
+    itemListOrder: 'https://schema.org/ItemListOrderAscending',
+    itemListElement: plans.map((plan, index) => {
+      const images = [absoluteAsset(plan.layoutImageUrl), absoluteAsset(plan.renderImageUrl)].filter(
+        (src): src is string => Boolean(src),
+      )
+      const item: Record<string, unknown> = {
+        '@type': 'FloorPlan',
+        name: plan.name,
+        description: plan.altText,
+        numberOfBedrooms: plan.bedrooms,
+        floorSize: {
+          '@type': 'QuantitativeValue',
+          value: plan.areaSqft,
+          unitCode: 'FTK',
+        },
+        image: images,
+        url,
+      }
+      if (plan.bathrooms != null) item.numberOfBathroomsTotal = plan.bathrooms
+      if (plan.startingPriceAed != null && plan.startingPriceAed > 0) {
+        item.offers = {
+          '@type': 'Offer',
+          price: plan.startingPriceAed,
+          priceCurrency: 'AED',
+          url,
+        }
+      }
+      return {
+        '@type': 'ListItem',
+        position: index + 1,
+        item,
+      }
+    }),
+  }
+}

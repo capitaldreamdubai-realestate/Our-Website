@@ -103,6 +103,13 @@ export function SubmissionDetailSheet({
             ) : null}
           </Field>
           {meta.intent ? <Field label="Intent">{meta.intent}</Field> : null}
+          {meta.floor_plan_name ? (
+            <Field label="Floor plan">
+              <p className="font-medium">{meta.floor_plan_name}</p>
+              {meta.bedrooms ? <p className="mt-0.5 text-ink/70">{meta.bedrooms} bedrooms</p> : null}
+              {meta.price_aed ? <p className="mt-0.5 text-ink/70">AED {meta.price_aed}</p> : null}
+            </Field>
+          ) : null}
           <Field label="Assigned salesperson">
             {meta.salesperson_name ? (
               <>

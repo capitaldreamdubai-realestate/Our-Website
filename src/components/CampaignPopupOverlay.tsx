@@ -2,10 +2,11 @@ import clsx from 'clsx'
 import { X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { buttonClassNames } from '@/components/Button'
 import { CampaignPopupLeadForm } from '@/components/CampaignPopupLeadForm'
 import { FormSuccessPanel } from '@/components/FormSuccessPanel'
+import { useCms } from '@/contexts/CmsContext'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
 import { getSupabase } from '@/integrations/supabase/client'
 import type { CampaignPopup } from '@/lib/campaignPopup'
@@ -14,6 +15,7 @@ import { markPopupShownThisSession, pickPopupForPage } from '@/lib/campaignPopup
 export function CampaignPopupOverlay() {
   const { pathname } = useLocation()
   const { t } = useLocalePreferences()
+  const { offplanProjects, salespeopleById } = useCms()
   const [popups, setPopups] = useState<CampaignPopup[]>([])
   const [active, setActive] = useState<CampaignPopup | null>(null)
   const [open, setOpen] = useState(false)
@@ -107,6 +109,11 @@ export function CampaignPopupOverlay() {
 
   if (!open || !active) return null
 
+  const launch = active.project_id
+    ? offplanProjects.find((project) => project.id === active.project_id) ?? null
+    : null
+  const salesperson = launch?.salespersonId ? salespeopleById[launch.salespersonId] ?? null : null
+
   return createPortal(
     <>
       <button
@@ -157,13 +164,24 @@ export function CampaignPopupOverlay() {
                 <FormSuccessPanel
                   variant="popup"
                   actions={
-                    <button
-                      type="button"
-                      onClick={close}
-                      className={buttonClassNames('primary', 'min-h-11 px-5 py-2.5')}
-                    >
-                      {t('popup.closeContinue')}
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      {launch ? (
+                        <Link
+                          to={`/offplan/${launch.slug}`}
+                          onClick={close}
+                          className={buttonClassNames('outlineTerracotta', 'min-h-11 px-5 py-2.5')}
+                        >
+                          {t('popup.viewLaunch')}
+                        </Link>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={close}
+                        className={buttonClassNames('primary', 'min-h-11 px-5 py-2.5')}
+                      >
+                        {t('popup.closeContinue')}
+                      </button>
+                    </div>
                   }
                 />
               </div>
@@ -186,6 +204,11 @@ export function CampaignPopupOverlay() {
                   popupId={active.id}
                   popupTitle={active.title}
                   submitLabel={active.submit_button_label}
+                  projectId={launch?.id ?? null}
+                  projectName={launch?.name ?? null}
+                  projectSlug={launch?.slug ?? null}
+                  salespersonId={salesperson?.id ?? null}
+                  salespersonName={salesperson?.name ?? null}
                   compact
                   onSuccess={() => setSubmitted(true)}
                 />

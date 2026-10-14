@@ -8,6 +8,19 @@ import { AdminRichTextField } from './components/AdminRichTextField'
 import { AdminTablePagination } from './components/AdminTablePagination'
 import { DocumentUploadField } from './components/DocumentUploadField'
 import { ImageUploadField } from './components/ImageUploadField'
+import {
+  FaqEditor,
+  FloorPlanEditor,
+  PaymentPlanEditor,
+  faqsFromJson,
+  floorPlansFromRows,
+  paymentPlansFromRows,
+  validateFloorPlans,
+  validatePaymentPlans,
+  type FaqDraft,
+  type FloorPlanDraft,
+  type PaymentPlanDraft,
+} from './components/OffplanLaunchFields'
 import { useAdminTablePagination } from './useAdminTablePagination'
 import { getSupabase } from '@/integrations/supabase/client'
 import type { Database } from '@/integrations/supabase/database.types'
@@ -42,6 +55,98 @@ function galleryFromSlots(slots: string[]): GalleryImageItem[] {
   return slots.filter(Boolean).map((src) => ({ type: 'image' as const, src }))
 }
 
+async function saveLaunchChildren(
+  sb: NonNullable<ReturnType<typeof getSupabase>>,
+  projectId: string,
+  floorPlans: FloorPlanDraft[],
+  paymentPlans: PaymentPlanDraft[],
+): Promise<string | null> {
+  const existing = await sb.from('offplan_floor_plans').select('id').eq('project_id', projectId)
+  if (existing.error) return existing.error.message
+  const keep = new Set(floorPlans.map((plan) => plan.id))
+  const remove = (existing.data ?? []).map((row) => row.id).filter((id) => !keep.has(id))
+  if (remove.length > 0) {
+    const { error } = await sb.from('offplan_floor_plans').delete().in('id', remove)
+    if (error) return error.message
+  }
+  if (floorPlans.length > 0) {
+    const { error } = await sb.from('offplan_floor_plans').upsert(
+      floorPlans.map((plan, index) => ({
+        id: plan.id,
+        project_id: projectId,
+        name: plan.name.trim(),
+        bedrooms: Math.max(0, Math.round(Number(plan.bedrooms) || 0)),
+        bathrooms: plan.bathrooms.trim() ? Number(plan.bathrooms) : null,
+        area_sqft: Number(plan.areaSqft) || 0,
+        starting_price_aed: plan.startingPriceAed.trim() ? Number(plan.startingPriceAed) : null,
+        layout_image_url: plan.layoutImageUrl.trim(),
+        render_image_url: plan.renderImageUrl.trim(),
+        alt_text: plan.altText.trim(),
+        sort_order: index,
+        published: plan.published,
+        updated_at: new Date().toISOString(),
+      })),
+    )
+    if (error) return error.message
+  }
+
+  const deleted = await sb.from('offplan_payment_plans').delete().eq('project_id', projectId)
+  if (deleted.error) return deleted.error.message
+  for (const [index, plan] of paymentPlans.entries()) {
+    const inserted = await sb
+      .from('offplan_payment_plans')
+      .insert({
+        project_id: projectId,
+        name: plan.name.trim(),
+        is_default: plan.isDefault,
+        dld_fee_payer: plan.dldFeePayer,
+        sort_order: index,
+      })
+      .select('id')
+      .single()
+    if (inserted.error || !inserted.data) return inserted.error?.message ?? 'Could not save a payment plan.'
+    const { error } = await sb.from('offplan_payment_milestones').insert(
+      plan.milestones.map((stage, stageIndex) => ({
+        plan_id: inserted.data.id,
+        label: stage.label.trim(),
+        percent: Number(stage.percent),
+        phase: stage.phase,
+        sort_order: stageIndex,
+      })),
+    )
+    if (error) return error.message
+  }
+  return null
+}
+
+async function createLaunchPopup(
+  sb: NonNullable<ReturnType<typeof getSupabase>>,
+  projectId: string,
+  name: string,
+  description: string,
+  imageUrl: string,
+): Promise<string | null> {
+  const existing = await sb.from('campaign_popups').select('id').eq('project_id', projectId).limit(1)
+  if (existing.error) return existing.error.message
+  if ((existing.data ?? []).length > 0) {
+    return 'A campaign popup already exists for this project. Turn it on under Campaign popups.'
+  }
+  const { error } = await sb.from('campaign_popups').insert({
+    internal_name: `Launch: ${name}`,
+    title: name,
+    description,
+    image_url: imageUrl,
+    active: false,
+    trigger_type: 'delay',
+    trigger_delay_seconds: 5,
+    target_paths: ['/', '/offplan'],
+    show_once_per_session: true,
+    sort_order: 0,
+    project_id: projectId,
+  })
+  return error?.message ?? null
+}
+
 function slotsFromGallery(gallery: unknown): string[] {
   const slots = ['', '', '', '', '', '']
   if (!Array.isArray(gallery)) return slots
@@ -64,6 +169,11 @@ export function AdminOffplanProjects() {
   const [modalOpen, setModalOpen] = useState(false)
   const [draft, setDraft] = useState<Row | null>(null)
   const [gallerySlots, setGallerySlots] = useState<string[]>(() => ['', '', '', '', '', ''])
+  const [floorPlans, setFloorPlans] = useState<FloorPlanDraft[]>([])
+  const [paymentPlans, setPaymentPlans] = useState<PaymentPlanDraft[]>([])
+  const [faqs, setFaqs] = useState<FaqDraft[]>([])
+  const [amenitiesText, setAmenitiesText] = useState('')
+  const [popupNote, setPopupNote] = useState<string | null>(null)
   const [isNew, setIsNew] = useState(true)
   const [slugLocked, setSlugLocked] = useState(false)
   const [saveErr, setSaveErr] = useState<string | null>(null)
@@ -123,6 +233,11 @@ export function AdminOffplanProjects() {
     setIsNew(true)
     setSlugLocked(false)
     setGallerySlots(['', '', '', '', '', ''])
+    setFloorPlans([])
+    setPaymentPlans([])
+    setFaqs([])
+    setAmenitiesText('')
+    setPopupNote(null)
     setDraft({
       id: '',
       slug: '',
@@ -138,6 +253,15 @@ export function AdminOffplanProjects() {
       salesperson_id: null,
       location: null,
       emirate: null,
+      starting_price_aed: null,
+      handover: null,
+      community: null,
+      dld_project_number: null,
+      escrow_bank: null,
+      amenities: [],
+      faqs: [],
+      seo_title: null,
+      seo_description: null,
       sort_order: rows.length,
       published: false,
       created_at: now,
@@ -147,13 +271,37 @@ export function AdminOffplanProjects() {
     setModalOpen(true)
   }
 
-  function openEdit(r: Row) {
+  async function openEdit(r: Row) {
     setIsNew(false)
     setSlugLocked(true)
     setGallerySlots(slotsFromGallery(r.gallery))
     setDraft({ ...r })
+    setAmenitiesText((r.amenities ?? []).join('\n'))
+    setFaqs(faqsFromJson(r.faqs))
+    setFloorPlans([])
+    setPaymentPlans([])
+    setPopupNote(null)
     setSaveErr(null)
     setModalOpen(true)
+    if (!sb) return
+    const [floorRes, planRes] = await Promise.all([
+      sb.from('offplan_floor_plans').select('*').eq('project_id', r.id).order('sort_order'),
+      sb.from('offplan_payment_plans').select('*').eq('project_id', r.id).order('sort_order'),
+    ])
+    if (floorRes.error || planRes.error) {
+      setSaveErr(floorRes.error?.message ?? planRes.error?.message ?? 'Could not load launch details.')
+      return
+    }
+    const planIds = (planRes.data ?? []).map((plan) => plan.id)
+    const mileRes = planIds.length
+      ? await sb.from('offplan_payment_milestones').select('*').in('plan_id', planIds).order('sort_order')
+      : { data: [], error: null }
+    if (mileRes.error) {
+      setSaveErr(mileRes.error.message)
+      return
+    }
+    setFloorPlans(floorPlansFromRows(floorRes.data ?? []))
+    setPaymentPlans(paymentPlansFromRows(planRes.data ?? [], mileRes.data ?? []))
   }
 
   function closeModal() {
@@ -161,9 +309,10 @@ export function AdminOffplanProjects() {
     setDraft(null)
   }
 
-  async function save() {
+  async function save(alsoCreatePopup = false) {
     if (!sb || !draft) return
     setSaveErr(null)
+    setPopupNote(null)
     const name = draft.name.trim()
     if (!name) {
       setSaveErr('Project name is required.')
@@ -183,12 +332,42 @@ export function AdminOffplanProjects() {
       setSaveErr('Short description is required.')
       return
     }
+    const floorError = validateFloorPlans(floorPlans)
+    if (floorError) {
+      setSaveErr(floorError)
+      return
+    }
+    const planError = validatePaymentPlans(paymentPlans)
+    if (planError) {
+      setSaveErr(planError)
+      return
+    }
+    if (faqs.some((faq) => Boolean(faq.question.trim()) !== Boolean(faq.answer.trim()))) {
+      setSaveErr('Each question needs an answer.')
+      return
+    }
+    if (draft.starting_price_aed != null && (!Number.isFinite(draft.starting_price_aed) || draft.starting_price_aed < 0)) {
+      setSaveErr('Starting price must be a number of dirhams.')
+      return
+    }
 
     const gallery = galleryFromSlots(gallerySlots)
     const hero =
       draft.hero_image_url?.trim() ||
       gallery[0]?.src ||
       null
+    if (alsoCreatePopup && !hero) {
+      setSaveErr('Add a hero image before creating a campaign popup.')
+      return
+    }
+
+    const amenities = amenitiesText
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+    const faqPayload = faqs
+      .map((faq) => ({ question: faq.question.trim(), answer: faq.answer.trim() }))
+      .filter((faq) => faq.question && faq.answer)
 
     const payload = {
       slug,
@@ -204,17 +383,28 @@ export function AdminOffplanProjects() {
       salesperson_id: draft.salesperson_id || null,
       location: draft.location?.trim() || null,
       emirate: draft.emirate?.trim() || null,
+      starting_price_aed: draft.starting_price_aed,
+      handover: draft.handover?.trim() || null,
+      community: draft.community?.trim() || null,
+      dld_project_number: draft.dld_project_number?.trim() || null,
+      escrow_bank: draft.escrow_bank?.trim() || null,
+      amenities,
+      faqs: faqPayload,
+      seo_title: draft.seo_title?.trim() || null,
+      seo_description: draft.seo_description?.trim() || null,
       sort_order: Number(draft.sort_order) || 0,
       published: draft.published,
       updated_at: new Date().toISOString(),
     }
 
+    let projectId = draft.id
     if (isNew) {
-      const { error } = await sb.from('offplan_projects').insert(payload)
-      if (error) {
-        setSaveErr(error.message)
+      const { data, error } = await sb.from('offplan_projects').insert(payload).select('id').single()
+      if (error || !data) {
+        setSaveErr(error?.message ?? 'Could not create the project.')
         return
       }
+      projectId = data.id
     } else if (draft.id) {
       const { error } = await sb.from('offplan_projects').update(payload).eq('id', draft.id)
       if (error) {
@@ -222,6 +412,35 @@ export function AdminOffplanProjects() {
         return
       }
     }
+    if (!projectId) {
+      setSaveErr('Could not save the project.')
+      return
+    }
+
+    const childError = await saveLaunchChildren(sb, projectId, floorPlans, paymentPlans)
+    if (childError) {
+      setSaveErr(childError)
+      setIsNew(false)
+      setSlugLocked(true)
+      setDraft((current) => (current ? { ...current, id: projectId, slug } : current))
+      return
+    }
+
+    if (alsoCreatePopup && hero) {
+      const popupError = await createLaunchPopup(sb, projectId, name, shortDescription, hero)
+      setIsNew(false)
+      setSlugLocked(true)
+      setDraft((current) => (current ? { ...current, id: projectId, slug } : current))
+      if (popupError) {
+        setSaveErr(popupError)
+        return
+      }
+      setPopupNote('Campaign popup created and left inactive. Turn it on under Campaign popups.')
+      void refresh()
+      void refetchCms()
+      return
+    }
+
     closeModal()
     void refresh()
     void refetchCms()
@@ -244,8 +463,9 @@ export function AdminOffplanProjects() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <AdminPageHeading title="Off-plan projects" helpAriaLabel="About off-plan projects">
           <p>
-            Developer launches shown on <strong>/offplan</strong>. Group by launch status (New,
-            Existing, Upcoming). Brochures are gated behind an enquiry form on the public site.
+            Developer launches shown on <strong>/offplan</strong>. Add floor plans, a payment
+            plan, and an optional campaign popup. Publishing a project makes its page indexable
+            on the next site build. Brochures stay behind an enquiry form.
           </p>
         </AdminPageHeading>
         <button
@@ -341,6 +561,13 @@ export function AdminOffplanProjects() {
               className="w-full rounded-2xl border border-ink/15 px-4 py-2.5 text-sm font-medium md:w-auto"
             >
               Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => void save(true)}
+              className="w-full rounded-2xl border border-ink/15 px-4 py-2.5 text-sm font-medium md:w-auto"
+            >
+              Save and create popup
             </button>
             <button type="button" onClick={() => void save()} className={`w-full md:w-auto ${adminBtnPrimary}`}>
               Save
@@ -463,6 +690,94 @@ export function AdminOffplanProjects() {
                 className={fieldClass()}
               />
             </div>
+            <div>
+              <label className="text-xs font-medium text-ink/70">Community</label>
+              <input
+                value={draft.community ?? ''}
+                onChange={(e) => setDraft({ ...draft, community: e.target.value || null })}
+                className={fieldClass()}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-ink/70">Location</label>
+              <input
+                value={draft.location ?? ''}
+                onChange={(e) => setDraft({ ...draft, location: e.target.value || null })}
+                className={fieldClass()}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-ink/70">Emirate</label>
+              <input
+                value={draft.emirate ?? ''}
+                onChange={(e) => setDraft({ ...draft, emirate: e.target.value || null })}
+                className={fieldClass()}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-ink/70">Handover</label>
+              <input
+                value={draft.handover ?? ''}
+                placeholder="Q4 2028"
+                onChange={(e) => setDraft({ ...draft, handover: e.target.value || null })}
+                className={fieldClass()}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-ink/70">Starting price (AED)</label>
+              <input
+                value={draft.starting_price_aed ?? ''}
+                onChange={(e) =>
+                  setDraft({
+                    ...draft,
+                    starting_price_aed: e.target.value.trim() ? Number(e.target.value) : null,
+                  })
+                }
+                className={fieldClass()}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-ink/70">DLD project number</label>
+              <input
+                value={draft.dld_project_number ?? ''}
+                onChange={(e) => setDraft({ ...draft, dld_project_number: e.target.value || null })}
+                className={fieldClass()}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-ink/70">Escrow bank</label>
+              <input
+                value={draft.escrow_bank ?? ''}
+                onChange={(e) => setDraft({ ...draft, escrow_bank: e.target.value || null })}
+                className={fieldClass()}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-ink/70">SEO title (optional)</label>
+              <input
+                value={draft.seo_title ?? ''}
+                onChange={(e) => setDraft({ ...draft, seo_title: e.target.value || null })}
+                className={fieldClass()}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="text-xs font-medium text-ink/70">SEO description (optional)</label>
+              <textarea
+                value={draft.seo_description ?? ''}
+                rows={2}
+                onChange={(e) => setDraft({ ...draft, seo_description: e.target.value || null })}
+                className={fieldClass()}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="text-xs font-medium text-ink/70">Amenities, one per line</label>
+              <textarea
+                value={amenitiesText}
+                rows={3}
+                onChange={(e) => setAmenitiesText(e.target.value)}
+                className={fieldClass()}
+              />
+            </div>
             <div className="sm:col-span-2">
               <ImageUploadField
                 label="Hero image"
@@ -507,6 +822,9 @@ export function AdminOffplanProjects() {
                 }
               />
             </div>
+            <FloorPlanEditor plans={floorPlans} onChange={setFloorPlans} />
+            <PaymentPlanEditor plans={paymentPlans} onChange={setPaymentPlans} />
+            <FaqEditor faqs={faqs} onChange={setFaqs} />
             <div className="sm:col-span-2">
               <label className="text-xs font-medium text-ink/70">Full description (optional)</label>
               <AdminRichTextField
@@ -517,6 +835,7 @@ export function AdminOffplanProjects() {
           </div>
         ) : null}
         {saveErr ? <p className="mt-2 text-xs text-red-600">{saveErr}</p> : null}
+        {popupNote ? <p className="mt-2 text-xs text-ink/70">{popupNote}</p> : null}
       </AdminModal>
 
       <AdminModal

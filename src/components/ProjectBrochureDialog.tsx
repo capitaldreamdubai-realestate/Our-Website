@@ -11,6 +11,12 @@ type Props = {
   projectName: string
   projectSlug?: string | null
   salesperson: PublicSalesperson | null
+  floorPlan?: {
+    id: string
+    name: string
+    bedrooms: number
+    priceAed: number | null
+  } | null
   onBrochureUnlocked: (details: { email: string; name: string }) => void
 }
 
@@ -21,6 +27,7 @@ export function ProjectBrochureDialog({
   projectName,
   projectSlug,
   salesperson,
+  floorPlan,
   onBrochureUnlocked,
 }: Props) {
   const { t } = useLocalePreferences()
@@ -83,6 +90,7 @@ export function ProjectBrochureDialog({
             projectName={projectName}
             projectSlug={projectSlug}
             salesperson={salesperson}
+            floorPlan={floorPlan}
             onSuccess={(details) => {
               onBrochureUnlocked(details)
               onClose()

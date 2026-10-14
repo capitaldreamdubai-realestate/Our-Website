@@ -48,6 +48,7 @@ function emptyPopup(): PopupRow {
     show_once_per_session: true,
     submit_button_label: null,
     sort_order: 0,
+    project_id: null,
   }
 }
 
