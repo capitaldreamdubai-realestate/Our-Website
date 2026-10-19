@@ -7,7 +7,13 @@ import { CarouselNav } from './CarouselNav'
 import { ImagePrimaryOverlay } from './ImagePrimaryOverlay'
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
 import { formatPriceFromAed } from '../lib/formatCurrency'
+import {
+  availabilityStatusOf,
+  isCompletedStatus,
+  publicPriceAed,
+} from '../lib/propertyAvailability'
 import { buttonClassNames } from './Button'
+import { PropertyStatusStamp } from './PropertyStatusStamp'
 
 type Props = {
   property: Property
@@ -16,7 +22,7 @@ type Props = {
 }
 
 export function PropertyDetailHero({ property, gallery, onGetDetails }: Props) {
-  const { currency, rates, intlLocale } = useLocalePreferences()
+  const { currency, rates, intlLocale, t } = useLocalePreferences()
   const [selectedIndex, setSelectedIndex] = useState(0)
 
   useEffect(() => {
@@ -62,10 +68,14 @@ export function PropertyDetailHero({ property, gallery, onGetDetails }: Props) {
     emblaApi?.scrollTo(0, true)
   }, [emblaApi, gallery.length, property.id])
 
+  const visiblePrice = publicPriceAed(property)
+  const completed = isCompletedStatus(property)
   const priceText =
-    property.priceAed != null
-      ? formatPriceFromAed(property.priceAed, currency, rates, intlLocale)
-      : property.meta.split('·')[0]?.trim() ?? property.meta
+    visiblePrice != null
+      ? formatPriceFromAed(visiblePrice, currency, rates, intlLocale)
+      : completed
+        ? ''
+        : property.meta.split('·')[0]?.trim() ?? property.meta
   const locationText =
     property.location ?? property.meta.split('·')[1]?.trim() ?? ''
 
@@ -103,6 +113,7 @@ export function PropertyDetailHero({ property, gallery, onGetDetails }: Props) {
         />
       )}
       <ImagePrimaryOverlay />
+      <PropertyStatusStamp status={property.availabilityStatus} />
       <div
         className="absolute inset-0 z-[2] bg-gradient-to-t from-ink/75 via-ink/45 to-ink/25"
         aria-hidden
@@ -113,9 +124,25 @@ export function PropertyDetailHero({ property, gallery, onGetDetails }: Props) {
             <h1 className="type-hero font-compact text-balance font-light tracking-[-0.02em] text-cream [text-shadow:0_2px_24px_rgba(28,20,18,0.55)]">
               {property.title}
             </h1>
-            <p className="mt-5 max-w-full font-compact text-xl font-semibold tracking-wide text-cream/95 [text-shadow:0_1px_12px_rgba(28,20,18,0.45)] sm:text-2xl">
-              {priceText}
-            </p>
+            {completed ? (
+              <p className="mt-5 max-w-full font-compact text-sm font-semibold uppercase tracking-[0.18em] text-cream/95 [text-shadow:0_1px_12px_rgba(28,20,18,0.45)]">
+                {availabilityStatusOf(property) === 'sold'
+                  ? t('property.status.sold')
+                  : t('property.status.rented')}
+                {property.availabilityStatusAt
+                  ? ` · ${new Date(property.availabilityStatusAt).toLocaleDateString(intlLocale, { day: 'numeric', month: 'long', year: 'numeric' })}`
+                  : ''}
+              </p>
+            ) : availabilityStatusOf(property) === 'under_offer' ? (
+              <p className="mt-5 font-compact text-sm font-semibold uppercase tracking-[0.18em] text-cream/95">
+                {t('property.status.reserved')}
+              </p>
+            ) : null}
+            {priceText ? (
+              <p className="mt-3 max-w-full font-compact text-xl font-semibold tracking-wide text-cream/95 [text-shadow:0_1px_12px_rgba(28,20,18,0.45)] sm:text-2xl">
+                {completed ? `${t('property.status.achievedPrice')} ${priceText}` : priceText}
+              </p>
+            ) : null}
             {locationText ? (
               <p className="mt-2 max-w-xl font-light leading-relaxed text-cream/90 [text-shadow:0_1px_12px_rgba(28,20,18,0.45)]">
                 {locationText}

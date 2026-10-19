@@ -18,6 +18,8 @@ Capital Dreams is a real estate brokerage in Dubai, United Arab Emirates. The of
 
 - [Home](https://capitaldreamdubai.com/): Agency overview, homes for sale and rent, and services
 - [Properties for sale](https://capitaldreamdubai.com/for-sale): Listings for sale
+- [Sold properties](https://capitaldreamdubai.com/sold-properties): Homes sold with Capital Dreams. Not current asking prices.
+- [Rented properties](https://capitaldreamdubai.com/rented-properties): Homes rented with Capital Dreams. Not current asking rents.
 - [Properties for rent](https://capitaldreamdubai.com/for-rent): Listings for rent
 - [All properties](https://capitaldreamdubai.com/all-properties): Full listing catalogue
 - [Deals](https://capitaldreamdubai.com/deals): Limited-time property deals

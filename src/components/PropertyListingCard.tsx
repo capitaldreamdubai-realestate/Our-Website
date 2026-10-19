@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom'
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
 import { formatAreaFromM2 } from '../lib/formatArea'
 import { formatPriceFromAed } from '../lib/formatCurrency'
+import { isCompletedStatus, publicPriceAed } from '../lib/propertyAvailability'
 import { ImagePrimaryOverlay } from './ImagePrimaryOverlay'
+import { PropertyStatusStamp } from './PropertyStatusStamp'
 import { PropertyTagBadges } from './PropertyTagBadges'
 import type { Property } from './PropertyCard'
 
@@ -14,10 +16,13 @@ type Props = {
 
 export function PropertyListingCard({ property, compact }: Props) {
   const { currency, rates, intlLocale, areaUnit } = useLocalePreferences()
+  const visiblePrice = publicPriceAed(property)
   const price =
-    property.priceAed != null
-      ? formatPriceFromAed(property.priceAed, currency, rates, intlLocale)
-      : property.meta.split('·')[0]?.trim() ?? property.meta
+    visiblePrice != null
+      ? formatPriceFromAed(visiblePrice, currency, rates, intlLocale)
+      : isCompletedStatus(property)
+        ? ''
+        : property.meta.split('·')[0]?.trim() ?? property.meta
   const location =
     property.location ?? property.meta.split('·')[1]?.trim() ?? ''
 
@@ -39,7 +44,8 @@ export function PropertyListingCard({ property, compact }: Props) {
           />
           <ImagePrimaryOverlay />
         </div>
-        <PropertyTagBadges
+          <PropertyStatusStamp status={property.availabilityStatus} />
+          <PropertyTagBadges
           tag={property.tag}
           tags={property.tags}
           className="absolute right-3 top-3 z-[2]"
@@ -49,9 +55,11 @@ export function PropertyListingCard({ property, compact }: Props) {
         className={`flex flex-1 flex-col gap-2 px-1 ${compact ? 'pt-4 sm:pt-5' : 'pt-6 sm:pt-7'}`}
       >
         <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-          <p className="type-card-title shrink-0 font-compact font-semibold text-ink">
-            {price}
-          </p>
+          {price ? (
+            <p className="type-card-title shrink-0 font-compact font-semibold text-ink">
+              {price}
+            </p>
+          ) : null}
           {location ? (
             <p className="flex min-w-0 items-center gap-1 font-normal leading-snug text-ink/80 sm:shrink">
               <MapPin

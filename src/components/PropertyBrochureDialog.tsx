@@ -1,9 +1,17 @@
 import { X } from 'lucide-react'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { buttonClassNames } from '@/components/Button'
+import { LeadQualificationFields } from '@/components/LeadQualificationFields'
 import { PhoneInputField } from '@/components/PhoneInputField'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
 import type { PublicSalesperson } from '@/lib/cms/loadCmsSnapshot'
+import {
+  emptyQualification,
+  qualificationComplete,
+  qualificationMessage,
+  qualificationMeta,
+  type QualificationAnswers,
+} from '@/lib/leadQualification'
 import { submitWebsiteForm } from '@/lib/submitWebsiteForm'
 
 function isValidEmail(value: string) {
@@ -31,6 +39,7 @@ export function PropertyBrochureDialog({
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
+  const [qualification, setQualification] = useState<QualificationAnswers>(emptyQualification)
   const [attempted, setAttempted] = useState(false)
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -60,6 +69,7 @@ export function PropertyBrochureDialog({
     setErr(null)
     setAttempted(false)
     setBusy(false)
+    setQualification(emptyQualification)
   }, [open])
 
   const errors = useMemo(() => {
@@ -93,7 +103,8 @@ export function PropertyBrochureDialog({
     if (
       trimmedName.length === 0 ||
       trimmedEmail.length === 0 ||
-      !isValidEmail(trimmedEmail)
+      !isValidEmail(trimmedEmail) ||
+      !qualificationComplete(qualification)
     ) {
       return
     }
@@ -106,11 +117,12 @@ export function PropertyBrochureDialog({
       name: name.trim(),
       email: email.trim(),
       phone: phone.trim() || null,
-      message: null,
+      message: qualificationMessage(qualification),
       meta: {
         salesperson_id: salesperson?.id ?? null,
         salesperson_name: salesperson?.name ?? null,
         intent: 'property_brochure',
+        ...qualificationMeta(qualification),
       },
     })
     setBusy(false)
@@ -241,6 +253,16 @@ export function PropertyBrochureDialog({
                     placeholder={t('contact.phone')}
                   />
                 </div>
+                <LeadQualificationFields
+                  idPrefix="brochure"
+                  answers={qualification}
+                  onChange={setQualification}
+                  attempted={attempted}
+                  labelClass={labelClass}
+                  fieldClass={fieldClass}
+                  errorClass="text-sm text-terracotta"
+                  stackClass="flex flex-col gap-3"
+                />
                 {err ? (
                   <p className="text-sm text-red-600" role="alert">
                     {err}

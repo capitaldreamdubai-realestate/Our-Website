@@ -395,10 +395,10 @@ export async function loadCmsSnapshot(
     offplanProjects,
   )
   const featuredProperties = propRows
-    .filter((r) => r.home_section === 'featured')
+    .filter((r) => r.home_section === 'featured' && r.availability_status === 'available')
     .map(mapPropertyRow)
   const moreHomes = propRows
-    .filter((r) => r.home_section === 'more_homes')
+    .filter((r) => r.home_section === 'more_homes' && r.availability_status === 'available')
     .map(mapPropertyRow)
 
   const artRows = artRes.error ? [] : (artRes.data ?? [])

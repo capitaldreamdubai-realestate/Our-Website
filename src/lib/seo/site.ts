@@ -123,6 +123,7 @@ export function realEstateListingJsonLd(input: {
   streetAddress?: string | null
   addressLocality?: string | null
   priceAed?: number | null
+  availability?: 'https://schema.org/InStock' | 'https://schema.org/LimitedAvailability' | 'https://schema.org/SoldOut'
 }) {
   const url = absoluteUrl(input.path)
   const data: Record<string, unknown> = {
@@ -153,6 +154,13 @@ export function realEstateListingJsonLd(input: {
       price: input.priceAed,
       priceCurrency: 'AED',
       url,
+      ...(input.availability ? { availability: input.availability } : {}),
+    }
+  } else if (input.availability) {
+    data.offers = {
+      '@type': 'Offer',
+      url,
+      availability: input.availability,
     }
   }
   return data

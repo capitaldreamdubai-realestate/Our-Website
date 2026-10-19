@@ -3,6 +3,7 @@ import { useEffect, type ReactNode } from 'react'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import type { Database } from '@/integrations/supabase/database.types'
 import { formSubmissionSourceLabel } from '@/lib/formSubmissionSource'
+import { qualificationAnswerLabel } from '@/lib/leadQualification'
 import { parseSubmissionMeta } from '@/lib/submissionMeta'
 import { adminModalCloseBtn } from '@/admin/adminClassNames'
 
@@ -147,6 +148,21 @@ export function SubmissionDetailSheet({
               <span className="text-ink/45">—</span>
             )}
           </Field>
+          {meta.investment_budget ? (
+            <Field label="Investment budget">
+              {qualificationAnswerLabel('budget', meta.investment_budget)}
+            </Field>
+          ) : null}
+          {meta.invest_timeline ? (
+            <Field label="Looking to invest">
+              {qualificationAnswerLabel('timeline', meta.invest_timeline)}
+            </Field>
+          ) : null}
+          {meta.invested_uae_before ? (
+            <Field label="Invested in UAE property before">
+              {qualificationAnswerLabel('investedBefore', meta.invested_uae_before)}
+            </Field>
+          ) : null}
           <Field label="Message">
             {row.message ? (
               <p className="whitespace-pre-wrap text-ink/85">{row.message}</p>

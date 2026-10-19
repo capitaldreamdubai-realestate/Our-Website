@@ -216,6 +216,12 @@ export function TeamMemberDetailPage() {
               <Link to="/team" className={buttonClassNames('outlineTerracotta')}>
                 {t('teamMember.backTeam')}
               </Link>
+              <Link to="/sold-properties" className={buttonClassNames('outlineTerracotta')}>
+                {t('portfolio.about.sold')}
+              </Link>
+              <Link to="/rented-properties" className={buttonClassNames('outlineTerracotta')}>
+                {t('portfolio.about.rented')}
+              </Link>
             </div>
           </article>
 

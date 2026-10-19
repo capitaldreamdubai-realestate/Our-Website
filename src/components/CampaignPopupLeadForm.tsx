@@ -1,7 +1,15 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { buttonClassNames } from '@/components/Button'
+import { LeadQualificationFields } from '@/components/LeadQualificationFields'
 import { PhoneInputField } from '@/components/PhoneInputField'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
+import {
+  emptyQualification,
+  qualificationComplete,
+  qualificationMessage,
+  qualificationMeta,
+  type QualificationAnswers,
+} from '@/lib/leadQualification'
 import { submitWebsiteForm } from '@/lib/submitWebsiteForm'
 
 function isValidEmail(value: string) {
@@ -37,6 +45,7 @@ export function CampaignPopupLeadForm({
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
+  const [qualification, setQualification] = useState<QualificationAnswers>(emptyQualification)
   const [attempted, setAttempted] = useState(false)
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
@@ -52,8 +61,6 @@ export function CampaignPopupLeadForm({
     }
   }, [attempted, name, email])
 
-  const hasErrors = errors.name || errors.emailRequired || errors.emailFormat
-
   const fieldClass = compact
     ? 'w-full rounded-xl border border-[#6B3B34]/28 bg-white px-3 py-2.5 text-sm text-ink outline-none transition focus:border-[#6B3B34]/55 focus:ring-2 focus:ring-[#6B3B34]/20'
     : 'w-full rounded-xl border border-[#6B3B34]/28 bg-white px-4 py-3 text-base text-ink outline-none transition focus:border-[#6B3B34]/55 focus:ring-2 focus:ring-[#6B3B34]/20'
@@ -66,7 +73,16 @@ export function CampaignPopupLeadForm({
     event.preventDefault()
     setAttempted(true)
     setErr(null)
-    if (hasErrors) return
+    const trimmedName = name.trim()
+    const trimmedEmail = email.trim()
+    if (
+      trimmedName.length === 0 ||
+      trimmedEmail.length === 0 ||
+      !isValidEmail(trimmedEmail) ||
+      !qualificationComplete(qualification)
+    ) {
+      return
+    }
 
     setBusy(true)
     const { error } = await submitWebsiteForm({
@@ -74,15 +90,16 @@ export function CampaignPopupLeadForm({
       popupId,
       projectId: projectId ?? null,
       projectName: projectName ?? null,
-      name: name.trim(),
-      email: email.trim(),
+      name: trimmedName,
+      email: trimmedEmail,
       phone: phone?.trim() || null,
-      message: null,
+      message: qualificationMessage(qualification),
       meta: {
         popup_title: popupTitle,
         project_slug: projectSlug?.trim() || null,
         salesperson_id: salespersonId ?? null,
         salesperson_name: salespersonName ?? null,
+        ...qualificationMeta(qualification),
       },
     })
     setBusy(false)
@@ -96,6 +113,7 @@ export function CampaignPopupLeadForm({
     setName('')
     setEmail('')
     setPhone('')
+    setQualification(emptyQualification)
     setAttempted(false)
     onSuccess?.()
   }
@@ -143,6 +161,16 @@ export function CampaignPopupLeadForm({
           placeholder={t('contact.phone')}
         />
       </div>
+      <LeadQualificationFields
+        idPrefix={`popup-${popupId}`}
+        answers={qualification}
+        onChange={setQualification}
+        attempted={attempted}
+        labelClass={labelClass}
+        fieldClass={fieldClass}
+        errorClass="text-sm text-terracotta"
+        stackClass="flex flex-col gap-3"
+      />
       {err ? (
         <p className="text-sm text-red-600" role="alert">
           {err}

@@ -3,9 +3,17 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { buttonClassNames } from '@/components/Button'
 import { FormSuccessPanel } from '@/components/FormSuccessPanel'
+import { LeadQualificationFields } from '@/components/LeadQualificationFields'
 import { PhoneInputField } from '@/components/PhoneInputField'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
 import type { PublicSalesperson } from '@/lib/cms/loadCmsSnapshot'
+import {
+  emptyQualification,
+  qualificationComplete,
+  qualificationMessage,
+  qualificationMeta,
+  type QualificationAnswers,
+} from '@/lib/leadQualification'
 import { submitWebsiteForm } from '@/lib/submitWebsiteForm'
 
 export type ProjectLeadIntent = 'inquiry' | 'brochure'
@@ -47,7 +55,7 @@ export function ProjectLeadForm({
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
-  const [message, setMessage] = useState('')
+  const [qualification, setQualification] = useState<QualificationAnswers>(emptyQualification)
   const [attempted, setAttempted] = useState(false)
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
@@ -73,7 +81,7 @@ export function ProjectLeadForm({
     setErr(null)
     const n = name.trim()
     const em = email.trim()
-    if (!n || !em || !isValidEmail(em)) return
+    if (!n || !em || !isValidEmail(em) || !qualificationComplete(qualification)) return
 
     setBusy(true)
     const source = intent === 'brochure' ? 'project_brochure' : 'project_enquiry'
@@ -84,12 +92,13 @@ export function ProjectLeadForm({
       name: n,
       email: em,
       phone: phone?.trim() || null,
-      message: message.trim() || null,
+      message: qualificationMessage(qualification),
       meta: {
         intent,
         project_slug: projectSlug?.trim() || null,
         salesperson_id: salesperson?.id ?? null,
         salesperson_name: salesperson?.name ?? null,
+        ...qualificationMeta(qualification),
         ...(floorPlan
           ? {
               floor_plan_id: floorPlan.id,
@@ -111,7 +120,7 @@ export function ProjectLeadForm({
       setName('')
       setEmail('')
       setPhone('')
-      setMessage('')
+      setQualification(emptyQualification)
       setAttempted(false)
     }
   }
@@ -226,20 +235,15 @@ export function ProjectLeadForm({
               placeholder={t('lead.phonePh')}
             />
           </div>
-          {intent === 'inquiry' ? (
-            <div>
-              <label className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink/55">
-                {t('lead.message')}
-              </label>
-              <textarea
-                className={clsx(field, 'min-h-[120px] resize-y')}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder={t('lead.messagePh')}
-                rows={4}
-              />
-            </div>
-          ) : null}
+          <LeadQualificationFields
+            idPrefix="project-lead"
+            answers={qualification}
+            onChange={setQualification}
+            attempted={attempted}
+            labelClass="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink/55"
+            fieldClass="w-full rounded-xl border border-ink/15 bg-white px-3 py-2.5 text-sm text-ink"
+            errorClass="mt-1 text-xs text-red-600"
+          />
           {err ? <p className="text-xs text-red-600">{err}</p> : null}
           <button
             type="submit"

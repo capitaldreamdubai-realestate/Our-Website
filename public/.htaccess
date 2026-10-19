@@ -8,6 +8,12 @@
   RewriteCond %{REQUEST_FILENAME} -f
   RewriteRule ^ - [L]
 
+  # After a successful prerender, unknown property URLs are real 404s.
+  # Without prerender-ok.txt the SPA shell remains the fallback.
+  RewriteCond %{DOCUMENT_ROOT}/prerender-ok.txt -f
+  RewriteCond %{DOCUMENT_ROOT}/properties/$1/index.html !-f
+  RewriteRule ^properties/([^/]+)/?$ - [R=404,L]
+
   # Prerendered route HTML, without a trailing-slash redirect.
   RewriteCond %{DOCUMENT_ROOT}/$1/index.html -f
   RewriteRule ^(.+?)/?$ /$1/index.html [L]

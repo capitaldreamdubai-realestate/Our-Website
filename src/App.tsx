@@ -27,6 +27,8 @@ import { HomePage } from './pages/HomePage'
 import { NewDevelopmentsPage } from './pages/NewDevelopmentsPage'
 import { ForRentPage } from './pages/ForRentPage'
 import { ForSalePage } from './pages/ForSalePage'
+import { RentedPropertiesPage } from './pages/RentedPropertiesPage'
+import { SoldPropertiesPage } from './pages/SoldPropertiesPage'
 import { DealsPage } from './pages/DealsPage'
 import { ArticleDetailPage } from './pages/ArticleDetailPage'
 import { ArticlesPage } from './pages/ArticlesPage'
@@ -88,6 +90,8 @@ function App() {
         />
         <Route path="for-rent" element={<ForRentPage />} />
         <Route path="for-sale" element={<ForSalePage />} />
+        <Route path="sold-properties" element={<SoldPropertiesPage />} />
+        <Route path="rented-properties" element={<RentedPropertiesPage />} />
         <Route path="deals" element={<DealsPage />} />
         <Route path="developers" element={<DevelopersPage />} />
         <Route path="developers/:slug" element={<DeveloperDetailPage />} />

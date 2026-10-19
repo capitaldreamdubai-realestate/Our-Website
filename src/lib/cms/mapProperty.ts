@@ -5,6 +5,7 @@ import {
   primaryListingTag,
   syncLegacyTagField,
 } from '@/lib/listingTags'
+import { isAvailabilityStatus } from '@/lib/propertyAvailability'
 
 type Row = Database['public']['Tables']['properties']['Row']
 
@@ -45,6 +46,12 @@ export function mapPropertyRow(row: Row): Property {
     salespersonId: row.salesperson_id ?? undefined,
     propertyType: row.property_type ?? undefined,
     developerId: row.developer_id ?? undefined,
+    availabilityStatus: isAvailabilityStatus(row.availability_status)
+      ? row.availability_status
+      : 'available',
+    availabilityStatusAt: row.availability_status_at ?? undefined,
+    achievedPriceAed: row.achieved_price_aed ?? undefined,
+    publishAchievedPrice: row.publish_achieved_price,
   }
 }
 
@@ -82,6 +89,10 @@ export function propertyRowToUpsert(
     home_section: row.home_section,
     sort_order_home: row.sort_order_home,
     published: row.published,
+    availability_status: row.availability_status,
+    availability_status_at: row.availability_status_at,
+    achieved_price_aed: row.achieved_price_aed,
+    publish_achieved_price: row.publish_achieved_price,
     salesperson_id: row.salesperson_id,
     property_type: row.property_type,
     developer_id: row.developer_id ?? null,
@@ -152,6 +163,10 @@ export function propertyToInsert(
     home_section: homeSection,
     sort_order_home: sortOrderHome,
     published,
+    availability_status: p.availabilityStatus ?? 'available',
+    availability_status_at: p.availabilityStatusAt ?? null,
+    achieved_price_aed: p.achievedPriceAed ?? null,
+    publish_achieved_price: Boolean(p.publishAchievedPrice),
     salesperson_id: p.salespersonId ?? null,
     property_type: p.propertyType ?? null,
     developer_id: p.developerId ?? null,

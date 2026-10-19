@@ -40,6 +40,10 @@ export type Database = {
           home_section: 'featured' | 'more_homes' | 'none'
           sort_order_home: number
           published: boolean
+          availability_status: 'available' | 'under_offer' | 'sold' | 'rented' | 'withdrawn'
+          availability_status_at: string | null
+          achieved_price_aed: number | null
+          publish_achieved_price: boolean
           salesperson_id: string | null
           property_type: string | null
           developer_id: string | null
@@ -98,6 +102,10 @@ export type Database = {
           home_section?: 'featured' | 'more_homes' | 'none'
           sort_order_home?: number
           published?: boolean
+          availability_status?: 'available' | 'under_offer' | 'sold' | 'rented' | 'withdrawn'
+          availability_status_at?: string | null
+          achieved_price_aed?: number | null
+          publish_achieved_price?: boolean
           salesperson_id?: string | null
           property_type?: string | null
           developer_id?: string | null
@@ -507,6 +515,10 @@ export type Database = {
             | 'contact'
             | 'newsletter'
             | 'whatsapp_click'
+            | 'sold_property_seller_enquiry'
+            | 'sold_property_buyer_enquiry'
+            | 'rented_property_landlord_enquiry'
+            | 'rented_property_tenant_enquiry'
           property_id: string | null
           property_title: string | null
           project_id: string | null
@@ -530,6 +542,10 @@ export type Database = {
             | 'contact'
             | 'newsletter'
             | 'whatsapp_click'
+            | 'sold_property_seller_enquiry'
+            | 'sold_property_buyer_enquiry'
+            | 'rented_property_landlord_enquiry'
+            | 'rented_property_tenant_enquiry'
           property_id?: string | null
           property_title?: string | null
           project_id?: string | null
@@ -708,6 +724,26 @@ export type Database = {
           reviewed_at?: string | null
         }
         Update: Partial<Database['public']['Tables']['testimonials']['Insert']>
+        Relationships: []
+      }
+      property_availability_events: {
+        Row: {
+          id: string
+          property_id: string
+          from_status: string | null
+          to_status: string
+          changed_at: string
+          note: string | null
+        }
+        Insert: {
+          id?: string
+          property_id: string
+          from_status?: string | null
+          to_status: string
+          changed_at?: string
+          note?: string | null
+        }
+        Update: Partial<Database['public']['Tables']['property_availability_events']['Insert']>
         Relationships: []
       }
     }

@@ -1,4 +1,6 @@
+import type { AvailabilityStatus } from '../lib/propertyAvailability'
 import { ImagePrimaryOverlay } from './ImagePrimaryOverlay'
+import { PropertyStatusStamp } from './PropertyStatusStamp'
 import { PropertyTagBadges } from './PropertyTagBadges'
 import { Link } from 'react-router-dom'
 
@@ -51,6 +53,10 @@ export type Property = {
   propertyType?: string
   /** FK to property_developers. */
   developerId?: string
+  availabilityStatus?: AvailabilityStatus
+  availabilityStatusAt?: string
+  achievedPriceAed?: number
+  publishAchievedPrice?: boolean
 }
 
 type Props = {
@@ -74,6 +80,7 @@ export function PropertyCard({ property }: Props) {
             />
             <ImagePrimaryOverlay />
           </div>
+          <PropertyStatusStamp status={property.availabilityStatus} />
           <PropertyTagBadges
             tag={property.tag}
             tags={property.tags}

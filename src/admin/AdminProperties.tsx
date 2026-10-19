@@ -101,6 +101,10 @@ function createEmptyRow(): Row {
     home_section: 'none',
     sort_order_home: 0,
     published: true,
+    availability_status: 'available',
+    availability_status_at: null,
+    achieved_price_aed: null,
+    publish_achieved_price: false,
     salesperson_id: null,
     property_type: null,
     developer_id: null,
@@ -148,6 +152,10 @@ export function AdminProperties() {
   const [loadErr, setLoadErr] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [draft, setDraft] = useState<Row | null>(null)
+  const [transactionVerified, setTransactionVerified] = useState(false)
+  const [statusEvents, setStatusEvents] = useState<
+    { id: string; from_status: string | null; to_status: string; changed_at: string }[]
+  >([])
   const [step, setStep] = useState(0)
   const [galleryText, setGalleryText] = useState('[]')
   const [saveErr, setSaveErr] = useState<string | null>(null)
@@ -167,6 +175,26 @@ export function AdminProperties() {
   const [developers, setDevelopers] = useState<DeveloperRow[]>([])
   const [viewRow, setViewRow] = useState<Row | null>(null)
   const [listingTagOptions, setListingTagOptions] = useState<ListingTagRow[]>([])
+
+  useEffect(() => {
+    if (!sb || !draft?.id) {
+      setStatusEvents([])
+      return
+    }
+    let cancelled = false
+    void sb
+      .from('property_availability_events')
+      .select('id, from_status, to_status, changed_at')
+      .eq('property_id', draft.id)
+      .order('changed_at', { ascending: false })
+      .limit(8)
+      .then(({ data }) => {
+        if (!cancelled) setStatusEvents(data ?? [])
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [sb, draft?.id, draft?.availability_status])
   const [tagsColumnReady, setTagsColumnReady] = useState<boolean | null>(null)
   const [propertyTypeOptions, setPropertyTypeOptions] = useState<PropertyTypeOptRow[]>([])
   const [geoLookup, setGeoLookup] = useState<{
@@ -506,6 +534,19 @@ export function AdminProperties() {
       setStep(0)
       return
     }
+    if (
+      (draft.availability_status === 'sold' || draft.availability_status === 'rented') &&
+      !transactionVerified
+    ) {
+      setSaveErr('Confirm this is a verified completed transaction before saving Sold or Rented.')
+      setStep(0)
+      return
+    }
+    if (draft.publish_achieved_price && !(Number(draft.achieved_price_aed) > 0)) {
+      setSaveErr('Enter the achieved price before choosing to publish it.')
+      setStep(0)
+      return
+    }
     const merged: Row = {
       ...draft,
       id: propertyId,
@@ -513,6 +554,11 @@ export function AdminProperties() {
       tags,
       tag: syncLegacyTagField(tags),
       gallery: galleryPayload as Row['gallery'],
+      published: draft.availability_status === 'withdrawn' ? false : draft.published,
+      publish_achieved_price:
+        draft.availability_status === 'sold' || draft.availability_status === 'rented'
+          ? draft.publish_achieved_price
+          : false,
     }
     const hasTagsCol =
       tagsColumnReady ?? (await propertiesHasTagsColumn(sb))
@@ -1092,11 +1138,90 @@ export function AdminProperties() {
                     className={fieldClass()}
                   />
 </Field>
+                <Field>
+                  <FieldLabel htmlFor="availability">Availability</FieldLabel>
+                  <select
+                    id="availability"
+                    className={fieldClass()}
+                    value={draft.availability_status}
+                    onChange={(e) => {
+                      const next = e.target.value as Row['availability_status']
+                      updateDraft('availability_status', next)
+                      if (next !== 'sold' && next !== 'rented') setTransactionVerified(false)
+                      if (next === 'withdrawn') updateDraft('published', false)
+                    }}
+                  >
+                    <option value="available">Available</option>
+                    <option value="under_offer">Under offer / reserved</option>
+                    <option value="sold">Sold</option>
+                    <option value="rented">Rented</option>
+                    <option value="withdrawn">Withdrawn / unavailable</option>
+                  </select>
+                  <p className="mt-1 text-xs text-ink/55">
+                    Sold and Rented keep the same URL. Withdrawn is removed from the public site.
+                    Hidden listings are not marked sold automatically.
+                  </p>
+                </Field>
+                {draft.availability_status === 'sold' || draft.availability_status === 'rented' ? (
+                  <div className="sm:col-span-2 space-y-3 rounded-2xl border border-ink/10 p-3">
+                    <label className="flex items-start gap-2 text-sm text-ink/80">
+                      <input
+                        type="checkbox"
+                        className="mt-0.5 size-4 rounded border-ink/20"
+                        checked={transactionVerified}
+                        onChange={(e) => setTransactionVerified(e.target.checked)}
+                      />
+                      <span>This is a verified completed transaction. Do not use this for expired or withdrawn listings.</span>
+                    </label>
+                    <Field>
+                      <FieldLabel>Achieved price (AED, optional)</FieldLabel>
+                      <Input
+                        type="number"
+                        value={draft.achieved_price_aed ?? ''}
+                        onChange={(e) =>
+                          updateDraft(
+                            'achieved_price_aed',
+                            e.target.value === '' ? null : Number(e.target.value),
+                          )
+                        }
+                        className={fieldClass()}
+                      />
+                    </Field>
+                    <label className="flex items-center gap-2 text-sm text-ink/80">
+                      <input
+                        type="checkbox"
+                        className="size-4 rounded border-ink/20"
+                        checked={draft.publish_achieved_price}
+                        onChange={(e) => updateDraft('publish_achieved_price', e.target.checked)}
+                      />
+                      Publish the achieved price. Otherwise the asking price stays hidden.
+                    </label>
+                    {draft.availability_status_at ? (
+                      <p className="text-xs text-ink/55">
+                        Status date: {new Date(draft.availability_status_at).toLocaleString()}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+                {statusEvents.length > 0 ? (
+                  <div className="sm:col-span-2 text-xs text-ink/60">
+                    <p className="font-medium text-ink/75">Status history</p>
+                    <ul className="mt-1 space-y-1">
+                      {statusEvents.map((event) => (
+                        <li key={event.id}>
+                          {(event.from_status ?? 'new')} → {event.to_status} ·{' '}
+                          {new Date(event.changed_at).toLocaleString()}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
                 <div className="flex items-center gap-2 sm:col-span-2">
                   <input
                     id="pub"
                     type="checkbox"
                     checked={draft.published}
+                    disabled={draft.availability_status === 'withdrawn'}
                     onChange={(e) => updateDraft('published', e.target.checked)}
                     className="size-4 rounded border-ink/20"
                   />
@@ -1552,7 +1677,10 @@ export function AdminProperties() {
                 },
                 { label: 'Source', value: viewRow.listing_source },
                 { label: 'PF listing ID', value: viewRow.pf_listing_id || '—' },
-                { label: 'Status', value: viewRow.published ? 'Published' : 'Hidden' },
+                {
+                  label: 'Status',
+                  value: `${viewRow.published ? 'Published' : 'Hidden'} · ${viewRow.availability_status}`,
+                },
               ]
             : []
         }

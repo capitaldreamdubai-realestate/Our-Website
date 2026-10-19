@@ -15,6 +15,11 @@ import { usePropertyDetail } from '../hooks/usePropertyDetail'
 import { useListingMapCoords } from '../hooks/useListingMapCoords'
 import { Seo } from '../components/Seo'
 import { breadcrumbJsonLd, plainText, realEstateListingJsonLd } from '../lib/seo/site'
+import {
+  availabilityStatusOf,
+  isCompletedStatus,
+  publicPriceAed,
+} from '../lib/propertyAvailability'
 import { useRelatedProperties } from '../hooks/useRelatedProperties'
 import { downloadPropertyBrochure } from '../lib/propertyBrochure/downloadPropertyBrochure'
 import { resolveGallery } from '../lib/resolvePropertyDetail'
@@ -50,7 +55,14 @@ export function PropertyDetailPage() {
           image: property.image,
           streetAddress: property.fullAddress,
           addressLocality: property.neighbourhood || property.location || property.emirate,
-          priceAed: property.priceAed,
+          priceAed: publicPriceAed(property) ?? null,
+          availability:
+            availabilityStatusOf(property) === 'sold' ||
+            availabilityStatusOf(property) === 'rented'
+              ? 'https://schema.org/SoldOut'
+              : availabilityStatusOf(property) === 'under_offer'
+                ? 'https://schema.org/LimitedAvailability'
+                : 'https://schema.org/InStock',
         }),
         breadcrumbJsonLd([
           { name: t('nav.home'), path: '/' },
@@ -83,7 +95,7 @@ export function PropertyDetailPage() {
         className="flex w-full flex-col gap-[0.625rem]"
         aria-label={t('property.notFound.aria')}
       >
-        <Seo title={seoTitle} description={seoDescription} />
+        <Seo title={seoTitle} description={seoDescription} noIndex />
         <SectionShell variant="cream">
           <h1 className="type-section-title font-display text-2xl font-semibold text-ink">
             {t('property.notFound.title')}
@@ -112,6 +124,30 @@ export function PropertyDetailPage() {
   const hasCoords = mapCoords != null
 
   const wa = agentWhatsappUrl(salesperson)
+  const status = availabilityStatusOf(property)
+  const completed = isCompletedStatus(property)
+  const similarBase = status === 'rented' ? '/for-rent' : '/for-sale'
+  const similarHref = property.neighbourhood
+    ? `${similarBase}?neighbourhood=${encodeURIComponent(property.neighbourhood)}`
+    : similarBase
+  const leadChoices =
+    status === 'sold'
+      ? [
+          { label: t('portfolio.sold.primary'), source: 'sold_property_seller_enquiry' as const },
+          { label: t('portfolio.sold.buyer'), source: 'sold_property_buyer_enquiry' as const },
+        ]
+      : status === 'rented'
+        ? [
+            {
+              label: t('portfolio.rented.primary'),
+              source: 'rented_property_landlord_enquiry' as const,
+            },
+            {
+              label: t('portfolio.rented.tenant'),
+              source: 'rented_property_tenant_enquiry' as const,
+            },
+          ]
+        : undefined
 
   return (
     <main
@@ -129,7 +165,7 @@ export function PropertyDetailPage() {
       <PropertyDetailHero
         property={property}
         gallery={gallery}
-        onGetDetails={() => setBrochureOpen(true)}
+        onGetDetails={completed ? undefined : () => setBrochureOpen(true)}
       />
 
       <SectionShell variant="cream">
@@ -274,17 +310,37 @@ export function PropertyDetailPage() {
           />
 
           <aside className="flex min-w-0 w-full flex-col gap-4 lg:w-[35%] lg:max-w-[35%] lg:shrink-0 lg:sticky lg:top-28 lg:self-start">
-            <button
-              type="button"
-              className={buttonClassNames('primary', 'w-full')}
-              onClick={() => setBrochureOpen(true)}
-            >
-              Get Property Details
-            </button>
+            {completed ? null : (
+              <button
+                type="button"
+                className={buttonClassNames('primary', 'w-full')}
+                onClick={() => setBrochureOpen(true)}
+              >
+                {status === 'under_offer' ? t('property.status.registerInterest') : 'Get Property Details'}
+              </button>
+            )}
             <PropertyLeadForm
               propertyId={property.id}
               propertyTitle={property.title}
               salesperson={salesperson}
+              headlineOverride={
+                status === 'sold'
+                  ? t('portfolio.sold.primary')
+                  : status === 'rented'
+                    ? t('portfolio.rented.primary')
+                    : status === 'under_offer'
+                      ? t('property.status.reservedLead')
+                      : undefined
+              }
+              enquiryChoices={leadChoices}
+              similarHref={completed ? similarHref : undefined}
+              similarLabel={
+                status === 'sold'
+                  ? t('portfolio.sold.secondary')
+                  : status === 'rented'
+                    ? t('portfolio.rented.secondary')
+                    : undefined
+              }
             />
           </aside>
         </div>
@@ -293,7 +349,7 @@ export function PropertyDetailPage() {
       {related.length > 0 ? (
         <SectionShell variant="cream">
           <h2 className="type-section-title font-display mb-8 text-xl font-semibold text-terracotta sm:mb-10 sm:text-2xl">
-            You might also like
+            {completed ? t('portfolio.similarHeading') : 'You might also like'}
           </h2>
           <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3 lg:gap-6">
             {related.map((p) => (

@@ -10,6 +10,10 @@ export type WebsiteFormSource =
   | 'contact'
   | 'newsletter'
   | 'whatsapp_click'
+  | 'sold_property_seller_enquiry'
+  | 'sold_property_buyer_enquiry'
+  | 'rented_property_landlord_enquiry'
+  | 'rented_property_tenant_enquiry'
 
 export type WebsiteFormPayload = {
   source: WebsiteFormSource
@@ -49,6 +53,18 @@ export async function submitWebsiteForm(payload: WebsiteFormPayload) {
     p_project_name: payload.projectName ?? null,
     p_popup_id: payload.popupId ?? null,
   })
+
+  if (!error && typeof window !== 'undefined') {
+    window.dataLayer = window.dataLayer || []
+    const leadEvent: Record<string, unknown> = {
+      event: 'generate_lead',
+      form_source: payload.source,
+      page_path: window.location.pathname,
+    }
+    if (payload.propertyId) leadEvent.property_id = payload.propertyId
+    if (payload.projectId) leadEvent.project_id = payload.projectId
+    window.dataLayer.push(leadEvent)
+  }
 
   return {
     data: (data as string | null) ?? null,

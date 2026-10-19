@@ -6,6 +6,7 @@ export function AllPropertiesPage() {
   return (
     <PropertyListingPage
       variant="all"
+      showStatusFilter
       seoTitle={t('seo.allProperties.title')}
       seoDescription={t('seo.allProperties.description')}
       mainId="page-all-properties"

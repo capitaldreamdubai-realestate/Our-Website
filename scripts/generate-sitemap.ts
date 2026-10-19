@@ -18,6 +18,8 @@ const STATIC_PATHS = [
   '/offplan',
   '/for-rent',
   '/for-sale',
+  '/sold-properties',
+  '/rented-properties',
   '/deals',
   '/developers',
   '/about',
@@ -73,9 +75,34 @@ async function publishedValues(
   return values
 }
 
+async function publishedPropertyIds(supabase: SupabaseClient): Promise<string[]> {
+  const pageSize = 1000
+  const values: string[] = []
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await supabase
+      .from('properties')
+      .select('id, availability_status')
+      .eq('published', true)
+      .range(from, from + pageSize - 1)
+    if (error) {
+      if (/availability_status/i.test(error.message)) {
+        return publishedValues(supabase, 'properties', 'id')
+      }
+      throw new Error(`properties: ${error.message}`)
+    }
+    const rows = data ?? []
+    for (const row of rows) {
+      if (row.availability_status === 'withdrawn') continue
+      if (row.id.trim()) values.push(row.id.trim())
+    }
+    if (rows.length < pageSize) break
+  }
+  return values
+}
+
 async function dynamicPaths(supabase: SupabaseClient): Promise<string[]> {
   const [properties, articles, developers, projects, team] = await Promise.all([
-    publishedValues(supabase, 'properties', 'id'),
+    publishedPropertyIds(supabase),
     publishedValues(supabase, 'articles', 'slug'),
     publishedValues(supabase, 'property_developers', 'slug'),
     publishedValues(supabase, 'offplan_projects', 'slug'),

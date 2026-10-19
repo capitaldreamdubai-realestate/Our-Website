@@ -274,6 +274,8 @@ type Preserve = {
   tags: string[] | null
   /** May be null for legacy rows; sync always sends a non-null `created_at` on upsert. */
   created_at: string | null
+  availability_status: string | null
+  published: boolean
 }
 
 type AgentMaps = {
@@ -427,7 +429,10 @@ function mapListingToRow(
     pf_price_raw: (priceObj ?? null) as unknown,
     pf_currency: priceAed != null ? 'AED' : null,
     pf_published_at: publishedAt,
-    published,
+    published:
+      preserve?.availability_status === 'sold' || preserve?.availability_status === 'rented'
+        ? preserve.published
+        : published,
     property_type: propertyTypeLabel(listing.type),
     exclusive_with_us: preserve?.exclusive_with_us ?? false,
     home_section: preserve?.home_section ?? 'none',
@@ -519,7 +524,7 @@ Deno.serve(async (req) => {
     const { data: existingRows, error: exErr } = await supabase
       .from('properties')
       .select(
-        'pf_listing_id, home_section, sort_order_home, salesperson_id, developer_id, exclusive_with_us, tags, created_at',
+        'pf_listing_id, home_section, sort_order_home, salesperson_id, developer_id, exclusive_with_us, tags, created_at, availability_status, published',
       )
       .eq('listing_source', 'property_finder')
 
@@ -536,6 +541,8 @@ Deno.serve(async (req) => {
         exclusive_with_us: r.exclusive_with_us,
         tags: Array.isArray(r.tags) ? r.tags : null,
         created_at: r.created_at,
+        availability_status: r.availability_status,
+        published: r.published,
       })
     }
 
@@ -575,12 +582,17 @@ Deno.serve(async (req) => {
 
     const { data: allPfRows } = await supabase
       .from('properties')
-      .select('id, pf_listing_id')
+      .select('id, pf_listing_id, availability_status')
       .eq('listing_source', 'property_finder')
 
     let unpublished = 0
     for (const r of allPfRows ?? []) {
-      if (r.pf_listing_id && !syncedPfIds.has(r.pf_listing_id)) {
+      if (
+        r.pf_listing_id &&
+        !syncedPfIds.has(r.pf_listing_id) &&
+        r.availability_status !== 'sold' &&
+        r.availability_status !== 'rented'
+      ) {
         const { error } = await supabase.from('properties').update({ published: false }).eq('id', r.id)
         if (!error) unpublished += 1
       }

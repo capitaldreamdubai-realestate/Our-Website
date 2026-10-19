@@ -16,6 +16,14 @@ export function formSubmissionSourceLabel(source: string): string {
       return 'Newsletter'
     case 'whatsapp_click':
       return 'WhatsApp'
+    case 'sold_property_seller_enquiry':
+      return 'Sold portfolio — seller'
+    case 'sold_property_buyer_enquiry':
+      return 'Sold portfolio — buyer'
+    case 'rented_property_landlord_enquiry':
+      return 'Rented portfolio — landlord'
+    case 'rented_property_tenant_enquiry':
+      return 'Rented portfolio — tenant'
     default:
       return source
   }

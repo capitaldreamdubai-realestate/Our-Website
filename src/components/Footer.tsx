@@ -48,6 +48,8 @@ export function Footer() {
         { label: t('footer.link.forSaleAnchor'), href: '/#homes' },
         { label: t('footer.link.forRentAnchor'), href: '/#home-more-homes' },
         { label: t('footer.link.allProperties'), href: '/all-properties' },
+        { label: t('footer.link.sold'), href: '/sold-properties', useRouter: true },
+        { label: t('footer.link.rented'), href: '/rented-properties', useRouter: true },
       ] as const,
     [t],
   )
@@ -66,7 +68,8 @@ export function Footer() {
     () =>
       [
         { label: t('footer.link.buy'), href: '/#services' },
-        { label: t('footer.link.sell'), href: '/#services' },
+        { label: t('footer.link.sell'), href: '/sold-properties', useRouter: true },
+        { label: t('footer.link.let'), href: '/rented-properties', useRouter: true },
         { label: t('footer.link.concierge'), href: '/#services' },
       ] as const,
     [t],
@@ -136,12 +139,21 @@ export function Footer() {
           <Col title={t('footer.col.property')}>
             {propertyLinks.map((l) => (
               <li key={l.href}>
-                <a
-                  href={l.href}
-                  className="text-cream/90 leading-relaxed transition hover:text-white"
-                >
-                  {l.label}
-                </a>
+                {'useRouter' in l && l.useRouter ? (
+                  <Link
+                    to={l.href}
+                    className="text-cream/90 leading-relaxed transition hover:text-white"
+                  >
+                    {l.label}
+                  </Link>
+                ) : (
+                  <a
+                    href={l.href}
+                    className="text-cream/90 leading-relaxed transition hover:text-white"
+                  >
+                    {l.label}
+                  </a>
+                )}
               </li>
             ))}
           </Col>
@@ -169,12 +181,21 @@ export function Footer() {
           <Col title={t('footer.col.services')}>
             {serviceLinks.map((l) => (
               <li key={l.label}>
-                <a
-                  href={l.href}
-                  className="text-cream/90 leading-relaxed transition hover:text-white"
-                >
-                  {l.label}
-                </a>
+                {'useRouter' in l && l.useRouter ? (
+                  <Link
+                    to={l.href}
+                    className="text-cream/90 leading-relaxed transition hover:text-white"
+                  >
+                    {l.label}
+                  </Link>
+                ) : (
+                  <a
+                    href={l.href}
+                    className="text-cream/90 leading-relaxed transition hover:text-white"
+                  >
+                    {l.label}
+                  </a>
+                )}
               </li>
             ))}
           </Col>

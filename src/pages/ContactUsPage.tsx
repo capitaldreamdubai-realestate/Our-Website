@@ -1,7 +1,15 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { buttonClassNames } from '@/components/Button'
 import { FormSuccessPanel } from '@/components/FormSuccessPanel'
+import { LeadQualificationFields } from '@/components/LeadQualificationFields'
 import { PhoneInputField } from '@/components/PhoneInputField'
+import {
+  emptyQualification,
+  qualificationComplete,
+  qualificationMessage,
+  qualificationMeta,
+  type QualificationAnswers,
+} from '@/lib/leadQualification'
 import { submitWebsiteForm } from '@/lib/submitWebsiteForm'
 import { buildWhatsappPrefill, openWhatsappWithLead } from '@/lib/whatsapp'
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
@@ -16,14 +24,14 @@ type ContactFormState = {
   name: string
   email: string
   phone: string
-  message: string
+  qualification: QualificationAnswers
 }
 
 const initialState: ContactFormState = {
   name: '',
   email: '',
   phone: '',
-  message: '',
+  qualification: emptyQualification,
 }
 
 function isValidEmail(value: string) {
@@ -41,12 +49,10 @@ export function ContactUsPage() {
   const errors = useMemo(() => {
     const name = values.name.trim()
     const email = values.email.trim()
-    const message = values.message.trim()
     return {
       name: attempted && name.length === 0,
       emailRequired: attempted && email.length === 0,
       emailFormat: attempted && email.length > 0 && !isValidEmail(email),
-      message: attempted && message.length === 0,
     }
   }, [attempted, values])
 
@@ -61,8 +67,7 @@ export function ContactUsPage() {
 
     const name = values.name.trim()
     const email = values.email.trim()
-    const message = values.message.trim()
-    if (!name || !email || !isValidEmail(email) || !message) return
+    if (!name || !email || !isValidEmail(email) || !qualificationComplete(values.qualification)) return
 
     setBusy(true)
     const { error } = await submitWebsiteForm({
@@ -70,10 +75,11 @@ export function ContactUsPage() {
       name,
       email,
       phone: values.phone.trim() || null,
-      message,
+      message: qualificationMessage(values.qualification),
       meta: {
         page_path: typeof window !== 'undefined' ? window.location.pathname : '/contact-us',
         intent: 'contact',
+        ...qualificationMeta(values.qualification),
       },
     })
     setBusy(false)
@@ -188,28 +194,15 @@ export function ContactUsPage() {
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="contact-message"
-                  className="font-sans text-sm font-medium text-terracotta/90"
-                >
-                  {t('contact.message')}
-                </label>
-                <textarea
-                  id="contact-message"
-                  value={values.message}
-                  onChange={(event) => updateField('message', event.target.value)}
-                  rows={5}
-                  aria-invalid={errors.message || undefined}
-                  aria-describedby={errors.message ? 'contact-message-error' : undefined}
-                  className="w-full rounded-xl border border-[#6B3B34]/28 bg-white px-4 py-3 text-base text-ink outline-none transition focus:border-[#6B3B34]/55 focus:ring-2 focus:ring-[#6B3B34]/20"
-                />
-                {errors.message ? (
-                  <p id="contact-message-error" className="text-sm text-terracotta" role="alert">
-                    {t('contact.errorMessage')}
-                  </p>
-                ) : null}
-              </div>
+              <LeadQualificationFields
+                idPrefix="contact"
+                answers={values.qualification}
+                onChange={(qualification) => updateField('qualification', qualification)}
+                attempted={attempted}
+                labelClass="font-sans text-sm font-medium text-terracotta/90"
+                fieldClass="w-full rounded-xl border border-[#6B3B34]/28 bg-white px-4 py-3 text-base text-ink outline-none transition focus:border-[#6B3B34]/55 focus:ring-2 focus:ring-[#6B3B34]/20"
+                errorClass="text-sm text-terracotta"
+              />
 
               {submitError ? (
                 <p className="text-sm text-terracotta" role="alert">

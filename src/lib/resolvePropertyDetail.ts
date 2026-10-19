@@ -1,6 +1,7 @@
 import type { Property, PropertyGalleryItem } from '../components/PropertyCard'
 import { catalogProperties } from '../data/properties'
 import { propertyDetailOverlays } from '../data/propertyDetailOverlays'
+import { availabilityStatusOf, isAvailableStatus, isCompletedStatus } from './propertyAvailability'
 
 export function resolveGallery(property: Property): PropertyGalleryItem[] {
   if (property.gallery && property.gallery.length > 0) return property.gallery
@@ -28,12 +29,14 @@ export function relatedPropertiesInCatalog(
   limit = 3,
 ): Property[] {
   const others = catalog.filter((p) => p.id !== current.id)
+  const preferred = isCompletedStatus(current)
+    ? others.filter(isAvailableStatus)
+    : others.filter((p) => availabilityStatusOf(p) === availabilityStatusOf(current))
+  const pool = preferred.length > 0 ? preferred : others.filter(isAvailableStatus)
   const n = current.neighbourhood?.trim()
-  const sameNeighbourhood = n
-    ? others.filter((p) => p.neighbourhood === n)
-    : []
+  const sameNeighbourhood = n ? pool.filter((p) => p.neighbourhood === n) : []
   const sameIds = new Set(sameNeighbourhood.map((p) => p.id))
-  const rest = others.filter((p) => !sameIds.has(p.id))
+  const rest = pool.filter((p) => !sameIds.has(p.id))
   return [...sameNeighbourhood, ...rest].slice(0, limit)
 }
 

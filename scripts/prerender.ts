@@ -218,6 +218,10 @@ async function main() {
 
   await removeSkippedFromSitemaps(skipped)
 
+  if (failures.length === 0) {
+    await writeFile(resolve(DIST, 'prerender-ok.txt'), 'ok\n')
+  }
+
   if (failures.length > 0) {
     console.error(`Prerender failed for ${failures.length} route(s).`)
     process.exit(1)

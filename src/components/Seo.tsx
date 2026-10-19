@@ -14,6 +14,7 @@ type SeoProps = {
   image?: string | null
   type?: 'website' | 'article'
   jsonLd?: unknown
+  noIndex?: boolean
 }
 
 function jsonLdBlocks(jsonLd: unknown): unknown[] {
@@ -28,6 +29,7 @@ export function Seo({
   image,
   type = 'website',
   jsonLd,
+  noIndex = false,
 }: SeoProps) {
   const { pathname } = useLocation()
   const canonical = absoluteUrl(path ?? pathname)
@@ -38,6 +40,7 @@ export function Seo({
     <>
       <title>{title}</title>
       <meta name="description" content={description} />
+      {noIndex ? <meta name="robots" content="noindex, follow" /> : null}
       <link rel="canonical" href={canonical} />
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />

@@ -1,8 +1,8 @@
 import { SlidersHorizontal } from 'lucide-react'
 import useEmblaCarousel from 'embla-carousel-react'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Button } from '../components/Button'
+import { Button, buttonClassNames } from '../components/Button'
 import { CarouselNav } from '../components/CarouselNav'
 import type { Property } from '../components/PropertyCard'
 import { FeaturedPropertiesCarousel } from '../components/FeaturedPropertiesCarousel'
@@ -18,7 +18,7 @@ import {
   filterParamsFromSearchParams,
   filterProperties,
 } from '../lib/propertyFilters'
-
+import { discoveryStatusFromParam, matchesDiscoveryStatus } from '../lib/propertyChannels'
 type BaseProps = {
   seoTitle: string
   seoDescription: string
@@ -29,10 +29,16 @@ type BaseProps = {
   emptyFilteredMessage: string
   /** Landmark id on `<main>` for accessibility / QA */
   mainId?: string
+  primaryHref?: string
+  primaryLabel?: string
+  secondaryHref?: string
+  secondaryLabel?: string
+  belowHero?: ReactNode
 }
 
 type AllVariant = BaseProps & {
   variant: 'all'
+  showStatusFilter?: boolean
 }
 
 type ChannelVariant = BaseProps & {
@@ -69,10 +75,15 @@ export function PropertyListingPage(props: PropertyListingPageProps) {
     [searchParams],
   )
 
+  const showStatusFilter = variant === 'all' && props.showStatusFilter
+  const discoveryStatus = discoveryStatusFromParam(searchParams.get('status'))
   const basePool = useMemo(() => {
-    if (variant === 'all') return catalogProperties
+    if (variant === 'all') {
+      if (!showStatusFilter) return catalogProperties
+      return catalogProperties.filter((property) => matchesDiscoveryStatus(property, discoveryStatus))
+    }
     return catalogProperties.filter(channelFilter!)
-  }, [variant, channelFilter, catalogProperties])
+  }, [variant, channelFilter, catalogProperties, showStatusFilter, discoveryStatus])
 
   const carouselCandidates = useMemo(() => {
     if (variant === 'all') {
@@ -147,7 +158,19 @@ export function PropertyListingPage(props: PropertyListingPageProps) {
     gridTitle,
     emptyFilteredMessage,
     mainId,
+    primaryHref,
+    primaryLabel,
+    secondaryHref,
+    secondaryLabel,
+    belowHero,
   } = props
+  const [gridPage, setGridPage] = useState(0)
+  const pageSize = 12
+  useEffect(() => {
+    setGridPage(0)
+  }, [filters, discoveryStatus, variant])
+  const pageCount = Math.max(1, Math.ceil(gridList.length / pageSize))
+  const visibleGrid = gridList.slice(gridPage * pageSize, gridPage * pageSize + pageSize)
 
   return (
     <main
@@ -165,6 +188,48 @@ export function PropertyListingPage(props: PropertyListingPageProps) {
               <p className="mt-4 max-w-2xl text-left text-ink/70">
                 {heroDescription}
               </p>
+              {primaryHref && primaryLabel ? (
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                  <a href={primaryHref} className={buttonClassNames('primary', 'w-full text-center sm:w-auto')}>
+                    {primaryLabel}
+                  </a>
+                  {secondaryHref && secondaryLabel ? (
+                    <a href={secondaryHref} className={buttonClassNames('outlineTerracotta', 'w-full text-center sm:w-auto')}>
+                      {secondaryLabel}
+                    </a>
+                  ) : null}
+                </div>
+              ) : null}
+              {showStatusFilter ? (
+                <div className="mt-6 flex flex-wrap gap-2" role="navigation" aria-label={t('listing.statusFilter')}>
+                  {(
+                    [
+                      ['available', t('listing.status.available')],
+                      ['under_offer', t('listing.status.reserved')],
+                      ['sold', t('listing.status.sold')],
+                      ['rented', t('listing.status.rented')],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => {
+                        const next = new URLSearchParams(searchParams)
+                        if (value === 'available') next.delete('status')
+                        else next.set('status', value)
+                        setSearchParams(next, { replace: true })
+                      }}
+                      className={
+                        discoveryStatus === value
+                          ? buttonClassNames('primary')
+                          : buttonClassNames('outlineTerracotta')
+                      }
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
             </div>
             {!isMobile ? (
               <Button
@@ -198,6 +263,8 @@ export function PropertyListingPage(props: PropertyListingPageProps) {
           </div>
         </div>
       </SectionShell>
+
+      {belowHero}
 
       {!channelEmpty && carouselProperties.length > 0 ? (
         <SectionShell variant="cream">
@@ -254,7 +321,7 @@ export function PropertyListingPage(props: PropertyListingPageProps) {
                 aria-label={t('listing.gridAria', { title: gridTitle })}
               >
                 <div className="flex touch-pan-y [-webkit-tap-highlight-color:transparent]">
-                  {gridList.map((p) => (
+                  {visibleGrid.map((p) => (
                     <div key={p.id} className="mr-4 min-w-0 shrink-0 grow-0 basis-full last:mr-0">
                       <PropertyListingCard property={p} compact />
                     </div>
@@ -264,11 +331,34 @@ export function PropertyListingPage(props: PropertyListingPageProps) {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 sm:gap-8 lg:grid-cols-4 lg:gap-6">
-              {gridList.map((p) => (
+              {visibleGrid.map((p) => (
                 <PropertyListingCard key={p.id} property={p} compact />
               ))}
             </div>
           )}
+          {pageCount > 1 ? (
+            <div className="mt-8 flex items-center justify-center gap-3">
+              <button
+                type="button"
+                className={buttonClassNames('outlineTerracotta')}
+                disabled={gridPage === 0}
+                onClick={() => setGridPage((page) => Math.max(0, page - 1))}
+              >
+                {t('listing.pagePrev')}
+              </button>
+              <p className="text-sm text-ink/70">
+                {gridPage + 1} / {pageCount}
+              </p>
+              <button
+                type="button"
+                className={buttonClassNames('outlineTerracotta')}
+                disabled={gridPage >= pageCount - 1}
+                onClick={() => setGridPage((page) => Math.min(pageCount - 1, page + 1))}
+              >
+                {t('listing.pageNext')}
+              </button>
+            </div>
+          ) : null}
         </div>
       </SectionShell>
     </main>
