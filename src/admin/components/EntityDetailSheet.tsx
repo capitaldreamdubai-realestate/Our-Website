@@ -32,7 +32,7 @@ export function EntityDetailSheet({
   const shellMobile =
     'fixed inset-x-0 bottom-0 z-[111] flex max-h-[min(92dvh,760px)] w-full flex-col overflow-hidden rounded-t-[24px] border border-ink/10 border-b-0 bg-[#FAFAF8] shadow-[0_-12px_48px_rgba(28,20,18,0.18)] motion-safe:animate-[adminSheetUp_0.32s_ease-out]'
   const shellDesktop =
-    'fixed inset-y-0 right-0 z-[111] flex w-full max-w-md flex-col overflow-hidden border-l border-ink/10 bg-[#FAFAF8] shadow-2xl motion-safe:animate-[submissionSheetSlideIn_0.28s_ease-out]'
+    'admin-portal fixed inset-y-0 right-0 z-[111] flex w-full max-w-3xl flex-col overflow-hidden border-l border-ink/10 bg-[var(--admin-surface,#f8f3ef)] text-[var(--admin-ink,#1c1412)] shadow-2xl motion-safe:animate-[submissionSheetSlideIn_0.28s_ease-out]'
 
   return (
     <>
@@ -56,12 +56,14 @@ export function EntityDetailSheet({
           </button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 md:px-5 md:py-4">
-          {fields.map((f) => (
-            <div key={f.label} className="border-b border-ink/8 py-3 last:border-0">
-              <p className="text-[0.6875rem] font-semibold uppercase tracking-wider text-ink/45">{f.label}</p>
-              <div className="mt-1 text-sm text-ink">{f.value}</div>
-            </div>
-          ))}
+          <dl className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
+            {fields.map((f) => (
+              <div key={f.label} className="min-w-0 border-b border-ink/10 py-3">
+                <dt className="text-[0.6875rem] font-semibold uppercase tracking-wider text-ink/45">{f.label}</dt>
+                <dd className="mt-1 break-words text-sm text-ink">{f.value}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
         <div className="shrink-0 border-t border-ink/10 px-4 py-3 md:px-5 md:py-4">
           <button

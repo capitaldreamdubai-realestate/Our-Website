@@ -44,7 +44,11 @@ export function SearchableCombobox({
       <FieldLabel>{label}</FieldLabel>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button type="button" variant="outline" className="w-full justify-between">
+          <Button
+            type="button"
+            variant="outline"
+            className="h-auto w-full justify-between rounded-2xl border-ink/15 bg-white px-3 py-2 text-xs font-normal text-ink shadow-none hover:bg-white md:text-sm"
+          >
             <span className="truncate">{selected?.label || placeholder}</span>
             <ChevronsUpDownIcon data-icon="inline-end" />
           </Button>

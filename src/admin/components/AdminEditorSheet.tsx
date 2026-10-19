@@ -21,7 +21,11 @@ export function AdminEditorSheet({ open, title, onClose, children, footer, wide 
     <Sheet open={open} onOpenChange={(next) => { if (!next) onClose() }}>
       <SheetContent
         side="right"
-        className={wide ? 'w-full sm:max-w-3xl' : 'w-full sm:max-w-xl'}
+        className={
+          wide
+            ? 'admin-portal w-full bg-[var(--admin-surface,#f8f3ef)] text-[var(--admin-ink,#1c1412)] data-[side=right]:w-full data-[side=right]:sm:!max-w-5xl sm:max-w-5xl'
+            : 'admin-portal w-full bg-[var(--admin-surface,#f8f3ef)] text-[var(--admin-ink,#1c1412)] data-[side=right]:w-full data-[side=right]:sm:!max-w-xl sm:max-w-xl'
+        }
       >
         <SheetHeader>
           <SheetTitle>{title}</SheetTitle>

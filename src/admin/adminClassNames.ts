@@ -9,7 +9,7 @@ export const adminBtnGhost =
   'rounded-2xl border border-ink/15 bg-white px-4 py-2.5 text-sm font-medium text-ink transition hover:bg-[var(--admin-accent-soft)]'
 
 export const adminStepActive =
-  'bg-[var(--admin-primary)] text-white shadow-sm shadow-[var(--admin-primary)]/20'
+  'bg-[var(--admin-primary,#a67d32)] text-white shadow-sm shadow-[var(--admin-primary,#a67d32)]/20'
 
 export const adminStepInactive = 'bg-ink/5 text-ink/60 hover:bg-ink/10'
 

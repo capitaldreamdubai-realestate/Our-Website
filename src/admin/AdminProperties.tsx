@@ -1,7 +1,7 @@
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useCms } from '@/contexts/CmsContext'
-import type { TerracottaDropdownOption } from '@/components/TerracottaDropdown'
+import { TerracottaDropdown, type TerracottaDropdownOption } from '@/components/TerracottaDropdown'
 import {
   adminBtnGhost,
   adminBtnPrimary,
@@ -138,7 +138,7 @@ function createEmptyRow(): Row {
 const steps = ['Basics', 'Specs', 'Media', 'Copy'] as const
 
 function fieldClass(extra = '') {
-  return `mt-1 w-full rounded-2xl border border-ink/15 bg-white px-3 py-2 text-xs text-ink md:text-sm ${extra}`
+  return `h-auto w-full rounded-2xl border border-ink/15 bg-white px-3 py-2 text-xs text-ink md:text-sm ${extra}`
 }
 
 function draftGallerySeedKey(title: string, id: string): string {
@@ -149,6 +149,14 @@ export function AdminProperties() {
   const { refetch: refetchCms } = useCms()
   const sb = getSupabase()
   const [rows, setRows] = useState<Row[]>([])
+  const [listQuery, setListQuery] = useState('')
+  const [tagFilter, setTagFilter] = useState('')
+  const [typeFilter, setTypeFilter] = useState('')
+  const [emirateFilter, setEmirateFilter] = useState('')
+  const [neighbourhoodFilter, setNeighbourhoodFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [publishedFilter, setPublishedFilter] = useState('')
+  const [agentFilter, setAgentFilter] = useState('')
   const [loadErr, setLoadErr] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [draft, setDraft] = useState<Row | null>(null)
@@ -401,6 +409,104 @@ export function AdminProperties() {
     [],
   )
 
+  const filteredRows = useMemo(() => {
+    const q = listQuery.trim().toLowerCase()
+    return rows.filter((r) => {
+      if (q) {
+        const agent = r.salesperson_id ? (salesNameById.get(r.salesperson_id) ?? '') : ''
+        const hay = [r.title, r.property_ref_id, r.neighbourhood, r.location, r.emirate, r.property_type, agent]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+        if (!hay.includes(q)) return false
+      }
+      if (tagFilter) {
+        const tags = normalizePropertyTags(r.tags, r.tag)
+        if (!tags.some((t) => t.toLowerCase() === tagFilter.toLowerCase())) return false
+      }
+      if (typeFilter && (r.property_type ?? '') !== typeFilter) return false
+      if (emirateFilter && (r.emirate ?? '') !== emirateFilter) return false
+      if (neighbourhoodFilter && (r.neighbourhood ?? '') !== neighbourhoodFilter) return false
+      if (statusFilter && r.availability_status !== statusFilter) return false
+      if (publishedFilter === 'yes' && !r.published) return false
+      if (publishedFilter === 'no' && r.published) return false
+      if (agentFilter === 'none' && r.salesperson_id) return false
+      if (agentFilter && agentFilter !== 'none' && r.salesperson_id !== agentFilter) return false
+      return true
+    })
+  }, [
+    agentFilter,
+    emirateFilter,
+    listQuery,
+    neighbourhoodFilter,
+    publishedFilter,
+    rows,
+    salesNameById,
+    statusFilter,
+    tagFilter,
+    typeFilter,
+  ])
+
+  const filtersActive =
+    listQuery.trim() !== '' ||
+    tagFilter !== '' ||
+    typeFilter !== '' ||
+    emirateFilter !== '' ||
+    neighbourhoodFilter !== '' ||
+    statusFilter !== '' ||
+    publishedFilter !== '' ||
+    agentFilter !== ''
+
+  const tagFilterOptions = useMemo((): TerracottaDropdownOption[] => {
+    const names = new Set<string>()
+    for (const tag of listingTagOptions) names.add(tag.name)
+    for (const row of rows) {
+      for (const tag of normalizePropertyTags(row.tags, row.tag)) names.add(tag)
+    }
+    return [
+      { value: '', label: 'All tags' },
+      ...[...names].sort((a, b) => a.localeCompare(b)).map((name) => ({ value: name, label: name })),
+    ]
+  }, [listingTagOptions, rows])
+
+  const typeFilterOptions = useMemo((): TerracottaDropdownOption[] => {
+    const names = new Set<string>()
+    for (const opt of propertyTypeOptions) if (opt.name) names.add(opt.name)
+    for (const row of rows) if (row.property_type) names.add(row.property_type)
+    return [
+      { value: '', label: 'All types' },
+      ...[...names].sort((a, b) => a.localeCompare(b)).map((name) => ({ value: name, label: name })),
+    ]
+  }, [propertyTypeOptions, rows])
+
+  const emirateFilterOptions = useMemo((): TerracottaDropdownOption[] => {
+    const names = new Set<string>()
+    for (const opt of geoLookup.emirates) if (opt.value) names.add(opt.value)
+    for (const row of rows) if (row.emirate) names.add(row.emirate)
+    return [
+      { value: '', label: 'All emirates' },
+      ...[...names].sort((a, b) => a.localeCompare(b)).map((name) => ({ value: name, label: name })),
+    ]
+  }, [geoLookup.emirates, rows])
+
+  const neighbourhoodFilterOptions = useMemo((): TerracottaDropdownOption[] => {
+    const names = new Set<string>()
+    for (const opt of geoLookup.neighbourhoods) if (opt.value) names.add(opt.value)
+    for (const row of rows) if (row.neighbourhood) names.add(row.neighbourhood)
+    return [
+      { value: '', label: 'All neighbourhoods' },
+      ...[...names].sort((a, b) => a.localeCompare(b)).map((name) => ({ value: name, label: name })),
+    ]
+  }, [geoLookup.neighbourhoods, rows])
+
+  const agentFilterOptions = useMemo((): TerracottaDropdownOption[] => {
+    return [
+      { value: '', label: 'All agents' },
+      { value: 'none', label: 'Unassigned' },
+      ...salespeople.map((s) => ({ value: s.id, label: s.name })),
+    ]
+  }, [salespeople])
+
   const {
     page: tablePage,
     setPage: setTablePage,
@@ -410,7 +516,21 @@ export function AdminProperties() {
     rangeStart: tableRangeStart,
     rangeEnd: tableRangeEnd,
     showPagination: showTablePagination,
-  } = useAdminTablePagination(rows)
+  } = useAdminTablePagination(filteredRows)
+
+  useEffect(() => {
+    setTablePage(1)
+  }, [
+    agentFilter,
+    emirateFilter,
+    listQuery,
+    neighbourhoodFilter,
+    publishedFilter,
+    setTablePage,
+    statusFilter,
+    tagFilter,
+    typeFilter,
+  ])
 
   useEffect(() => {
     void refresh()
@@ -797,7 +917,98 @@ export function AdminProperties() {
         </div>
       ) : null}
 
-      <div className="w-full max-w-none overflow-x-auto rounded-[var(--admin-radius-lg,24px)] border border-ink/10 bg-white shadow-sm">
+      <div className="w-full max-w-none overflow-hidden rounded-[var(--admin-radius-lg,24px)] border border-ink/10 bg-white shadow-sm">
+        <div className="border-b border-ink/10 bg-ink/[0.02] p-3 md:p-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <label className="flex min-w-0 flex-col gap-1 sm:col-span-2">
+              <span className="text-xs font-medium text-ink/70">Search</span>
+              <input
+                type="search"
+                value={listQuery}
+                onChange={(e) => setListQuery(e.target.value)}
+                placeholder="Title, reference, location, agent…"
+                className="min-h-9 rounded-2xl border border-ink/15 bg-white px-3 py-2 text-sm text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--admin-primary)]"
+                autoComplete="off"
+              />
+            </label>
+            <label className="flex min-w-0 flex-col gap-1">
+              <span className="text-xs font-medium text-ink/70">Tag</span>
+              <TerracottaDropdown variant="admin" listPortal label="Tag" options={tagFilterOptions} value={tagFilter} onChange={setTagFilter} />
+            </label>
+            <label className="flex min-w-0 flex-col gap-1">
+              <span className="text-xs font-medium text-ink/70">Type</span>
+              <TerracottaDropdown variant="admin" listPortal label="Type" options={typeFilterOptions} value={typeFilter} onChange={setTypeFilter} />
+            </label>
+            <label className="flex min-w-0 flex-col gap-1">
+              <span className="text-xs font-medium text-ink/70">Emirate</span>
+              <TerracottaDropdown variant="admin" listPortal label="Emirate" options={emirateFilterOptions} value={emirateFilter} onChange={setEmirateFilter} />
+            </label>
+            <label className="flex min-w-0 flex-col gap-1">
+              <span className="text-xs font-medium text-ink/70">Neighbourhood</span>
+              <TerracottaDropdown variant="admin" listPortal label="Neighbourhood" options={neighbourhoodFilterOptions} value={neighbourhoodFilter} onChange={setNeighbourhoodFilter} />
+            </label>
+            <label className="flex min-w-0 flex-col gap-1">
+              <span className="text-xs font-medium text-ink/70">Availability</span>
+              <TerracottaDropdown
+                variant="admin"
+                listPortal
+                label="Availability"
+                options={[
+                  { value: '', label: 'All statuses' },
+                  { value: 'available', label: 'Available' },
+                  { value: 'under_offer', label: 'Under offer' },
+                  { value: 'sold', label: 'Sold' },
+                  { value: 'rented', label: 'Rented' },
+                  { value: 'withdrawn', label: 'Withdrawn' },
+                ]}
+                value={statusFilter}
+                onChange={setStatusFilter}
+              />
+            </label>
+            <label className="flex min-w-0 flex-col gap-1">
+              <span className="text-xs font-medium text-ink/70">Published</span>
+              <TerracottaDropdown
+                variant="admin"
+                listPortal
+                label="Published"
+                options={[
+                  { value: '', label: 'All' },
+                  { value: 'yes', label: 'Published' },
+                  { value: 'no', label: 'Hidden' },
+                ]}
+                value={publishedFilter}
+                onChange={setPublishedFilter}
+              />
+            </label>
+            <label className="flex min-w-0 flex-col gap-1">
+              <span className="text-xs font-medium text-ink/70">Agent</span>
+              <TerracottaDropdown variant="admin" listPortal label="Agent" options={agentFilterOptions} value={agentFilter} onChange={setAgentFilter} />
+            </label>
+            <div className="flex items-end">
+              <button
+                type="button"
+                disabled={!filtersActive}
+                onClick={() => {
+                  setListQuery('')
+                  setTagFilter('')
+                  setTypeFilter('')
+                  setEmirateFilter('')
+                  setNeighbourhoodFilter('')
+                  setStatusFilter('')
+                  setPublishedFilter('')
+                  setAgentFilter('')
+                }}
+                className="min-h-9 rounded-2xl border border-ink/15 bg-white px-3 py-2 text-xs font-semibold text-ink disabled:opacity-40"
+              >
+                Clear filters
+              </button>
+            </div>
+          </div>
+          <p className="mt-3 text-xs text-ink/50">
+            {tableTotal} of {rows.length} {rows.length === 1 ? 'property' : 'properties'}
+          </p>
+        </div>
+        <div className="overflow-x-auto">
         <table className="w-full min-w-[1100px] border-collapse text-left text-xs md:text-sm">
           <thead>
             <tr className="border-b border-ink/10 bg-ink/[0.02] text-[0.6875rem] font-semibold uppercase tracking-wider text-ink/50">
@@ -956,7 +1167,10 @@ export function AdminProperties() {
         />
         {rows.length === 0 ? (
           <p className="px-4 py-6 text-center text-sm text-ink/50">No properties yet.</p>
+        ) : filteredRows.length === 0 ? (
+          <p className="px-4 py-6 text-center text-sm text-ink/50">No properties match these filters.</p>
         ) : null}
+        </div>
       </div>
 
       <AdminEditorSheet
@@ -1000,7 +1214,7 @@ export function AdminProperties() {
       >
         {draft ? (
           <div className="space-y-4">
-            <div className="flex gap-1 overflow-x-auto pb-1">
+            <div className="flex gap-1 overflow-x-auto rounded-full bg-ink/5 p-1">
               {steps.map((label, i) => (
                 <button
                   key={label}
@@ -1026,7 +1240,7 @@ export function AdminProperties() {
             ) : null}
 
             {step === 0 ? (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 items-start gap-x-4 gap-y-3 sm:grid-cols-2">
                 <Field className="sm:col-span-2">
 <FieldLabel>Title</FieldLabel>
 <Input
@@ -1099,7 +1313,7 @@ export function AdminProperties() {
                     onChange={(v) => updateDraft('property_type', v || null)}
                   />
                 </div>
-                <div className="sm:col-span-2">
+                <div className="min-w-0">
                   <SearchableCombobox
                     label="Developer"
                     searchPlaceholder="Search developers…"
@@ -1109,7 +1323,7 @@ export function AdminProperties() {
                     description="From Properties → Developers. The developer appears on /developers when this listing is published."
                   />
                 </div>
-                <div className="sm:col-span-2">
+                <div className="min-w-0">
                   <SearchableCombobox
                     label="Assigned agent"
                     searchPlaceholder="Search agents…"
@@ -1257,7 +1471,7 @@ export function AdminProperties() {
             ) : null}
 
             {step === 1 ? (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 items-start gap-x-4 gap-y-3 sm:grid-cols-2">
                 <Field>
 <FieldLabel>Price (AED)</FieldLabel>
 <Input
@@ -1354,7 +1568,7 @@ export function AdminProperties() {
                     className={fieldClass()}
                   />
 </Field>
-                <div className="sm:col-span-2">
+                <div className="min-w-0">
                   <SearchableCombobox
                     label="Neighbourhood"
                     searchPlaceholder="Search neighbourhoods…"
@@ -1364,7 +1578,7 @@ export function AdminProperties() {
                     description="Pulled from Properties → Featured neighbourhoods. Pick a card label or keep a synced value shown as (current)."
                   />
                 </div>
-                <div className="sm:col-span-2">
+                <div className="min-w-0">
                   <SearchableCombobox
                     label="Emirate"
                     searchPlaceholder="Search emirates…"
