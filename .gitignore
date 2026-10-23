@@ -28,4 +28,8 @@ dist-ssr
 # Supabase migrations (excluded from public repo)
 supabase/migrations/
 
+# Local 360 villa export packages. They contain Sites project ids and are imported, not deployed.
+Opal_Gardens_D315/
+Opal_Gardens_320_Final_Project/
+
 capital-dream-dist.zip

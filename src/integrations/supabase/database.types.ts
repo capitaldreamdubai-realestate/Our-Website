@@ -746,6 +746,62 @@ export type Database = {
         Update: Partial<Database['public']['Tables']['property_availability_events']['Insert']>
         Relationships: []
       }
+      virtual_tours: {
+        Row: {
+          id: string
+          slug: string
+          title: string
+          summary: string | null
+          cover_url: string | null
+          published: boolean
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          slug: string
+          title: string
+          summary?: string | null
+          cover_url?: string | null
+          published?: boolean
+          sort_order?: number
+        }
+        Update: Partial<Database['public']['Tables']['virtual_tours']['Insert']>
+        Relationships: []
+      }
+      virtual_tour_scenes: {
+        Row: {
+          id: string
+          tour_id: string
+          sort_order: number
+          title: string
+          zone: string
+          grade: 'daylight' | 'interior' | 'sunset'
+          image_url: string
+          thumb_url: string
+          active: boolean
+          capture: string | null
+          source_key: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tour_id: string
+          sort_order?: number
+          title: string
+          zone?: string
+          grade?: 'daylight' | 'interior' | 'sunset'
+          image_url: string
+          thumb_url: string
+          active?: boolean
+          capture?: string | null
+          source_key: string
+        }
+        Update: Partial<Database['public']['Tables']['virtual_tour_scenes']['Insert']>
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: {

@@ -20,6 +20,8 @@ import { AdminFaqs } from './admin/AdminFaqs'
 import { AdminMedia } from './admin/AdminMedia'
 import { AdminTestimonials } from './admin/AdminTestimonials'
 import { AdminCampaignPopups } from './admin/AdminCampaignPopups'
+import { AdminTours } from './admin/AdminTours'
+import { AdminTourManager } from './admin/AdminTourManager'
 import { SiteLayout } from './layouts/SiteLayout'
 import { AboutPage } from './pages/AboutPage'
 import { AllPropertiesPage } from './pages/AllPropertiesPage'
@@ -45,6 +47,8 @@ import { TestimonialsPage } from './pages/TestimonialsPage'
 import { DevelopersPage } from './pages/DevelopersPage'
 import { DeveloperDetailPage } from './pages/DeveloperDetailPage'
 import { OffplanProjectDetailPage } from './pages/OffplanProjectDetailPage'
+import { TourPage } from './pages/TourPage'
+import { ToursIndexPage } from './pages/ToursIndexPage'
 
 function App() {
   return (
@@ -74,7 +78,10 @@ function App() {
         <Route path="integrations" element={<Navigate to="/admin" replace />} />
         <Route path="site" element={<AdminSiteSettings />} />
         <Route path="media" element={<AdminMedia />} />
+        <Route path="tours" element={<AdminTours />} />
+        <Route path="tours/:tourId" element={<AdminTourManager />} />
       </Route>
+      <Route path="/tours/:slug" element={<TourPage />} />
       <Route element={<SiteLayout />}>
         <Route index element={<HomePage />} />
         <Route
@@ -100,6 +107,7 @@ function App() {
         <Route path="team" element={<TeamPage />} />
         <Route path="team/:slug" element={<TeamMemberDetailPage />} />
         <Route path="experiences" element={<ExperiencesPage />} />
+        <Route path="tours" element={<ToursIndexPage />} />
         <Route path="contact-us" element={<ContactUsPage />} />
         <Route path="testimonials" element={<TestimonialsPage />} />
         <Route path="articles" element={<ArticlesPage />} />

@@ -25,6 +25,7 @@ const STATIC_PATHS = [
   '/about',
   '/team',
   '/experiences',
+  '/tours',
   '/contact-us',
   '/testimonials',
   '/articles',
@@ -100,13 +101,24 @@ async function publishedPropertyIds(supabase: SupabaseClient): Promise<string[]>
   return values
 }
 
+async function publishedTourSlugs(supabase: SupabaseClient): Promise<string[]> {
+  try {
+    return await publishedValues(supabase, 'virtual_tours', 'slug')
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    console.warn(`360 tours omitted from sitemap (${message}).`)
+    return []
+  }
+}
+
 async function dynamicPaths(supabase: SupabaseClient): Promise<string[]> {
-  const [properties, articles, developers, projects, team] = await Promise.all([
+  const [properties, articles, developers, projects, team, tours] = await Promise.all([
     publishedPropertyIds(supabase),
     publishedValues(supabase, 'articles', 'slug'),
     publishedValues(supabase, 'property_developers', 'slug'),
     publishedValues(supabase, 'offplan_projects', 'slug'),
     publishedValues(supabase, 'salespeople', 'slug'),
+    publishedTourSlugs(supabase),
   ])
   return [
     ...properties.map((id) => `/properties/${id}`),
@@ -114,6 +126,7 @@ async function dynamicPaths(supabase: SupabaseClient): Promise<string[]> {
     ...developers.map((slug) => `/developers/${slug}`),
     ...projects.map((slug) => `/offplan/${slug}`),
     ...team.map((slug) => `/team/${slug}`),
+    ...tours.map((slug) => `/tours/${slug}`),
   ]
 }
 

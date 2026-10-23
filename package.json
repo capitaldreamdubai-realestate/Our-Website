@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "seed": "tsx --tsconfig tsconfig.seed.json scripts/seed-cms.ts",
+    "import-villa": "tsx --tsconfig tsconfig.seed.json scripts/import-villa-tour.ts",
     "generate-faq-seed": "node scripts/generate-faq-seed-sql.mjs"
   },
   "dependencies": {
