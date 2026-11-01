@@ -12,6 +12,7 @@ import {
   DEFAULT_CARD_RADIUS,
   INTEGRATION_KEYS,
 } from '@/lib/cms/integrationSettingsKeys'
+import { parseStoredFxRates, type StoredFxRates } from '@/lib/exchangeRates'
 import {
   FLOATING_SOCIAL_PLATFORMS,
   normalizeFloatingSocialLinks,
@@ -57,6 +58,11 @@ export function AdminIntegrations() {
   const [pfSyncErr, setPfSyncErr] = useState<string | null>(null)
   const [pfLastSync, setPfLastSync] = useState<string | null>(null)
   const [pfIncludeDrafts, setPfIncludeDrafts] = useState(false)
+  const [fxStored, setFxStored] = useState<StoredFxRates | null>(null)
+  const [fxBusy, setFxBusy] = useState(false)
+  const [fxMsg, setFxMsg] = useState<string | null>(null)
+  const [fxErr, setFxErr] = useState<string | null>(null)
+  const [fxNeedsForce, setFxNeedsForce] = useState(false)
 
   const load = useCallback(async () => {
     if (!sb) return
@@ -69,6 +75,7 @@ export function AdminIntegrations() {
     setCardRadius(m.get(INTEGRATION_KEYS.brandCardRadiusPx) ?? DEFAULT_CARD_RADIUS)
     setGlassPanels((m.get(INTEGRATION_KEYS.adminGlassPanels) ?? '0') === '1')
     setPfLastSync(m.get(INTEGRATION_KEYS.pfLastSyncAt) ?? null)
+    setFxStored(parseStoredFxRates(m.get(INTEGRATION_KEYS.fxRatesFromAed)))
     const socialRaw = m.get(INTEGRATION_KEYS.floatingSocialLinks) ?? ''
     if (!socialRaw.trim()) {
       setFloatingSocialLinks([])
@@ -174,6 +181,48 @@ export function AdminIntegrations() {
     }
     await load()
     await refetch()
+  }
+
+  async function runExchangeRatesRefresh(force: boolean) {
+    if (!sb) return
+    const { data: refreshed, error: refreshError } = await sb.auth.refreshSession()
+    const session = refreshed.session
+    if (refreshError || !session) {
+      setFxErr('Your admin session expired. Please sign in again, then refresh rates.')
+      return
+    }
+    const baseUrl = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim() ?? ''
+    const anonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim() ?? ''
+    if (!baseUrl || !anonKey) {
+      setFxErr('Supabase env is missing. Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.')
+      return
+    }
+    setFxBusy(true)
+    setFxErr(null)
+    setFxMsg(null)
+    setFxNeedsForce(false)
+    const res = await fetch(`${baseUrl}/functions/v1/refresh-exchange-rates`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+        apikey: anonKey,
+      },
+      body: JSON.stringify({ force }),
+    })
+    const data = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null
+    setFxBusy(false)
+    if (res.status === 422) {
+      setFxErr(data?.error ?? 'Rates moved unusually far since the last refresh.')
+      setFxNeedsForce(true)
+      return
+    }
+    if (!res.ok || data?.ok === false) {
+      setFxErr(data?.error ?? `Rates refresh failed (${res.status}).`)
+      return
+    }
+    setFxMsg('Rates updated. Visitors pick them up within an hour.')
+    await load()
   }
 
   function addSocialLink() {
@@ -301,6 +350,59 @@ export function AdminIntegrations() {
         >
           {pfSyncBusy ? 'Syncing…' : 'Run Property Finder sync'}
         </button>
+      </section>
+
+      <section className="space-y-4 rounded-[var(--admin-radius-lg,24px)] border border-ink/10 bg-white p-5 shadow-sm md:p-6">
+        <h2 className="text-sm font-semibold text-ink md:text-base">Exchange rates</h2>
+        <p className="text-xs leading-relaxed text-ink/60 md:text-sm">
+          Prices are stored in AED. USD, EUR and GBP prices use rates refreshed daily at 10:00 Dubai time by the{' '}
+          <code className="rounded bg-ink/5 px-1">refresh-exchange-rates</code> Edge Function (ECB rates via the
+          AED–USD peg). If no rates are stored, the site uses built-in fallback rates.
+        </p>
+        {fxStored ? (
+          <div className="space-y-1 text-xs text-ink/55">
+            <p>
+              Last refresh:{' '}
+              {fxStored.at ? (
+                <time dateTime={fxStored.at} className="font-mono text-ink/75">
+                  {new Date(fxStored.at).toLocaleString()}
+                </time>
+              ) : (
+                '—'
+              )}
+              {fxStored.rateDate ? ` (ECB rate date ${fxStored.rateDate})` : null}
+            </p>
+            <p className="font-mono text-ink/75">
+              {(['USD', 'EUR', 'GBP'] as const)
+                .map((c) => `1 AED = ${fxStored.rates[c]?.toFixed(5) ?? '—'} ${c}`)
+                .join(' · ')}
+            </p>
+          </div>
+        ) : (
+          <p className="text-xs text-ink/55">Last refresh: Never (site is using fallback rates)</p>
+        )}
+        {fxErr ? <p className="text-sm text-red-600">{fxErr}</p> : null}
+        {fxMsg ? <p className="text-sm text-[var(--admin-primary)]">{fxMsg}</p> : null}
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            disabled={fxBusy || !sb}
+            onClick={() => void runExchangeRatesRefresh(false)}
+            className={adminBtnPrimary}
+          >
+            {fxBusy ? 'Refreshing…' : 'Refresh rates now'}
+          </button>
+          {fxNeedsForce ? (
+            <button
+              type="button"
+              disabled={fxBusy}
+              onClick={() => void runExchangeRatesRefresh(true)}
+              className={adminBtnGhost}
+            >
+              Save these rates anyway
+            </button>
+          ) : null}
+        </div>
       </section>
 
       <section className="space-y-5 rounded-[var(--admin-radius-lg,24px)] border border-ink/10 bg-white p-5 shadow-sm md:p-6">

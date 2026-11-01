@@ -6,3 +6,9 @@ verify_jwt = false
 
 [functions.geocode-property-location]
 verify_jwt = false
+
+[functions.refresh-exchange-rates]
+verify_jwt = false
+
+[functions.pf-publish-listing]
+verify_jwt = false

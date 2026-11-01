@@ -39,6 +39,16 @@ This keeps the function protected, but avoids the edge-gateway rejection loop.
 - Updated `src/lib/exchangeRates.ts` to use `FALLBACK_RATES_FROM_AED` only.
 - No frontend calls to Frankfurter now.
 
+### C) Server-side daily rates refresh (2026-11-01)
+
+- Edge Function `refresh-exchange-rates` fetches USD→EUR/GBP from Frankfurter server-side (no CORS),
+  converts via the AED–USD peg (3.6725), and stores `site_settings.fx_rates_from_aed`.
+- It refuses a rate that moved more than 15% since the last refresh; Admin → Integrations can save anyway.
+- `pg_cron` runs it daily at 06:00 UTC (migration `20261101090000_fx_rates_daily_refresh.sql`,
+  which reads `project_url` and `service_role_key` from Vault).
+- The browser reads only the stored row (cached 1 hour) and still uses `FALLBACK_RATES_FROM_AED`
+  if the row is missing or invalid. Still no frontend calls to Frankfurter.
+
 ## Current Required Secrets (Edge Functions)
 
 - `PF_API_KEY`

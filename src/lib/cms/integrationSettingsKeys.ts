@@ -10,6 +10,8 @@ export const INTEGRATION_KEYS = {
   pfLastSyncAt: 'pf_last_sync_at',
   /** JSON summary string from last PF sync */
   pfLastSyncSummary: 'pf_last_sync_summary',
+  /** JSON `{ rates, source, rateDate, at }` written daily by Edge Function `refresh-exchange-rates` */
+  fxRatesFromAed: 'fx_rates_from_aed',
   /** JSON array for floating social bubble icons */
   floatingSocialLinks: 'floating_social_links',
 } as const

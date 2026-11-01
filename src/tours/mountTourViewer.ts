@@ -59,14 +59,31 @@ export function mountTourViewer(
   galleryButton.id = 'gallery'
   galleryButton.type = 'button'
   galleryButton.setAttribute('aria-expanded', 'false')
-  galleryButton.textContent = 'Explore views'
+  toolControl(
+    galleryButton,
+    'Explore views',
+    toolIcon([
+      'M4 4h6.5v6.5H4z',
+      'M13.5 4H20v6.5h-6.5z',
+      'M4 13.5h6.5V20H4z',
+      'M13.5 13.5H20V20h-6.5z',
+    ]),
+  )
   const allVillas = document.createElement('a')
   allVillas.href = '/tours'
-  allVillas.textContent = 'All villas'
+  toolControl(
+    allVillas,
+    'All villas',
+    toolIcon(['M4 20V11L12 5l8 6v9', 'M10 20v-6h4v6']),
+  )
   const fullButton = document.createElement('button')
   fullButton.id = 'full'
   fullButton.type = 'button'
-  fullButton.textContent = 'Fullscreen'
+  const fullLabel = toolControl(
+    fullButton,
+    'Fullscreen',
+    toolIcon(['M9 4H4v5', 'M15 4h5v5', 'M9 20H4v-5', 'M15 20h5v-5']),
+  )
   tools.append(galleryButton, allVillas, fullButton)
   header.append(brand, tools)
 
@@ -225,7 +242,8 @@ export function mountTourViewer(
       if (document.fullscreenElement) await document.exitFullscreen()
       else await root.requestFullscreen()
     } catch {
-      fullButton.textContent = 'Fullscreen unavailable'
+      fullLabel.textContent = 'Fullscreen unavailable'
+      fullButton.title = 'Fullscreen unavailable'
     }
   }
 
@@ -611,6 +629,32 @@ export function mountTourViewer(
       .then(() => load(Math.max(0, Math.min(scenes.length - 1, start - 1))))
       .catch(() => fail('The tour could not load. Please refresh to try again.'))
   }
+}
+
+function toolIcon(paths: string[]) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  svg.setAttribute('viewBox', '0 0 24 24')
+  svg.setAttribute('aria-hidden', 'true')
+  svg.classList.add('tool-icon')
+  for (const d of paths) {
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    path.setAttribute('d', d)
+    path.setAttribute('fill', 'none')
+    path.setAttribute('stroke', 'currentColor')
+    path.setAttribute('stroke-width', '1.75')
+    path.setAttribute('stroke-linecap', 'round')
+    path.setAttribute('stroke-linejoin', 'round')
+    svg.append(path)
+  }
+  return svg
+}
+
+function toolControl(element: HTMLElement, label: string, icon: SVGElement) {
+  const text = document.createElement('span')
+  text.className = 'tool-label'
+  text.textContent = label
+  element.append(icon, text)
+  return text
 }
 
 function button(id: string, text: string, label?: string) {
