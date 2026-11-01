@@ -110,7 +110,9 @@ async function pfSend(token: string, method: string, path: string, payload?: unk
 function pfError(status: number, body: unknown): string {
   if (body && typeof body === 'object') {
     const b = body as Record<string, unknown>
-    const parts = [b.title, b.detail].filter((x) => typeof x === 'string') as string[]
+    const parts = [b.title, b.detail, b.message, b.error]
+      .filter((x) => x != null && x !== '')
+      .map((x) => (typeof x === 'string' ? x : JSON.stringify(x).slice(0, 500)))
     const fields = b.errors ?? b.invalidParams ?? b.violations ?? b.fields
     if (fields) parts.push(JSON.stringify(fields).slice(0, 1500))
     if (typeof b.type === 'string') parts.push(`(${b.type})`)
@@ -460,9 +462,19 @@ Deno.serve(async (req) => {
       if (!pfListingId) return json({ ok: false, error: 'pfListingId is required.' }, 400)
       const { data: taken } = await sb.from('properties').select('id').eq('pf_listing_id', pfListingId).neq('id', propertyId).limit(1)
       if (taken?.length) return json({ ok: false, error: `Already linked to listing ${taken[0].id}.` }, 409)
-      const r = await pfGet(pf.token, `/v1/listings/${encodeURIComponent(pfListingId)}`)
-      if (r.status >= 400) return json({ ok: false, error: pfError(r.status, r.body) }, 502)
-      const l = r.body as Record<string, unknown>
+      // The single-listing GET is not open to this key (403), so find it through the list.
+      let l: Record<string, unknown> | null = null
+      for (const draft of [false, true]) {
+        for (let page = 1; page <= 10 && !l; page++) {
+          const r = await pfGet(pf.token, `/v1/listings?page=${page}&perPage=100&draft=${draft}`)
+          if (r.status >= 400) return json({ ok: false, error: pfError(r.status, r.body) }, 502)
+          const b = r.body as { results?: Record<string, unknown>[]; pagination?: { totalPages?: number } }
+          l = (b?.results ?? []).find((x) => String(x.id) === pfListingId) ?? null
+          if (page >= (b?.pagination?.totalPages ?? 1)) break
+        }
+        if (l) break
+      }
+      if (!l) return json({ ok: false, error: 'That listing was not found on Property Finder.' }, 404)
       const stage = String((l.state as Record<string, unknown> | undefined)?.stage ?? '')
       const loc = l.location as Record<string, unknown> | undefined
       await saveState(sb, propertyId, {
