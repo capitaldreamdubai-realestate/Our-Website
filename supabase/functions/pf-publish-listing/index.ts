@@ -253,6 +253,77 @@ function listingIdOf(body: unknown): string | null {
   return id != null ? String(id) : null
 }
 
+/** Single-listing GET is closed to this key (403), so look a listing up through the list. */
+async function findListing(token: string, pfListingId: string): Promise<Record<string, unknown> | null> {
+  for (const draft of [false, true]) {
+    for (let page = 1; page <= 10; page++) {
+      const r = await pfGet(token, `/v1/listings?page=${page}&perPage=100&draft=${draft}`)
+      if (r.status >= 400) throw new Error(pfError(r.status, r.body))
+      const b = r.body as { results?: Record<string, unknown>[]; pagination?: { totalPages?: number } }
+      const hit = (b?.results ?? []).find((x) => String(x.id) === pfListingId)
+      if (hit) return hit
+      if (page >= (b?.pagination?.totalPages ?? 1)) break
+    }
+  }
+  return null
+}
+
+/** Fields Property Finder computes or owns; never sent back on update. */
+const READ_ONLY = ['id', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'state', 'qualityScore', 'portals', 'products', 'verificationStatus', 'publishedAt', 'reference']
+/** Core fields Property Finder will not change after create (listings_core-fields-immutable). */
+const CORE = ['category', 'type', 'uaeEmirate']
+
+/**
+ * Update body = Property Finder's current listing with the website's fields laid over it, so
+ * anything the website doesn't manage (amenities, availability date…) is kept.
+ */
+function updateBody(current: Record<string, unknown>, ours: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(current)) if (!READ_ONLY.includes(k)) out[k] = v
+  for (const [k, v] of Object.entries(ours)) if (!CORE.includes(k) && v !== undefined) out[k] = v
+  const assigned = out.assignedTo as Record<string, unknown> | undefined
+  if (assigned?.id != null) out.assignedTo = { id: assigned.id }
+  return out
+}
+
+/** What a sync would change, field by field (for a read-only preview). */
+/** JSON with sorted keys, so field order never counts as a change. */
+function stable(v: unknown): string {
+  if (Array.isArray(v)) return `[${v.map(stable).join(',')}]`
+  if (v && typeof v === 'object') {
+    return `{${Object.keys(v as Record<string, unknown>).sort().map((k) => `${JSON.stringify(k)}:${stable((v as Record<string, unknown>)[k])}`).join(',')}}`
+  }
+  return JSON.stringify(v ?? null)
+}
+
+function changes(current: Record<string, unknown>, next: Record<string, unknown>): Record<string, { now: unknown; next: unknown }> {
+  const out: Record<string, { now: unknown; next: unknown }> = {}
+  const short = (v: unknown) => {
+    const t = JSON.stringify(v ?? null)
+    return t.length > 160 ? `${t.slice(0, 160)}…` : JSON.parse(t)
+  }
+  for (const k of new Set([...Object.keys(current), ...Object.keys(next)])) {
+    if (READ_ONLY.includes(k)) continue
+    if (k === 'media') {
+      const urls = (m: unknown) =>
+        ((m as { images?: { original?: { url?: string } }[] } | undefined)?.images ?? []).map((i) => i.original?.url ?? '')
+      const a = urls(current.media)
+      const b = urls(next.media)
+      if (JSON.stringify(a) !== JSON.stringify(b)) out.media = { now: `${a.length} images`, next: `${b.length} images, ${b.filter((u) => !a.includes(u)).length} not on Property Finder now` }
+      continue
+    }
+    if (k === 'assignedTo') {
+      if (String((current[k] as Record<string, unknown> | undefined)?.id) === String((next[k] as Record<string, unknown> | undefined)?.id)) continue
+    }
+    if (k === 'description') {
+      const t = (d: unknown) => String((d as Record<string, string> | undefined)?.en ?? '').replace(/\s+/g, ' ').trim()
+      if (t(current[k]) === t(next[k])) continue
+    }
+    if (stable(current[k]) !== stable(next[k])) out[k] = { now: short(current[k]), next: short(next[k]) }
+  }
+  return out
+}
+
 type SyncResult = { ok: boolean; status: string; pfListingId: string | null; error?: string; missing?: string[] }
 
 async function saveState(sb: SupabaseClient, id: string, patch: Record<string, unknown>) {
@@ -296,7 +367,16 @@ async function syncRow(sb: SupabaseClient, token: string, row: PropertyRow): Pro
   }
 
   const create = !row.pf_listing_id
-  const payload = listingBody(row, agentProfileId!, create)
+  let payload = listingBody(row, agentProfileId!, create)
+  if (!create) {
+    const current = await findListing(token, row.pf_listing_id!)
+    if (!current) {
+      const error = 'The linked Property Finder listing was not found. Unlink it or link another.'
+      await saveState(sb, row.id, { pf_sync_status: 'error', pf_publish_error: error })
+      return { ok: false, status: 'error', pfListingId: row.pf_listing_id, error }
+    }
+    payload = updateBody(current, payload)
+  }
   let r = create
     ? await pfSend(token, 'POST', '/v1/listings', payload)
     : await pfSend(token, 'PATCH', `/v1/listings/${row.pf_listing_id}`, payload)
@@ -433,6 +513,24 @@ Deno.serve(async (req) => {
       return data as PropertyRow | null
     }
 
+    // Read-only: what a save would change on Property Finder.
+    if (action === 'preview') {
+      const row = await loadRow()
+      if (!row) return json({ ok: false, error: 'Listing not found.' }, 404)
+      let agentProfileId: string | null = null
+      if (row.salesperson_id) {
+        const { data } = await sb.from('salespeople').select('pf_public_profile_id').eq('id', row.salesperson_id).maybeSingle()
+        agentProfileId = data?.pf_public_profile_id ? String(data.pf_public_profile_id) : null
+      }
+      const missing = missingFor(row, agentProfileId)
+      if (missing.length) return json({ ok: false, missing })
+      const ours = listingBody(row, agentProfileId!, !row.pf_listing_id)
+      if (!row.pf_listing_id) return json({ ok: true, create: true, body: shapeOf(ours) })
+      const current = await findListing(pf.token, row.pf_listing_id)
+      if (!current) return json({ ok: false, error: 'Linked listing not found on Property Finder.' })
+      return json({ ok: true, create: false, changes: changes(current, updateBody(current, ours)) })
+    }
+
     if (action === 'sync') {
       const row = await loadRow()
       if (!row) return json({ ok: false, error: 'Listing not found.' }, 404)
@@ -462,18 +560,7 @@ Deno.serve(async (req) => {
       if (!pfListingId) return json({ ok: false, error: 'pfListingId is required.' }, 400)
       const { data: taken } = await sb.from('properties').select('id').eq('pf_listing_id', pfListingId).neq('id', propertyId).limit(1)
       if (taken?.length) return json({ ok: false, error: `Already linked to listing ${taken[0].id}.` }, 409)
-      // The single-listing GET is not open to this key (403), so find it through the list.
-      let l: Record<string, unknown> | null = null
-      for (const draft of [false, true]) {
-        for (let page = 1; page <= 10 && !l; page++) {
-          const r = await pfGet(pf.token, `/v1/listings?page=${page}&perPage=100&draft=${draft}`)
-          if (r.status >= 400) return json({ ok: false, error: pfError(r.status, r.body) }, 502)
-          const b = r.body as { results?: Record<string, unknown>[]; pagination?: { totalPages?: number } }
-          l = (b?.results ?? []).find((x) => String(x.id) === pfListingId) ?? null
-          if (page >= (b?.pagination?.totalPages ?? 1)) break
-        }
-        if (l) break
-      }
+      const l = await findListing(pf.token, pfListingId)
       if (!l) return json({ ok: false, error: 'That listing was not found on Property Finder.' }, 404)
       const stage = String((l.state as Record<string, unknown> | undefined)?.stage ?? '')
       const loc = l.location as Record<string, unknown> | undefined
