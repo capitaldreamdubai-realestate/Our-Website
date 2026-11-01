@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Database, Json } from '@/integrations/supabase/database.types'
 import { callPfPublish, pfLocationOptions } from '@/lib/pfPublish'
 import { Field, FieldLabel } from '@/components/ui/field'
@@ -16,7 +16,19 @@ const STATUS_LABEL: Record<string, { label: string; tone: string }> = {
   removed: { label: 'Taken down', tone: 'bg-ink/5 text-ink/70' },
 }
 
-type Unlinked = { id: string; reference: string | null; title: string | null; location: unknown; bedrooms: unknown }
+type Unlinked = { id: string; reference: string | null; title: string | null; location: unknown; bedrooms: unknown; stage?: string | null }
+
+const words = (t: string) => new Set(t.toLowerCase().split(/[^a-z0-9%]+/).filter((w) => w.length > 2))
+
+/** Share of the website title's words found in the Property Finder title (0–1). */
+function titleMatch(a: string, b: string): number {
+  const wa = words(a)
+  if (!wa.size) return 0
+  const wb = words(b)
+  let hit = 0
+  for (const w of wa) if (wb.has(w)) hit += 1
+  return hit / wa.size
+}
 
 /**
  * Website → Property Finder for one listing. The website stays the master copy: saving the
@@ -42,9 +54,26 @@ export function PropertyFinderPublishPanel({
   const [busy, setBusy] = useState<string | null>(null)
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
   const [unlinked, setUnlinked] = useState<Unlinked[] | null>(null)
+  const [known, setKnown] = useState<{ id: string; label: string }[]>([])
+  const [manualLoc, setManualLoc] = useState('')
 
   const agent = salespeople.find((s) => s.id === draft.salesperson_id) ?? null
-  const [license, setLicense] = useState(agent?.broker_license ?? '')
+  const [license, setLicense] = useState(String((draft.pf_compliance as Record<string, unknown> | null)?.issuingClientLicenseNumber ?? ''))
+
+  // Locations and the company license already used on Property Finder (its location search is down).
+  useEffect(() => {
+    if (!columnsReady) return
+    let cancelled = false
+    void callPfPublish('known').then((r) => {
+      if (cancelled || !r.ok) return
+      setKnown((r.results as { id: string; label: string }[]) ?? [])
+      const lic = (r as { license?: string | null }).license
+      if (lic) setLicense((cur) => cur || lic)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [columnsReady])
   const status = STATUS_LABEL[draft.pf_sync_status ?? 'off'] ?? STATUS_LABEL.off
 
   if (!columnsReady) {
@@ -158,9 +187,12 @@ export function PropertyFinderPublishPanel({
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault()
-                  void run('locations', { query: locQuery }, (r) =>
-                    r.ok ? setLocResults(pfLocationOptions(r.results)) : setMessage({ ok: false, text: r.error ?? 'Search failed' }),
-                  )
+                  void run('locations', { query: locQuery }, (r) => {
+                    if (r.ok) return setLocResults(pfLocationOptions(r.results))
+                    const q = locQuery.trim().toLowerCase()
+                    setLocResults(known.filter((k) => k.label.toLowerCase().includes(q)))
+                    setMessage({ ok: false, text: "Property Finder's location search isn't responding, so these are locations your existing Property Finder listings use. You can also paste a location ID below." })
+                  })
                 }
               }}
               placeholder="Search a community or building, e.g. Dubai Marina"
@@ -171,9 +203,12 @@ export function PropertyFinderPublishPanel({
               disabled={locQuery.trim().length < 2 || busy !== null}
               className={`shrink-0 ${adminBtnGhost}`}
               onClick={() =>
-                void run('locations', { query: locQuery }, (r) =>
-                  r.ok ? setLocResults(pfLocationOptions(r.results)) : setMessage({ ok: false, text: r.error ?? 'Search failed' }),
-                )
+                void run('locations', { query: locQuery }, (r) => {
+                  if (r.ok) return setLocResults(pfLocationOptions(r.results))
+                  const q = locQuery.trim().toLowerCase()
+                  setLocResults(known.filter((k) => k.label.toLowerCase().includes(q)))
+                  setMessage({ ok: false, text: "Property Finder's location search isn't responding, so these are locations your existing Property Finder listings use. You can also paste a location ID below." })
+                })
               }
             >
               {busy === 'locations' ? 'Searching…' : 'Search'}
@@ -198,6 +233,45 @@ export function PropertyFinderPublishPanel({
               ))}
             </ul>
           ) : null}
+          <div className="mt-2 flex flex-wrap gap-2">
+            {known.length > 0 ? (
+              <select
+                className={`min-w-0 flex-1 ${adminNativeSelect}`}
+                value=""
+                onChange={(e) => {
+                  const k = known.find((x) => x.id === e.target.value)
+                  if (k) {
+                    updateDraft('pf_location_id', k.id)
+                    updateDraft('pf_location_name', k.label)
+                  }
+                }}
+              >
+                <option value="">Or pick a location your Property Finder listings use…</option>
+                {known.map((k) => (
+                  <option key={k.id} value={k.id}>{k.label}</option>
+                ))}
+              </select>
+            ) : null}
+            <Input
+              value={manualLoc}
+              onChange={(e) => setManualLoc(e.target.value.replace(/\D/g, ''))}
+              placeholder="Location ID"
+              className="w-32 rounded-2xl"
+              aria-label="Property Finder location ID"
+            />
+            <button
+              type="button"
+              disabled={!manualLoc}
+              className={adminBtnGhost}
+              onClick={() => {
+                updateDraft('pf_location_id', manualLoc)
+                updateDraft('pf_location_name', `#${manualLoc}`)
+                setManualLoc('')
+              }}
+            >
+              Use ID
+            </button>
+          </div>
         </Field>
 
         <Field>
@@ -242,7 +316,13 @@ export function PropertyFinderPublishPanel({
               className={adminBtnGhost}
               onClick={() =>
                 void run('unlinked', {}, (r) =>
-                  r.ok ? setUnlinked((r.results as Unlinked[]) ?? []) : setMessage({ ok: false, text: r.error ?? 'Could not load' }),
+                  r.ok
+                    ? setUnlinked(
+                        [...((r.results as Unlinked[]) ?? [])].sort(
+                          (a, b) => titleMatch(draft.title, b.title ?? '') - titleMatch(draft.title, a.title ?? ''),
+                        ),
+                      )
+                    : setMessage({ ok: false, text: r.error ?? 'Could not load' }),
                 )
               }
             >
@@ -287,9 +367,14 @@ export function PropertyFinderPublishPanel({
                     })
                   }
                 >
-                  <span className="font-medium text-ink">{u.title ?? u.id}</span>
+                  <span className="font-medium text-ink">
+                    {u.title ?? u.id}
+                    {titleMatch(draft.title, u.title ?? '') >= 0.6 ? (
+                      <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-[0.65rem] text-emerald-800">Likely match</span>
+                    ) : null}
+                  </span>
                   <span className="block text-ink/55">
-                    {[u.reference, typeof u.location === 'string' ? u.location : null, u.bedrooms != null ? `${String(u.bedrooms)} bed` : null]
+                    {[u.reference, u.stage, u.location != null ? `location #${String(u.location)}` : null, u.bedrooms != null ? `${String(u.bedrooms)} bed` : null]
                       .filter(Boolean)
                       .join(' · ')}
                   </span>

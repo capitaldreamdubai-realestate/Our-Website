@@ -5,6 +5,7 @@
  *   probe     read-only: token scopes, one sample listing's shape, location search, live listing summary
  *   locations read-only: search Property Finder's location tree `{ query }`
  *   permit    read-only: validate a DLD permit `{ permitNumber, licenseNumber }`
+ *   known     read-only: locations and company license used by this account's PF listings
  *   unlinked  read-only: live Property Finder listings not yet linked to a website listing
  *   sync      `{ propertyId }` create/update the draft on PF, or take it down when the listing is off
  *   publish   `{ propertyId }` sync, then publish (public, uses listing credits)
@@ -157,6 +158,10 @@ function isRent(row: PropertyRow): boolean {
   return tags.some((t) => t.includes('rent'))
 }
 
+function isOffplan(row: PropertyRow): boolean {
+  return [...(row.tags ?? []), row.tag ?? ''].some((t) => /off\s*-?plan/i.test(t))
+}
+
 function emirateSlug(e: string | null): string | null {
   const s = (e ?? '').toLowerCase()
   if (s.includes('dubai')) return 'dubai'
@@ -193,6 +198,7 @@ function imageList(row: PropertyRow): string[] {
 function missingFor(row: PropertyRow, agentProfileId: string | null): string[] {
   const m: string[] = []
   if (!row.pf_permit_number?.trim()) m.push('DLD permit number')
+  if (!row.pf_compliance?.issuingClientLicenseNumber) m.push('permit check (press Check next to the permit)')
   if (!row.pf_location_id) m.push('Property Finder location')
   if (!agentProfileId) m.push("assigned agent's Property Finder profile (Salespeople → PF public profile id)")
   if (!(Number(row.price_aed) > 0)) m.push('price')
@@ -227,9 +233,11 @@ function listingBody(row: PropertyRow, agentProfileId: string, create: boolean):
     assignedTo: { id: Number(agentProfileId) },
     media: { images: imageList(row).map((url) => ({ original: { url } })) },
     furnishingType: row.pf_furnishing ?? undefined,
+    projectStatus: isOffplan(row) ? 'off_plan' : 'completed',
     compliance: {
       listingAdvertisementNumber: row.pf_permit_number?.trim(),
-      ...(row.pf_compliance?.type ? { type: row.pf_compliance.type } : {}),
+      issuingClientLicenseNumber: String(row.pf_compliance?.issuingClientLicenseNumber ?? ''),
+      type: String(row.pf_compliance?.type ?? 'rera'),
     },
   }
   // Property Finder makes `reference` immutable, so it is only sent once.
@@ -385,6 +393,13 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Read-only: raw query string against the locations endpoint (to learn its parameters).
+    if (action === 'locationsRaw') {
+      const qs = String(body.qs ?? '').replace(/^\?/, '')
+      const r = await pfGet(pf.token, `/v1/locations?${qs}`)
+      return json({ ok: r.status < 400, status: r.status, body: shapeOf(r.body) })
+    }
+
     if (action === 'locations') {
       const q = String(body.query ?? '').trim()
       if (q.length < 2) return json({ ok: true, results: [] })
@@ -398,7 +413,12 @@ Deno.serve(async (req) => {
       const license = String(body.licenseNumber ?? '').trim()
       if (!permit || !license) return json({ ok: false, error: 'Permit and license numbers are required.' }, 400)
       const r = await pfGet(pf.token, `/v1/compliances/${encodeURIComponent(permit)}/${encodeURIComponent(license)}`)
-      return json({ ok: r.status < 400, status: r.status, result: r.body })
+      if (r.status >= 400) return json({ ok: false, status: r.status, error: pfError(r.status, r.body) })
+      const result = (r.body && typeof r.body === 'object' ? r.body : {}) as Record<string, unknown>
+      return json({
+        ok: true,
+        result: { type: 'rera', ...result, issuingClientLicenseNumber: license, listingAdvertisementNumber: permit },
+      })
     }
 
     const propertyId = String(body.propertyId ?? '').trim()
@@ -451,10 +471,36 @@ Deno.serve(async (req) => {
         pf_sync_status: stage === 'live' || stage === 'published' ? 'live' : 'draft',
         pf_state_stage: stage || null,
         pf_location_id: loc?.id != null ? String(loc.id) : null,
-        pf_location_name: typeof loc?.name === 'string' ? loc.name : null,
+        pf_location_name: typeof loc?.name === 'string' ? loc.name : loc?.id != null ? `#${loc.id}` : null,
         pf_publish_error: null,
       })
       return json({ ok: true, pfListingId, stage })
+    }
+
+    // Property Finder's location search is down (upstream 404), so offer the locations and the
+    // company license already used by this account's listings.
+    if (action === 'known') {
+      const locations = new Map<string, { id: string; label: string; count: number }>()
+      const licenses = new Map<string, number>()
+      for (let page = 1; page <= 10; page++) {
+        const r = await pfGet(pf.token, `/v1/listings?page=${page}&perPage=100&draft=false`)
+        const b = r.body as { results?: Record<string, unknown>[]; pagination?: { totalPages?: number } }
+        for (const l of b?.results ?? []) {
+          const id = (l.location as Record<string, unknown> | undefined)?.id
+          if (id != null) {
+            const key = String(id)
+            const title = (l.title as Record<string, string> | undefined)?.en ?? ''
+            const cur = locations.get(key)
+            if (cur) cur.count += 1
+            else locations.set(key, { id: key, label: `#${key} · e.g. ${title.slice(0, 60)}`, count: 1 })
+          }
+          const lic = (l.compliance as Record<string, unknown> | undefined)?.issuingClientLicenseNumber
+          if (lic) licenses.set(String(lic), (licenses.get(String(lic)) ?? 0) + 1)
+        }
+        if (page >= (b?.pagination?.totalPages ?? 1)) break
+      }
+      const license = [...licenses.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
+      return json({ ok: true, results: [...locations.values()].sort((a, b) => b.count - a.count), license })
     }
 
     // Unlinked Property Finder listings, for the editor's "link existing" picker.
@@ -473,7 +519,8 @@ Deno.serve(async (req) => {
             title: (l.title as Record<string, string> | undefined)?.en ?? null,
             price: l.price ?? null,
             bedrooms: l.bedrooms ?? null,
-            location: (l.location as Record<string, unknown> | undefined)?.name ?? null,
+            location: (l.location as Record<string, unknown> | undefined)?.id ?? null,
+            stage: (l.state as Record<string, unknown> | undefined)?.stage ?? null,
           })
         }
         if (page >= (b?.pagination?.totalPages ?? 1)) break
