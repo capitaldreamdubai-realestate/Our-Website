@@ -572,6 +572,29 @@ Deno.serve(async (req) => {
       return data as PropertyRow | null
     }
 
+    // Read-only: this account's Property Finder users and their public profile ids.
+    if (action === 'agents') {
+      const out: Record<string, unknown>[] = []
+      for (let page = 1; page <= 5; page++) {
+        const r = await pfGet(pf.token, `/v1/users?page=${page}&perPage=100`)
+        if (r.status >= 400) return json({ ok: false, error: pfError(r.status, r.body) })
+        const b = r.body as { data?: Record<string, unknown>[]; results?: Record<string, unknown>[]; pagination?: { totalPages?: number } }
+        for (const u of b?.data ?? b?.results ?? []) {
+          const profile = u.publicProfile as Record<string, unknown> | undefined
+          out.push({
+            userId: u.id ?? null,
+            name: [u.firstName, u.lastName].filter(Boolean).join(' ') || (profile?.name ?? null),
+            email: u.email ?? null,
+            publicProfileId: profile?.id ?? u.publicProfileId ?? null,
+            status: u.status ?? null,
+            keys: page === 1 && out.length === 0 ? Object.keys(u) : undefined,
+          })
+        }
+        if (page >= (b?.pagination?.totalPages ?? 1)) break
+      }
+      return json({ ok: true, results: out })
+    }
+
     // Read-only: listing credit balance (to see what publishing costs).
     if (action === 'credits') {
       const out: Record<string, unknown> = {}
@@ -641,8 +664,9 @@ Deno.serve(async (req) => {
         // rooms and price, so both match before website edits start flowing to Property Finder.
         ...websiteFieldsFromPf(l),
         pf_listing_id: pfListingId,
-        pf_publish_enabled: true,
-        pf_sync_status: stage === 'live' || stage === 'published' ? 'live' : 'draft',
+        // Only a live Property Finder listing stays switched on; a taken-down one is linked but off.
+        pf_publish_enabled: stage === 'live',
+        pf_sync_status: stage === 'live' ? 'live' : stage === 'takendown' ? 'removed' : 'draft',
         pf_state_stage: stage || null,
         pf_state_type: String((l.state as Record<string, unknown> | undefined)?.type ?? '') || null,
         pf_location_id: loc?.id != null ? String(loc.id) : null,
