@@ -74,7 +74,10 @@ export function PropertyFinderPublishPanel({
       cancelled = true
     }
   }, [columnsReady])
-  const status = STATUS_LABEL[draft.pf_sync_status ?? 'off'] ?? STATUS_LABEL.off
+  const pendingChanges = draft.pf_sync_status === 'live' && /pending/i.test(draft.pf_state_type ?? '')
+  const status = pendingChanges
+    ? { label: 'Live · edits waiting to publish', tone: 'bg-amber-50 text-amber-900' }
+    : (STATUS_LABEL[draft.pf_sync_status ?? 'off'] ?? STATUS_LABEL.off)
 
   if (!columnsReady) {
     return (
@@ -331,17 +334,20 @@ export function PropertyFinderPublishPanel({
           ) : null}
           <button
             type="button"
-            disabled={!ready || !draft.pf_publish_enabled || busy !== null || draft.pf_sync_status === 'live'}
+            disabled={!ready || !draft.pf_publish_enabled || busy !== null || (draft.pf_sync_status === 'live' && !pendingChanges)}
             className={adminBtnPrimarySm}
             onClick={() => {
-              if (!window.confirm('Publish this listing on Property Finder? It goes public and uses a listing credit. Save your edits first.')) return
+              const ask = pendingChanges
+                ? 'Publish your saved edits on Property Finder? Save first if you changed anything.'
+                : 'Publish this listing on Property Finder? It goes public and uses a listing credit. Save your edits first.'
+              if (!window.confirm(ask)) return
               void run('publish', { propertyId: draft.id }, (r) => {
                 setMessage(r.ok ? { ok: true, text: 'Live on Property Finder.' } : { ok: false, text: r.error ?? 'Publish failed' })
                 onChanged()
               })
             }}
           >
-            {busy === 'publish' ? 'Publishing…' : draft.pf_sync_status === 'live' ? 'Live' : 'Publish on Property Finder'}
+            {busy === 'publish' ? 'Publishing…' : pendingChanges ? 'Publish changes' : draft.pf_sync_status === 'live' ? 'Live' : 'Publish on Property Finder'}
           </button>
         </div>
       )}

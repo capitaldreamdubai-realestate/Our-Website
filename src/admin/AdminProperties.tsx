@@ -52,8 +52,9 @@ function slotsFromGallery(g: unknown): string[] {
     }
     return ''
   })
+  // At least six slots; listings linked to Property Finder can carry more, and all are kept.
   while (urls.length < 6) urls.push('')
-  return urls.slice(0, 6)
+  return urls
 }
 
 function galleryFromSlots(slots: string[]): GalleryImageItem[] {
@@ -152,6 +153,7 @@ function pickPfStatus(row: Row): Partial<Row> {
     pf_publish_error: row.pf_publish_error,
     pf_synced_at: row.pf_synced_at,
     pf_state_stage: row.pf_state_stage,
+    pf_state_type: row.pf_state_type,
     pf_publish_enabled: row.pf_publish_enabled,
     pf_location_id: row.pf_location_id,
     pf_location_name: row.pf_location_name,
@@ -617,6 +619,19 @@ export function AdminProperties() {
     setStep(0)
     setSaveErr(null)
     setModalOpen(true)
+  }
+
+  /** Re-read the open listing in full (linking copies Property Finder's title and photos into it). */
+  async function reloadWholeDraft(id: string) {
+    if (!sb) return
+    const { data } = await sb.from('properties').select('*').eq('id', id).maybeSingle()
+    if (!data) return
+    const row = data as Row
+    const tags = normalizePropertyTags(row.tags, row.tag)
+    setDraft({ ...row, tags, tag: syncLegacyTagField(tags) })
+    const slots = slotsFromGallery(row.gallery)
+    setGallerySlots(slots)
+    setGalleryText(JSON.stringify(galleryFromSlots(slots), null, 2))
   }
 
   async function openEdit(row: Row) {
@@ -1708,13 +1723,13 @@ export function AdminProperties() {
                   onChange={(url) => updateDraft('image_url', url)}
                 />
                 <p className="text-xs font-medium text-ink/70">
-                  Detail gallery — six images (upload or URL each)
+                  Detail gallery — {Math.max(6, gallerySlots.filter(Boolean).length)} images (upload or URL each)
                 </p>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {gallerySlots.map((slotUrl, i) => (
                     <ImageUploadField
                       key={i}
-                      label={`Image ${i + 1} of 6`}
+                      label={`Image ${i + 1} of ${gallerySlots.length}`}
                       folder="properties"
                       value={slotUrl}
                       onChange={(url) => setGallerySlot(i, url)}
@@ -1760,8 +1775,9 @@ export function AdminProperties() {
                 columnsReady={pfColumnsReady}
                 updateDraft={updateDraft}
                 onChanged={() => {
-                  void reloadDraft(draft.id)
+                  void reloadWholeDraft(draft.id)
                   void refresh()
+                  void refetchCms()
                 }}
               />
             ) : null}

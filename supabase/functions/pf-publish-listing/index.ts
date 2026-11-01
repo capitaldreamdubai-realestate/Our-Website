@@ -269,7 +269,7 @@ async function findListing(token: string, pfListingId: string): Promise<Record<s
 }
 
 /** Fields Property Finder computes or owns; never sent back on update. */
-const READ_ONLY = ['id', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'state', 'qualityScore', 'portals', 'products', 'verificationStatus', 'publishedAt', 'reference']
+const READ_ONLY = ['id', 'createdAt', 'updatedAt', 'updatedBy', 'state', 'qualityScore', 'portals', 'products', 'verificationStatus', 'publishedAt']
 /** Core fields Property Finder will not change after create (listings_core-fields-immutable). */
 const CORE = ['category', 'type', 'uaeEmirate']
 
@@ -280,9 +280,12 @@ const CORE = ['category', 'type', 'uaeEmirate']
 function updateBody(current: Record<string, unknown>, ours: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {}
   for (const [k, v] of Object.entries(current)) if (!READ_ONLY.includes(k)) out[k] = v
-  for (const [k, v] of Object.entries(ours)) if (!CORE.includes(k) && v !== undefined) out[k] = v
-  const assigned = out.assignedTo as Record<string, unknown> | undefined
-  if (assigned?.id != null) out.assignedTo = { id: assigned.id }
+  for (const [k, v] of Object.entries(ours)) if (!CORE.includes(k) && k !== 'reference' && v !== undefined) out[k] = v
+  // People are sent back as `{ id }` only; PUT requires createdBy.id.
+  for (const k of ['assignedTo', 'createdBy']) {
+    const person = out[k] as Record<string, unknown> | undefined
+    if (person?.id != null) out[k] = { id: person.id }
+  }
   return out
 }
 
@@ -312,7 +315,7 @@ function changes(current: Record<string, unknown>, next: Record<string, unknown>
       if (JSON.stringify(a) !== JSON.stringify(b)) out.media = { now: `${a.length} images`, next: `${b.length} images, ${b.filter((u) => !a.includes(u)).length} not on Property Finder now` }
       continue
     }
-    if (k === 'assignedTo') {
+    if (k === 'assignedTo' || k === 'createdBy') {
       if (String((current[k] as Record<string, unknown> | undefined)?.id) === String((next[k] as Record<string, unknown> | undefined)?.id)) continue
     }
     if (k === 'description') {
@@ -321,6 +324,37 @@ function changes(current: Record<string, unknown>, next: Record<string, unknown>
     }
     if (stable(current[k]) !== stable(next[k])) out[k] = { now: short(current[k]), next: short(next[k]) }
   }
+  return out
+}
+
+const SQFT_TO_M2 = 0.09290304
+
+/** Website columns taken from a Property Finder listing when the two are linked. */
+function websiteFieldsFromPf(l: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  const title = (l.title as Record<string, string> | undefined)?.en?.trim()
+  if (title) {
+    out.title = title
+    out.alt = title
+  }
+  const urls = (((l.media as Record<string, unknown> | undefined)?.images as { original?: { url?: string } }[] | undefined) ?? [])
+    .map((i) => i?.original?.url)
+    .filter((u): u is string => typeof u === 'string' && u.startsWith('https://'))
+  if (urls.length) {
+    out.image_url = urls[0]
+    out.gallery = urls.slice(0, 50).map((src) => ({ type: 'image', src }))
+  }
+  const m2 = (v: unknown) => (typeof v === 'number' && v > 0 ? Math.round(v * SQFT_TO_M2 * 100) / 100 : null)
+  const interior = m2(l.size) ?? m2(l.builtUpArea)
+  if (interior != null) out.interior_m2 = interior
+  out.plot_m2 = m2(l.plotSize)
+  const beds = l.bedrooms === 'studio' ? 0 : Number.parseInt(String(l.bedrooms ?? ''), 10)
+  if (Number.isFinite(beds)) out.beds = beds
+  const baths = Number.parseInt(String(l.bathrooms ?? ''), 10)
+  if (Number.isFinite(baths)) out.baths = baths
+  const price = l.price as { type?: string; amounts?: Record<string, number> } | undefined
+  const amount = price?.type ? price.amounts?.[price.type] : undefined
+  if (typeof amount === 'number' && amount > 0) out.price_aed = amount
   return out
 }
 
@@ -380,20 +414,25 @@ async function syncRow(sb: SupabaseClient, token: string, row: PropertyRow): Pro
   let r = create
     ? await pfSend(token, 'POST', '/v1/listings', payload)
     : await pfSend(token, 'PATCH', `/v1/listings/${row.pf_listing_id}`, payload)
-  if (!create && r.status === 405) r = await pfSend(token, 'PUT', `/v1/listings/${row.pf_listing_id}`, payload)
+  // No PATCH route: the gateway answers 403/404/405 for a method it doesn't have. Update is PUT.
+  if (!create && [403, 404, 405].includes(r.status)) r = await pfSend(token, 'PUT', `/v1/listings/${row.pf_listing_id}`, payload)
   if (r.status >= 400) {
     const error = pfError(r.status, r.body)
     await saveState(sb, row.id, { pf_sync_status: 'error', pf_publish_error: error })
     return { ok: false, status: 'error', pfListingId: row.pf_listing_id, error }
   }
   const pfListingId = row.pf_listing_id ?? listingIdOf(r.body)
-  const stage = ((r.body as Record<string, unknown>)?.state as Record<string, unknown> | undefined)?.stage
-  const status = row.pf_sync_status === 'live' ? 'live' : 'draft'
+  const state = (r.body as Record<string, unknown>)?.state as Record<string, unknown> | undefined
+  const stage = typeof state?.stage === 'string' ? state.stage : null
+  // An edited live listing stays live; Property Finder holds the edit until it is published
+  // again (state.type live_changes_pending_publishing).
+  const status = stage === 'live' ? 'live' : 'draft'
   await saveState(sb, row.id, {
     pf_listing_id: pfListingId,
     pf_sync_status: status,
     pf_publish_error: null,
-    pf_state_stage: typeof stage === 'string' ? stage : null,
+    pf_state_stage: stage,
+    pf_state_type: typeof state?.type === 'string' ? state.type : null,
     pf_payload: r.body,
   })
   return { ok: true, status, pfListingId }
@@ -550,7 +589,7 @@ Deno.serve(async (req) => {
         await saveState(sb, propertyId, { pf_sync_status: 'error', pf_publish_error: `Publish failed: ${error}` })
         return json({ ok: false, status: 'error', pfListingId: synced.pfListingId, error })
       }
-      await saveState(sb, propertyId, { pf_sync_status: 'live', pf_publish_error: null, pf_published_at: new Date().toISOString() })
+      await saveState(sb, propertyId, { pf_sync_status: 'live', pf_state_stage: 'live', pf_state_type: 'live', pf_publish_error: null, pf_published_at: new Date().toISOString() })
       return json({ ok: true, status: 'live', pfListingId: synced.pfListingId })
     }
 
@@ -568,10 +607,14 @@ Deno.serve(async (req) => {
       const compliance = l.compliance as Record<string, unknown> | undefined
       const furnishing = typeof l.furnishingType === 'string' ? l.furnishingType : null
       await saveState(sb, propertyId, {
+        // Property Finder's copy is the richer one: the website takes its photos, title, size,
+        // rooms and price, so both match before website edits start flowing to Property Finder.
+        ...websiteFieldsFromPf(l),
         pf_listing_id: pfListingId,
         pf_publish_enabled: true,
         pf_sync_status: stage === 'live' || stage === 'published' ? 'live' : 'draft',
         pf_state_stage: stage || null,
+        pf_state_type: String((l.state as Record<string, unknown> | undefined)?.type ?? '') || null,
         pf_location_id: loc?.id != null ? String(loc.id) : null,
         pf_location_name: typeof loc?.name === 'string' ? loc.name : loc?.id != null ? `#${loc.id}` : null,
         pf_publish_error: null,
