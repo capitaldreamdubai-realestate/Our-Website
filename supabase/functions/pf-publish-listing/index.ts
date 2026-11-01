@@ -9,6 +9,8 @@
  *   unlinked  read-only: live Property Finder listings not yet linked to a website listing
  *   sync      `{ propertyId }` create/update the draft on PF, or take it down when the listing is off
  *   publish   `{ propertyId }` sync, then publish (public, uses listing credits)
+ *             (sync also publishes edits to an already-live listing automatically)
+ *   credits   read-only: listing credit balance
  *   link      `{ propertyId, pfListingId }` attach an existing PF listing instead of creating one
  *
  * Secrets: PF_API_KEY, PF_API_SECRET (shared with sync-property-finder).
@@ -435,6 +437,24 @@ async function syncRow(sb: SupabaseClient, token: string, row: PropertyRow): Pro
     pf_state_type: typeof state?.type === 'string' ? state.type : null,
     pf_payload: r.body,
   })
+  // Already-live listings: publish the edit straight away so Property Finder shows it. A
+  // listing that has never been live still waits for an admin to press Publish.
+  if (status === 'live' && /pending/i.test(String(state?.type ?? ''))) {
+    const pub = await pfSend(token, 'POST', `/v1/listings/${pfListingId}/publish`)
+    // 409 "pending publishing already": Property Finder is already publishing the edit itself.
+    const alreadyPublishing = pub.status === 409 && /pending publishing already/i.test(JSON.stringify(pub.body))
+    if (pub.status >= 400 && !alreadyPublishing) {
+      const error = `Saved on Property Finder, but publishing the edit failed: ${pfError(pub.status, pub.body)}`
+      await saveState(sb, row.id, { pf_publish_error: error })
+      return { ok: false, status, pfListingId, error }
+    }
+    const pubState = (pub.body as Record<string, unknown> | null)?.state as Record<string, unknown> | undefined
+    await saveState(sb, row.id, {
+      pf_state_type: typeof pubState?.type === 'string' ? pubState.type : String(state?.type ?? 'live'),
+      pf_publish_error: null,
+      pf_published_at: new Date().toISOString(),
+    })
+  }
   return { ok: true, status, pfListingId }
 }
 
@@ -552,6 +572,16 @@ Deno.serve(async (req) => {
       return data as PropertyRow | null
     }
 
+    // Read-only: listing credit balance (to see what publishing costs).
+    if (action === 'credits') {
+      const out: Record<string, unknown> = {}
+      for (const path of ['/v1/credits', '/v1/credits/balance', '/v1/credits/summary']) {
+        const r = await pfGet(pf.token, path)
+        out[path] = { status: r.status, body: r.status < 400 ? r.body : shapeOf(r.body) }
+      }
+      return json({ ok: true, ...out })
+    }
+
     // Read-only: what a save would change on Property Finder.
     if (action === 'preview') {
       const row = await loadRow()
@@ -567,7 +597,7 @@ Deno.serve(async (req) => {
       if (!row.pf_listing_id) return json({ ok: true, create: true, body: shapeOf(ours) })
       const current = await findListing(pf.token, row.pf_listing_id)
       if (!current) return json({ ok: false, error: 'Linked listing not found on Property Finder.' })
-      return json({ ok: true, create: false, changes: changes(current, updateBody(current, ours)) })
+      return json({ ok: true, create: false, state: current.state ?? null, changes: changes(current, updateBody(current, ours)) })
     }
 
     if (action === 'sync') {

@@ -76,7 +76,7 @@ export function PropertyFinderPublishPanel({
   }, [columnsReady])
   const pendingChanges = draft.pf_sync_status === 'live' && /pending/i.test(draft.pf_state_type ?? '')
   const status = pendingChanges
-    ? { label: 'Live · edits waiting to publish', tone: 'bg-amber-50 text-amber-900' }
+    ? { label: 'Live · edit publishing on Property Finder', tone: 'bg-amber-50 text-amber-900' }
     : (STATUS_LABEL[draft.pf_sync_status ?? 'off'] ?? STATUS_LABEL.off)
 
   if (!columnsReady) {
@@ -131,7 +131,7 @@ export function PropertyFinderPublishPanel({
         <span>
           <span className="font-medium">List on Property Finder</span>
           <span className="block text-xs text-ink/55">
-            Saving updates the Property Finder draft. Hiding, withdrawing, or marking the listing sold or rented takes it down there.
+            Saving updates Property Finder; edits to a live listing go live straight away. Hiding, withdrawing, or marking the listing sold or rented takes it down there.
           </span>
         </span>
       </label>
@@ -334,20 +334,17 @@ export function PropertyFinderPublishPanel({
           ) : null}
           <button
             type="button"
-            disabled={!ready || !draft.pf_publish_enabled || busy !== null || (draft.pf_sync_status === 'live' && !pendingChanges)}
+            disabled={!ready || !draft.pf_publish_enabled || busy !== null || draft.pf_sync_status === 'live'}
             className={adminBtnPrimarySm}
             onClick={() => {
-              const ask = pendingChanges
-                ? 'Publish your saved edits on Property Finder? Save first if you changed anything.'
-                : 'Publish this listing on Property Finder? It goes public and uses a listing credit. Save your edits first.'
-              if (!window.confirm(ask)) return
+              if (!window.confirm('Publish this listing on Property Finder? It goes public and uses a listing credit. Save your edits first.')) return
               void run('publish', { propertyId: draft.id }, (r) => {
                 setMessage(r.ok ? { ok: true, text: 'Live on Property Finder.' } : { ok: false, text: r.error ?? 'Publish failed' })
                 onChanged()
               })
             }}
           >
-            {busy === 'publish' ? 'Publishing…' : pendingChanges ? 'Publish changes' : draft.pf_sync_status === 'live' ? 'Live' : 'Publish on Property Finder'}
+            {busy === 'publish' ? 'Publishing…' : draft.pf_sync_status === 'live' ? 'Live' : 'Publish on Property Finder'}
           </button>
         </div>
       )}
