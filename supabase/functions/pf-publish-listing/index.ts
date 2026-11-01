@@ -477,6 +477,9 @@ Deno.serve(async (req) => {
       if (!l) return json({ ok: false, error: 'That listing was not found on Property Finder.' }, 404)
       const stage = String((l.state as Record<string, unknown> | undefined)?.stage ?? '')
       const loc = l.location as Record<string, unknown> | undefined
+      // Keep the permit and furnishing Property Finder already holds, so later saves pass the checks.
+      const compliance = l.compliance as Record<string, unknown> | undefined
+      const furnishing = typeof l.furnishingType === 'string' ? l.furnishingType : null
       await saveState(sb, propertyId, {
         pf_listing_id: pfListingId,
         pf_publish_enabled: true,
@@ -485,8 +488,14 @@ Deno.serve(async (req) => {
         pf_location_id: loc?.id != null ? String(loc.id) : null,
         pf_location_name: typeof loc?.name === 'string' ? loc.name : loc?.id != null ? `#${loc.id}` : null,
         pf_publish_error: null,
+        ...(compliance?.listingAdvertisementNumber
+          ? { pf_permit_number: String(compliance.listingAdvertisementNumber), pf_compliance: compliance }
+          : {}),
+        ...(furnishing && ['unfurnished', 'semi-furnished', 'furnished'].includes(furnishing)
+          ? { pf_furnishing: furnishing }
+          : {}),
       })
-      return json({ ok: true, pfListingId, stage })
+      return json({ ok: true, pfListingId, stage, permit: !!compliance?.listingAdvertisementNumber })
     }
 
     // Property Finder's location search is down (upstream 404), so offer the locations and the
