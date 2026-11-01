@@ -236,7 +236,7 @@ export function PropertyFinderPublishPanel({
           <div className="mt-2 flex flex-wrap gap-2">
             {known.length > 0 ? (
               <select
-                className={`min-w-0 flex-1 ${adminNativeSelect}`}
+                className={`w-full min-w-0 sm:w-auto sm:flex-1 ${adminNativeSelect}`}
                 value=""
                 onChange={(e) => {
                   const k = known.find((x) => x.id === e.target.value)
