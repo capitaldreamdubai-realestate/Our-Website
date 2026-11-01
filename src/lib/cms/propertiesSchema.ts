@@ -25,6 +25,19 @@ export async function propertiesHasTagsColumn(
   return true
 }
 
+let propertiesPfPublishColumns: boolean | null = null
+
+/** Whether the website → Property Finder columns exist (migration 20261102130000). */
+export async function propertiesHasPfPublishColumns(
+  supabase: SupabaseClient<Database>,
+): Promise<boolean> {
+  if (propertiesPfPublishColumns !== null) return propertiesPfPublishColumns
+  const { error } = await supabase.from('properties').select('pf_publish_enabled').limit(1)
+  propertiesPfPublishColumns = !error
+  return propertiesPfPublishColumns
+}
+
 export function resetPropertiesSchemaCache(): void {
   propertiesTagsColumn = null
+  propertiesPfPublishColumns = null
 }

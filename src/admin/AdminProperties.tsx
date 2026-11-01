@@ -25,7 +25,9 @@ import { gallerySixForPropertyId } from '@/data/propertyGallerySeeds'
 import { getSupabase } from '@/integrations/supabase/client'
 import type { Database } from '@/integrations/supabase/database.types'
 import { propertyRowToUpsert } from '@/lib/cms/mapProperty'
-import { propertiesHasTagsColumn } from '@/lib/cms/propertiesSchema'
+import { propertiesHasPfPublishColumns, propertiesHasTagsColumn } from '@/lib/cms/propertiesSchema'
+import { callPfPublish } from '@/lib/pfPublish'
+import { PropertyFinderPublishPanel } from './components/PropertyFinderPublishPanel'
 import { propertyIdFromTitle, slugifyPropertyKey } from '@/lib/propertyId'
 import {
   hasListingTag,
@@ -130,12 +132,33 @@ function createEmptyRow(): Row {
     pf_price_raw: null,
     pf_currency: null,
     pf_published_at: null,
+    pf_publish_enabled: false,
+    pf_permit_number: null,
+    pf_compliance: null,
+    pf_furnishing: null,
+    pf_sync_status: 'off',
+    pf_publish_error: null,
+    pf_synced_at: null,
     created_at: now,
     updated_at: now,
   }
 }
 
-const steps = ['Basics', 'Specs', 'Media', 'Copy'] as const
+/** Columns written by the Property Finder functions; refreshed into an open draft without touching edits. */
+function pickPfStatus(row: Row): Partial<Row> {
+  return {
+    pf_listing_id: row.pf_listing_id,
+    pf_sync_status: row.pf_sync_status,
+    pf_publish_error: row.pf_publish_error,
+    pf_synced_at: row.pf_synced_at,
+    pf_state_stage: row.pf_state_stage,
+    pf_publish_enabled: row.pf_publish_enabled,
+    pf_location_id: row.pf_location_id,
+    pf_location_name: row.pf_location_name,
+  }
+}
+
+const steps = ['Basics', 'Specs', 'Media', 'Copy', 'Property Finder'] as const
 
 function fieldClass(extra = '') {
   return `h-auto w-full rounded-2xl border border-ink/15 bg-white px-3 py-2 text-xs text-ink md:text-sm ${extra}`
@@ -204,6 +227,20 @@ export function AdminProperties() {
     }
   }, [sb, draft?.id, draft?.availability_status])
   const [tagsColumnReady, setTagsColumnReady] = useState<boolean | null>(null)
+  const [pfColumnsReady, setPfColumnsReady] = useState(false)
+  useEffect(() => {
+    if (sb) void propertiesHasPfPublishColumns(sb).then(setPfColumnsReady)
+  }, [sb])
+
+  /** Re-read one listing (after a Property Finder action changed its status columns). */
+  const reloadDraft = useCallback(
+    async (id: string) => {
+      if (!sb) return
+      const { data } = await sb.from('properties').select('*').eq('id', id).maybeSingle()
+      if (data) setDraft((d) => (d && d.id === id ? { ...d, ...pickPfStatus(data as Row) } : d))
+    },
+    [sb],
+  )
   const [propertyTypeOptions, setPropertyTypeOptions] = useState<PropertyTypeOptRow[]>([])
   const [geoLookup, setGeoLookup] = useState<{
     neighbourhoods: TerracottaDropdownOption[]
@@ -683,7 +720,10 @@ export function AdminProperties() {
     const hasTagsCol =
       tagsColumnReady ?? (await propertiesHasTagsColumn(sb))
     setTagsColumnReady(hasTagsCol)
-    const payload = propertyRowToUpsert(merged, { includeTagsColumn: hasTagsCol })
+    const payload = propertyRowToUpsert(merged, {
+      includeTagsColumn: hasTagsCol,
+      includePfPublishColumns: pfColumnsReady,
+    })
     const { error } = await sb.from('properties').upsert(payload, { onConflict: 'id' })
     if (error) {
       const hint =
@@ -692,6 +732,20 @@ export function AdminProperties() {
           : ''
       setSaveErr(`${error.message}${hint}`)
       return
+    }
+    // Website is the master copy: push the change to Property Finder (draft, or take-down).
+    if (pfColumnsReady && (merged.pf_publish_enabled || merged.pf_listing_id)) {
+      const pf = await callPfPublish('sync', { propertyId })
+      if (!pf.ok) {
+        setIsNewRecord(false)
+        setDraft((d) => (d ? { ...d, id: propertyId } : d))
+        await reloadDraft(propertyId)
+        setSaveErr(`Saved on the website. Property Finder: ${pf.error ?? 'update failed'}`)
+        setStep(steps.indexOf('Property Finder'))
+        void refresh()
+        void refetchCms()
+        return
+      }
     }
     closeModal()
     void refresh()
@@ -1696,6 +1750,20 @@ export function AdminProperties() {
                   />
                 </div>
               </div>
+            ) : null}
+
+            {step === 4 ? (
+              <PropertyFinderPublishPanel
+                draft={draft}
+                salespeople={salespeople}
+                isNewRecord={isNewRecord}
+                columnsReady={pfColumnsReady}
+                updateDraft={updateDraft}
+                onChanged={() => {
+                  void reloadDraft(draft.id)
+                  void refresh()
+                }}
+              />
             ) : null}
 
             {step === 3 ? (

@@ -58,7 +58,7 @@ export function mapPropertyRow(row: Row): Property {
 /** Admin save: map DB row → upsert payload without losing FKs (e.g. developer_id). */
 export function propertyRowToUpsert(
   row: Row,
-  options?: { includeTagsColumn?: boolean },
+  options?: { includeTagsColumn?: boolean; includePfPublishColumns?: boolean },
 ): Database['public']['Tables']['properties']['Insert'] {
   const tags = normalizePropertyTags(row.tags, row.tag)
   const payload: Database['public']['Tables']['properties']['Insert'] = {
@@ -97,30 +97,19 @@ export function propertyRowToUpsert(
     property_type: row.property_type,
     developer_id: row.developer_id ?? null,
     listing_source: row.listing_source,
-    pf_listing_id: row.pf_listing_id,
-    pf_payload: row.pf_payload,
-    pf_state_stage: row.pf_state_stage,
-    pf_state_type: row.pf_state_type,
-    pf_category: row.pf_category,
-    pf_offering_type: row.pf_offering_type,
-    pf_project_status: row.pf_project_status,
-    pf_verification_status: row.pf_verification_status,
-    pf_quality_score: row.pf_quality_score,
-    pf_assigned_to_id: row.pf_assigned_to_id,
-    pf_assigned_to_name: row.pf_assigned_to_name,
-    pf_created_by_id: row.pf_created_by_id,
+    // Property Finder fields the editor owns. Status fields (listing id, stage, sync status,
+    // errors) are written by pf-publish-listing / sync-property-finder and left untouched here.
     pf_location_id: row.pf_location_id,
     pf_location_name: row.pf_location_name,
-    pf_latitude: row.pf_latitude,
-    pf_longitude: row.pf_longitude,
-    pf_price_type: row.pf_price_type,
-    pf_price_on_request: row.pf_price_on_request,
-    pf_price_raw: row.pf_price_raw,
-    pf_currency: row.pf_currency,
-    pf_published_at: row.pf_published_at,
   }
   if (options?.includeTagsColumn) {
     payload.tags = tags
+  }
+  if (options?.includePfPublishColumns) {
+    payload.pf_publish_enabled = row.pf_publish_enabled ?? false
+    payload.pf_permit_number = row.pf_permit_number ?? null
+    payload.pf_compliance = row.pf_compliance ?? null
+    payload.pf_furnishing = row.pf_furnishing ?? null
   }
   return payload
 }

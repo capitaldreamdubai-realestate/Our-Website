@@ -5,7 +5,12 @@
  *   PF_API_KEY, PF_API_SECRET, APP_SUPABASE_URL, APP_SUPABASE_SERVICE_ROLE_KEY
  * Runtime also injects SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY in many setups.
  *
- * Invoke (authenticated admin JWT): supabase.functions.invoke('sync-property-finder', { body: { includeDrafts?: boolean } })
+ * Invoke (authenticated admin JWT): supabase.functions.invoke('sync-property-finder', { body: { includeDrafts?: boolean, importUnlinked?: boolean } })
+ *
+ * The website is the master copy. A Property Finder listing that belongs to a website listing
+ * (its `reference` is the website id, or a website row holds its pf_listing_id) only refreshes
+ * that row's Property Finder status. Listings that exist only on Property Finder are imported
+ * as `pf-…` rows only when `importUnlinked` is true.
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
 
@@ -483,11 +488,15 @@ Deno.serve(async (req) => {
     }
 
     let includeDrafts = false
+    let importUnlinked = false
     if (req.method === 'POST') {
       try {
         const body = await req.json()
         if (body && typeof body === 'object' && (body as { includeDrafts?: boolean }).includeDrafts === true) {
           includeDrafts = true
+        }
+        if (body && typeof body === 'object' && (body as { importUnlinked?: boolean }).importUnlinked === true) {
+          importUnlinked = true
         }
       } catch {
         /* empty body */
@@ -564,10 +573,48 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Website-owned listings: matched by pf_listing_id or by reference = website id.
+    const { data: ownedRows, error: ownedErr } = await supabase
+      .from('properties')
+      .select('id, pf_listing_id')
+      .neq('listing_source', 'property_finder')
+    if (ownedErr) throw new Error(ownedErr.message)
+    const ownedByPfId = new Map<string, string>()
+    const ownedIds = new Set<string>()
+    for (const r of ownedRows ?? []) {
+      ownedIds.add(r.id)
+      if (r.pf_listing_id) ownedByPfId.set(String(r.pf_listing_id), r.id)
+    }
+
     const syncedPfIds = new Set<string>()
     const rows: Record<string, unknown>[] = []
+    let refreshedOwned = 0
+    let skippedUnlinked = 0
 
     for (const [pfId, listing] of byId) {
+      const ref = typeof listing.reference === 'string' ? listing.reference : ''
+      const ownerId = ownedByPfId.get(pfId) ?? (ownedIds.has(ref) ? ref : null)
+      if (ownerId) {
+        const state = listing.state as Record<string, unknown> | undefined
+        const stage = typeof state?.stage === 'string' ? state.stage : null
+        const quality = listing.qualityScore as Record<string, unknown> | undefined
+        const { error } = await supabase
+          .from('properties')
+          .update({
+            pf_listing_id: pfId,
+            pf_state_stage: stage,
+            pf_verification_status: asText(listing.verificationStatus),
+            pf_quality_score: parseNumeric(quality?.value),
+            pf_published_at: asText(listing.publishedAt),
+          })
+          .eq('id', ownerId)
+        if (!error) refreshedOwned += 1
+        continue
+      }
+      if (!importUnlinked) {
+        skippedUnlinked += 1
+        continue
+      }
       syncedPfIds.add(pfId)
       const preserve = preserveMap.get(pfId)
       rows.push(mapListingToRow(listing, preserve, agentMaps))
@@ -588,6 +635,7 @@ Deno.serve(async (req) => {
     let unpublished = 0
     for (const r of allPfRows ?? []) {
       if (
+        importUnlinked &&
         r.pf_listing_id &&
         !syncedPfIds.has(r.pf_listing_id) &&
         r.availability_status !== 'sold' &&
@@ -601,6 +649,8 @@ Deno.serve(async (req) => {
     const summary = {
       upserted: rows.length,
       unpublished,
+      refreshedOwned,
+      skippedUnlinked,
       includeDrafts,
       at: new Date().toISOString(),
     }

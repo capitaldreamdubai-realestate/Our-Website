@@ -69,6 +69,13 @@ export type Database = {
           pf_price_raw: Json | null
           pf_currency: string | null
           pf_published_at: string | null
+          pf_publish_enabled: boolean
+          pf_permit_number: string | null
+          pf_compliance: Json | null
+          pf_furnishing: string | null
+          pf_sync_status: string
+          pf_publish_error: string | null
+          pf_synced_at: string | null
           created_at: string
           updated_at: string
         }
@@ -131,6 +138,13 @@ export type Database = {
           pf_price_raw?: Json | null
           pf_currency?: string | null
           pf_published_at?: string | null
+          pf_publish_enabled?: boolean
+          pf_permit_number?: string | null
+          pf_compliance?: Json | null
+          pf_furnishing?: string | null
+          pf_sync_status?: string
+          pf_publish_error?: string | null
+          pf_synced_at?: string | null
         }
         Update: Partial<Database['public']['Tables']['properties']['Insert']>
         Relationships: []
