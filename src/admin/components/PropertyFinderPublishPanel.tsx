@@ -16,6 +16,31 @@ const STATUS_LABEL: Record<string, { label: string; tone: string }> = {
   removed: { label: 'Taken down', tone: 'bg-ink/5 text-ink/70' },
 }
 
+/** What Property Finder needs before it accepts a listing, and which editor step fixes each. */
+export type PfRequirement = { label: string; ok: boolean; step: 'Basics' | 'Specs' | 'Copy' | 'Property Finder' }
+
+export function pfRequirements(draft: Row, salespeople: SalesRow[]): PfRequirement[] {
+  const agent = salespeople.find((s) => s.id === draft.salesperson_id) ?? null
+  const compliance = draft.pf_compliance as Record<string, unknown> | null
+  return [
+    { label: 'DLD permit number', ok: !!draft.pf_permit_number?.trim(), step: 'Property Finder' },
+    { label: 'Permit checked with Property Finder', ok: !!compliance?.issuingClientLicenseNumber, step: 'Property Finder' },
+    { label: 'Property Finder location', ok: !!draft.pf_location_id, step: 'Property Finder' },
+    {
+      label: agent
+        ? agent.pf_public_profile_id
+          ? `Agent on Property Finder (${agent.name})`
+          : `${agent.name} has no Property Finder profile`
+        : 'Assigned agent',
+      ok: !!agent?.pf_public_profile_id,
+      step: 'Basics',
+    },
+    { label: 'Price', ok: Number(draft.price_aed) > 0, step: 'Specs' },
+    { label: 'Size', ok: Number(draft.interior_m2) > 0 || Number(draft.plot_m2) > 0, step: 'Specs' },
+    { label: 'Description (30+ characters)', ok: (draft.description_html ?? '').replace(/<[^>]+>/g, '').trim().length >= 30, step: 'Copy' },
+  ]
+}
+
 type Unlinked = { id: string; reference: string | null; title: string | null; location: unknown; bedrooms: unknown; stage?: string | null }
 
 const words = (t: string) => new Set(t.toLowerCase().split(/[^a-z0-9%]+/).filter((w) => w.length > 2))
@@ -41,6 +66,7 @@ export function PropertyFinderPublishPanel({
   columnsReady,
   updateDraft,
   onChanged,
+  onGoToStep,
 }: {
   draft: Row
   salespeople: SalesRow[]
@@ -48,6 +74,7 @@ export function PropertyFinderPublishPanel({
   columnsReady: boolean
   updateDraft: <K extends keyof Row>(key: K, value: Row[K]) => void
   onChanged: () => void
+  onGoToStep: (step: PfRequirement['step']) => void
 }) {
   const [locQuery, setLocQuery] = useState('')
   const [locResults, setLocResults] = useState<{ id: string; label: string }[]>([])
@@ -57,7 +84,6 @@ export function PropertyFinderPublishPanel({
   const [known, setKnown] = useState<{ id: string; label: string }[]>([])
   const [manualLoc, setManualLoc] = useState('')
 
-  const agent = salespeople.find((s) => s.id === draft.salesperson_id) ?? null
   const [license, setLicense] = useState(String((draft.pf_compliance as Record<string, unknown> | null)?.issuingClientLicenseNumber ?? ''))
 
   // Locations and the company license already used on Property Finder (its location search is down).
@@ -88,15 +114,9 @@ export function PropertyFinderPublishPanel({
     )
   }
 
-  const checks: [string, boolean][] = [
-    ['DLD permit number', !!draft.pf_permit_number?.trim()],
-    ['Property Finder location', !!draft.pf_location_id],
-    [`Agent with a Property Finder profile${agent ? ` (${agent.name})` : ''}`, !!agent?.pf_public_profile_id],
-    ['Price', Number(draft.price_aed) > 0],
-    ['Size', Number(draft.interior_m2) > 0 || Number(draft.plot_m2) > 0],
-    ['Description', (draft.description_html ?? '').replace(/<[^>]+>/g, '').trim().length >= 30],
-  ]
-  const ready = checks.every(([, ok]) => ok)
+  const checks = pfRequirements(draft, salespeople)
+  const ready = checks.every((c) => c.ok)
+  const missing = checks.filter((c) => !c.ok).length
 
   async function run(action: string, body: Record<string, unknown>, done: (r: Awaited<ReturnType<typeof callPfPublish>>) => void) {
     setBusy(action)
@@ -121,20 +141,35 @@ export function PropertyFinderPublishPanel({
         </p>
       ) : null}
 
-      <label className="flex items-start gap-2 rounded-2xl bg-ink/[0.03] px-3 py-3 text-sm text-ink/85">
-        <input
-          type="checkbox"
-          className="mt-0.5 size-4 rounded border-ink/20"
-          checked={draft.pf_publish_enabled ?? false}
-          onChange={(e) => updateDraft('pf_publish_enabled', e.target.checked)}
-        />
-        <span>
-          <span className="font-medium">List on Property Finder</span>
-          <span className="block text-xs text-ink/55">
-            Saving updates Property Finder; edits to a live listing go live straight away. Hiding, withdrawing, or marking the listing sold or rented takes it down there.
+      <div className="rounded-2xl bg-ink/[0.03] px-3 py-3">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink/55">Property Finder needs</p>
+          <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${ready ? 'bg-emerald-50 text-emerald-900' : 'bg-amber-50 text-amber-900'}`}>
+            {ready ? 'Ready' : `${missing} missing`}
           </span>
-        </span>
-      </label>
+        </div>
+        <ul className="space-y-1">
+          {checks.map((c) => (
+            <li key={c.label} className="flex min-h-9 items-center gap-2 text-sm">
+              <span
+                className={`flex size-5 shrink-0 items-center justify-center rounded-md text-[0.65rem] font-bold ${c.ok ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'}`}
+                aria-hidden
+              >
+                {c.ok ? '✓' : '!'}
+              </span>
+              <span className={`min-w-0 flex-1 ${c.ok ? 'text-ink/70' : 'font-medium text-ink'}`}>{c.label}</span>
+              {!c.ok && c.step !== 'Property Finder' ? (
+                <button type="button" className="shrink-0 text-xs font-medium text-[var(--admin-accent,#a67d32)] underline-offset-2 hover:underline" onClick={() => onGoToStep(c.step)}>
+                  Fix in {c.step}
+                </button>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+        <p className="mt-2 text-xs text-ink/55">
+          Saving updates Property Finder; edits to a live listing go live there within seconds. Hiding, withdrawing, or marking it sold or rented takes it down there.
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field>
@@ -293,16 +328,7 @@ export function PropertyFinderPublishPanel({
         </Field>
       </div>
 
-      <div className="rounded-2xl bg-ink/[0.03] px-3 py-3">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink/55">Before Property Finder accepts it</p>
-        <ul className="grid grid-cols-1 gap-1 text-xs sm:grid-cols-2">
-          {checks.map(([label, ok]) => (
-            <li key={label} className={ok ? 'text-emerald-800' : 'text-ink/60'}>
-              {ok ? '✓' : '○'} {label}
-            </li>
-          ))}
-        </ul>
-      </div>
+
 
       {message ? (
         <p className={`whitespace-pre-wrap break-words text-xs ${message.ok ? 'text-emerald-700' : 'text-red-700'}`}>{message.text}</p>

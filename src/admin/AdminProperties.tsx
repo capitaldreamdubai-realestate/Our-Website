@@ -27,7 +27,7 @@ import type { Database } from '@/integrations/supabase/database.types'
 import { propertyRowToUpsert } from '@/lib/cms/mapProperty'
 import { propertiesHasPfPublishColumns, propertiesHasTagsColumn } from '@/lib/cms/propertiesSchema'
 import { callPfPublish } from '@/lib/pfPublish'
-import { PropertyFinderPublishPanel } from './components/PropertyFinderPublishPanel'
+import { PropertyFinderPublishPanel, pfRequirements } from './components/PropertyFinderPublishPanel'
 import { propertyIdFromTitle, slugifyPropertyKey } from '@/lib/propertyId'
 import {
   hasListingTag,
@@ -1284,19 +1284,56 @@ export function AdminProperties() {
         {draft ? (
           <div className="space-y-4">
             <div className="flex gap-1 overflow-x-auto rounded-full bg-ink/5 p-1">
-              {steps.map((label, i) => (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => setStep(i)}
-                  className={`shrink-0 rounded-full px-3 py-1.5 text-[0.6875rem] font-semibold uppercase tracking-wider md:text-xs ${
-                    step === i ? adminStepActive : adminStepInactive
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+              {steps.map((label, i) => {
+                const pfStep = label === 'Property Finder'
+                // The Property Finder step only appears for listings going to Property Finder.
+                if (pfStep && !(pfColumnsReady && (draft.pf_publish_enabled || draft.pf_listing_id))) return null
+                const missing = pfStep ? pfRequirements(draft, salespeople).filter((c) => !c.ok).length : 0
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => setStep(i)}
+                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.6875rem] font-semibold uppercase tracking-wider md:text-xs ${
+                      step === i ? adminStepActive : adminStepInactive
+                    }`}
+                  >
+                    {label}
+                    {missing > 0 ? (
+                      <span className="rounded-full bg-amber-100 px-1.5 text-[0.625rem] leading-4 text-amber-900">{missing}</span>
+                    ) : null}
+                  </button>
+                )
+              })}
             </div>
+            {pfColumnsReady ? (
+              <div className="flex flex-col gap-2 rounded-2xl bg-ink/[0.03] p-2 sm:flex-row sm:items-center sm:justify-between">
+                <span className="px-1 text-xs font-medium text-ink/60">Listing on</span>
+                <div className="grid grid-cols-2 gap-1 rounded-full bg-white p-1" role="radiogroup" aria-label="Where this listing appears">
+                  {[
+                    { on: false, label: 'Website only' },
+                    { on: true, label: 'Website + Property Finder' },
+                  ].map((o) => (
+                    <button
+                      key={o.label}
+                      type="button"
+                      role="radio"
+                      aria-checked={(draft.pf_publish_enabled ?? false) === o.on}
+                      onClick={() => {
+                        updateDraft('pf_publish_enabled', o.on)
+                        if (o.on) setStep(steps.indexOf('Property Finder'))
+                        else if (step === steps.indexOf('Property Finder') && !draft.pf_listing_id) setStep(0)
+                      }}
+                      className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                        (draft.pf_publish_enabled ?? false) === o.on ? adminStepActive : 'text-ink/60 hover:bg-ink/5'
+                      }`}
+                    >
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             {saveErr ? <p className="text-xs text-red-600">{saveErr}</p> : null}
 
             {draft.listing_source === 'property_finder' ? (
@@ -1774,6 +1811,7 @@ export function AdminProperties() {
                 isNewRecord={isNewRecord}
                 columnsReady={pfColumnsReady}
                 updateDraft={updateDraft}
+                onGoToStep={(name) => setStep(steps.indexOf(name))}
                 onChanged={() => {
                   void reloadWholeDraft(draft.id)
                   void refresh()
