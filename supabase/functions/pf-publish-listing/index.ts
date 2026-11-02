@@ -146,6 +146,7 @@ type PropertyRow = {
   pf_listing_id: string | null
   pf_location_id: string | null
   pf_publish_enabled: boolean
+  pf_only?: boolean
   pf_permit_number: string | null
   pf_compliance: Record<string, unknown> | null
   pf_furnishing: string | null
@@ -153,7 +154,7 @@ type PropertyRow = {
 }
 
 const ROW_COLUMNS =
-  'id, title, description_html, price_aed, beds, baths, interior_m2, plot_m2, emirate, property_type, tags, tag, image_url, gallery, published, availability_status, salesperson_id, pf_listing_id, pf_location_id, pf_publish_enabled, pf_permit_number, pf_compliance, pf_furnishing, pf_sync_status'
+  'id, title, description_html, price_aed, beds, baths, interior_m2, plot_m2, emirate, property_type, tags, tag, image_url, gallery, published, availability_status, salesperson_id, pf_listing_id, pf_location_id, pf_publish_enabled, pf_only, pf_permit_number, pf_compliance, pf_furnishing, pf_sync_status'
 
 const COMMERCIAL = /office|shop|retail|warehouse|showroom|commercial|labour|factory|business centre|whole building|bulk/i
 
@@ -369,12 +370,13 @@ async function saveState(sb: SupabaseClient, id: string, patch: Record<string, u
 /**
  * Bring Property Finder in line with the website row. Creates or updates a draft; never
  * publishes (that spends credits and is its own action). Off, hidden, withdrawn, sold or
- * rented → taken down on Property Finder.
+ * rented → taken down on Property Finder. A Property Finder-only listing (pf_only) is hidden on
+ * the website on purpose, so being hidden doesn't take it down.
  */
 async function syncRow(sb: SupabaseClient, token: string, row: PropertyRow): Promise<SyncResult> {
   const offPf =
     !row.pf_publish_enabled ||
-    !row.published ||
+    (!row.published && !row.pf_only) ||
     ['withdrawn', 'sold', 'rented'].includes(row.availability_status)
   if (offPf) {
     if (!row.pf_listing_id || row.pf_sync_status === 'removed' || row.pf_sync_status === 'off') {
@@ -470,8 +472,12 @@ async function requireAdmin(sb: SupabaseClient, jwt: string): Promise<string | n
     .or(`auth_user_id.eq.${user.id}${email ? `,email.eq.${email}` : ''}`)
     .limit(1)
     .maybeSingle()
-  if (!row || !row.is_active || !['owner', 'admin'].includes(row.role)) return 'Not allowed.'
-  return null
+  if (row?.is_active && ['owner', 'admin'].includes(row.role)) return null
+  // CRM admins and managers (Capital Dream CRM) manage listings too. Salespeople can't publish:
+  // publishing spends Property Finder credits.
+  const { data: roles } = await sb.from('user_roles').select('role').eq('user_id', user.id)
+  if ((roles ?? []).some((r: { role: string }) => ['super_admin', 'admin', 'manager'].includes(r.role))) return null
+  return 'Not allowed.'
 }
 
 Deno.serve(async (req) => {
