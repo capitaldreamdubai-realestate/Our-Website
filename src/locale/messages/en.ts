@@ -176,13 +176,14 @@ export const en: Record<string, string> = {
   'aria.about.partners': 'About us — partner developers',
 
   'hero.aria': 'Hero',
-  'hero.line1': "Don't Play",
-  'hero.line2': 'Real Estate',
-  'hero.line3': 'Roulette.',
-  'hero.sub1': 'We pair private clients with vetted homes',
-  'hero.sub2': 'editorial presentation, disciplined process,',
-  'hero.sub3': 'and zero theatre from first conversation to closing.',
-  'hero.ctaSearch': 'Search properties',
+  'hero.line1': 'Dubai Property,',
+  'hero.line2': 'Bought, Sold,',
+  'hero.line3': 'Rented Right.',
+  'hero.sub1': 'Ready homes, off-plan launches and rentals across Dubai,',
+  'hero.sub2':
+    'with the fees, permits and payment plans laid out before you view.',
+  'hero.sub3': 'One team in Meydan, from first viewing to title deed.',
+  'hero.ctaSearch': 'Search Dubai properties',
 
   'heroCards.rent': 'Are you looking to rent?',
   'heroCards.buy': 'Do you want to buy property?',
@@ -192,9 +193,9 @@ export const en: Record<string, string> = {
   'intro.heading': 'A quieter way to move into the UAE Real Estate Market',
   'intro.imgAlt': 'Friends at a table',
   'intro.p1':
-    'Capital Dream is a private brokerage for people who treat property as capital, not content. We underwrite every introduction — documentation, comparables, and coastal nuance — before we ever suggest a walk-through.',
+    'Capital Dreams is a Dubai brokerage for people who treat property as capital. Before we suggest a viewing, we check the title deed or Oqood, recent DLD transactions nearby, the service charges and the developer’s track record.',
   'intro.p2':
-    'No roulette. No inflated listings for optics. If it is not the right fit, we say so early — and stay beside you until the right door opens.',
+    'If a property is not right for you, we say so early. Then we stay with you through the offer, the mortgage and the transfer at the Dubai Land Department.',
   'intro.ctaAbout': 'About',
 
   'founders.heading': 'Founded on discretion — built on proof.',

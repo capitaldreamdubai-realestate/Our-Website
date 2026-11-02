@@ -2,6 +2,37 @@
   command = "npm run build"
   publish = "dist"
 
+# Retired starter-template articles (Ibiza / Balearic copy). Must sit above the SPA catch-all.
+[[redirects]]
+  from = "/articles/ibiza-price-index-q1"
+  to = "/articles/dubai-property-buying-costs"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/articles/rental-law-updates-2026"
+  to = "/articles/renting-in-dubai-guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/articles/santa-eulalia-neighbourhood-notes"
+  to = "/articles/living-in-meydan-guide"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/articles/formentera-day-routes"
+  to = "/articles"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/articles/restoration-vs-new-build"
+  to = "/articles/dubai-off-plan-buying-guide"
+  status = 301
+  force = true
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

@@ -188,21 +188,6 @@ export function ArticleDetailPage() {
                       </p>
                     ),
                   )}
-                  {article.slug === 'dubai-price-index-q1' && section.id === 'what-measured' ? (
-                    <p className="font-sans text-[length:var(--brand-font-body-lg)] font-normal leading-[1.65] text-[#6B3B34]/95">
-                      Where public series exist, we still read them against title-transfer
-                      timelines and broker-reported absorption —{' '}
-                      <a
-                        href="https://dubailand.gov.ae/en/open-data/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-medium text-[#6B3B34] underline decoration-[#6B3B34]/35 underline-offset-[0.2em] transition hover:decoration-[#6B3B34]"
-                      >
-                        Dubai Land Department open data
-                      </a>{' '}
-                      are a useful cross-check, not the full story.
-                    </p>
-                  ) : null}
                 </div>
               </section>
             ))}

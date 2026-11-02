@@ -12,61 +12,66 @@ export type Article = {
   excerpt: string
 }
 
-/** Order: first two render as featured (wide row); remainder as three-up. */
+/**
+ * Source of truth for the journal. The live `articles` table is synced from
+ * this file (see scripts/articles-to-sql.ts), so keep copy Dubai/UAE-specific.
+ * Order: first two render as featured (wide row); remainder as three-up.
+ */
 export const articles: Article[] = [
   {
-    id: '1',
-    slug: 'dubai-price-index-q1',
-    title: 'What the latest Dubai price data means for UAE-focused buyers',
-    dateLabel: '12 Mar 2026',
+    id: 'dubai-property-buying-costs',
+    slug: 'dubai-property-buying-costs',
+    title: 'Buying property in Dubai: what it really costs beyond the price',
+    dateLabel: '2 Nov 2026',
     author: 'Capital Dreams',
-    image: u('photo-1507525428034-b723cf961d3e', 1600, 1000),
-    alt: 'Dubai skyline at sunset with waterfront towers',
+    image: u('photo-1512453979798-5ea266f8880c', 1600, 1000),
+    alt: 'Sheikh Zayed Road and the Burj Khalifa at sunset, Dubai',
     excerpt:
-      'A concise read on transaction velocity, asking-versus-achieved spreads, and where we see resilient demand this quarter.',
+      'The 4% DLD transfer fee, agency commission, mortgage charges and service charges: a line-by-line budget for buying a ready home in Dubai.',
   },
   {
-    id: '2',
-    slug: 'rental-law-updates-2026',
-    title: 'New UAE rental and short-stay rules: what owners should verify now',
-    dateLabel: '3 Mar 2026',
+    id: 'dubai-off-plan-buying-guide',
+    slug: 'dubai-off-plan-buying-guide',
+    title: 'Buying off-plan in Dubai: payment plans, escrow and handover',
+    dateLabel: '2 Nov 2026',
     author: 'Capital Dreams',
-    image: u('photo-1512917774080-9991f1c4c750', 1600, 1000),
-    alt: 'Modern villa in a gated Dubai community',
+    image: u('photo-1526495124232-a04e1849168c', 1600, 1000),
+    alt: 'Dubai towers along Sheikh Zayed Road at dusk',
     excerpt:
-      'We summarise compliance checkpoints for long-term leasing and holiday-home operations across the UAE.',
+      'How off-plan purchases work in Dubai, where your instalments go, what Oqood registration means, and the checks to run before you sign an SPA.',
   },
   {
-    id: '3',
-    slug: 'jumeirah-neighbourhood-notes',
-    title: 'Jumeirah neighbourhood notes: schools, beach access, and everyday livability',
-    dateLabel: '22 Feb 2026',
+    id: 'renting-in-dubai-guide',
+    slug: 'renting-in-dubai-guide',
+    title: 'Renting in Dubai: Ejari, deposits and rent increases explained',
+    dateLabel: '2 Nov 2026',
     author: 'Capital Dreams',
-    image: u('photo-1566073771259-6a8506099945', 1200, 750),
-    alt: 'Upscale residential street with low-rise homes in Dubai',
+    image: u('photo-1580674684081-7617fbf3d745', 1200, 750),
+    alt: 'Downtown Dubai apartment towers beside the Burj Khalifa',
     excerpt:
-      'Field notes from our team on commute patterns, family conveniences, and long-term value retention.',
+      'Upfront costs, Ejari registration, how the DLD rental index caps increases, and the notice rules that protect tenants and landlords.',
   },
   {
-    id: '4',
-    slug: 'abu-dhabi-day-routes',
-    title: 'Three Abu Dhabi day routes for Dubai residents and investors',
-    dateLabel: '8 Feb 2026',
+    id: 'uae-golden-visa-through-property',
+    slug: 'uae-golden-visa-through-property',
+    title: 'The UAE Golden Visa through property: what qualifies',
+    dateLabel: '2 Nov 2026',
     author: 'Capital Dreams',
-    image: u('photo-1544551763-46a013bb70d5', 1200, 750),
-    alt: 'Abu Dhabi corniche road and skyline on a clear day',
-    excerpt: 'Driving windows, key stops, and practical route planning for productive day trips.',
+    image: u('photo-1518684079-3c830dcef090', 1200, 750),
+    alt: 'Aerial view of the Dubai coastline and Burj Al Arab',
+    excerpt:
+      'The AED 2 million threshold, mortgaged and off-plan property, family sponsorship, and the documents to prepare for a 10-year residence visa.',
   },
   {
-    id: '5',
-    slug: 'restoration-vs-new-build',
-    title: 'Restoration or new build: how we underwrite total cost in the UAE',
-    dateLabel: '24 Jan 2026',
+    id: 'living-in-meydan-guide',
+    slug: 'living-in-meydan-guide',
+    title: 'Living in Meydan: a neighbourhood guide for buyers and tenants',
+    dateLabel: '2 Nov 2026',
     author: 'Capital Dreams',
-    image: u('photo-1600585154340-be6161a56a0c', 1200, 750),
-    alt: 'Architectural detail of a luxury Dubai villa facade',
+    image: u('photo-1582672060674-bc2bd808a8b5', 1200, 750),
+    alt: 'Burj Khalifa framed by palm trees, a short drive from Meydan',
     excerpt:
-      'Engineering realities, approvals, and resale liquidity compared side by side for UAE buyers.',
+      'Where Meydan sits in MBR City, the communities around it, commute times to Downtown and the airport, and who the area suits.',
   },
 ]
 

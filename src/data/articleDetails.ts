@@ -30,330 +30,295 @@ const detailsBySlug: Record<
     sections: ArticleBodySection[]
   }
 > = {
-  'dubai-price-index-q1': {
-    dateLong: '12 March 2026',
-    lastUpdated: '11 March 2026',
+  'dubai-property-buying-costs': {
+    dateLong: '2 November 2026',
+    lastUpdated: '2 November 2026',
     toc: [
-      { id: 'what-measured', label: 'What we measured this quarter' },
-      {
-        id: 'drivers',
-        label: 'What is driving asking prices?',
-        subItems: [
-          { id: 'drivers-stock', label: 'Stock levels and new instructions' },
-          { id: 'drivers-foreign', label: 'Cross-border demand and timing' },
-        ],
-      },
-      {
-        id: 'regulation',
-        label: 'Why regulation did not cool headline numbers',
-        subItems: [{ id: 'regulation-rental', label: 'Rental rules and resale positioning' }],
-      },
-      { id: 'policies', label: 'Policies most likely to shape 2026' },
-      { id: 'outlook', label: 'The bigger picture for buyers' },
+      { id: 'short-answer', label: 'The short answer' },
+      { id: 'dld-fee', label: 'Dubai Land Department fees' },
+      { id: 'agency', label: 'Agency commission' },
+      { id: 'mortgage', label: 'If you are using a mortgage' },
+      { id: 'noc-service', label: 'Developer NOC and service charges' },
+      { id: 'example', label: 'Worked example: AED 2 million apartment' },
+      { id: 'next', label: 'Before you make an offer' },
     ],
     sections: [
       {
-        id: 'what-measured',
-        heading: 'What we measured this quarter',
+        id: 'short-answer',
+        heading: 'The short answer',
         paragraphs: [
-          'Registered transactions across Dubai remained uneven by micro-market: waterfront and established villa communities held firmer volumes, while some outer-growth pockets required longer marketing periods.',
-          'We compared asking trajectories on like-for-like stock against recently recorded transaction bands. The spread between list and achieved pricing narrowed in key submarkets, which often signals more realistic seller expectations.',
+          'For a cash purchase of a ready home in Dubai, budget roughly 6–7% on top of the agreed price. With a mortgage, add a little over 1% of the loan amount on top of that. The single largest cost is the Dubai Land Department (DLD) transfer fee, and none of these costs can be added to a mortgage, so they must be paid in cash.',
         ],
       },
       {
-        id: 'drivers',
-        heading: 'What is driving asking prices?',
+        id: 'dld-fee',
+        heading: 'Dubai Land Department fees',
         paragraphs: [
-          'Two forces dominated this cycle: constrained quality inventory in proven communities, and buyers who are increasingly selective on build quality, service charges, and exit liquidity.',
+          'The DLD transfer fee is 4% of the purchase price. By market convention the buyer pays it, although who pays is ultimately set out in the sale contract (Form F). The transfer itself is processed at a Registration Trustee office, which charges a fixed service fee plus VAT; the fee is higher for properties above AED 500,000. A small title deed issuance fee is added on the day.',
+          '<p>Fees are set by the DLD and do change. Check the current schedule on the <a href="https://dubailand.gov.ae/en/" target="_blank" rel="noopener noreferrer">Dubai Land Department website</a> before you budget, or see our <a href="/faq">buying FAQ</a> for the questions clients ask most.</p>',
         ],
       },
       {
-        id: 'drivers-stock',
-        heading: 'Stock levels and new instructions',
+        id: 'agency',
+        heading: 'Agency commission',
         paragraphs: [
-          'New instructions improved after year-end, but genuinely turnkey homes in prime Dubai districts remain limited. That scarcity supports pricing power even when citywide indices look flat.',
+          'Agency commission on resale property in Dubai is typically 2% of the purchase price, plus 5% VAT on the commission. It is usually paid on the day of transfer. When you buy off-plan directly from a developer, the developer normally pays the agent, so the buyer does not.',
         ],
       },
       {
-        id: 'drivers-foreign',
-        heading: 'Cross-border demand and timing',
+        id: 'mortgage',
+        heading: 'If you are using a mortgage',
         paragraphs: [
-          'Cross-border enquiries from Europe, Asia, and Africa remained resilient, with many buyers planning short, high-intent viewing windows. Prepared inventory and clear documentation continue to win those mandates.',
+          'Mortgage registration with the DLD costs 0.25% of the loan amount plus an admin fee. Banks also charge an arrangement fee (often up to 1% of the loan) and a valuation fee, usually a few thousand dirhams.',
+          'UAE Central Bank rules set the minimum deposit. For an expatriate buying a first home worth up to AED 5 million, the minimum down payment is 20%; above AED 5 million it rises. Non-resident buyers are usually asked for a larger deposit by the lender. Get a pre-approval before you view seriously, so you know your real budget.',
         ],
       },
       {
-        id: 'regulation',
-        heading: 'Why regulation did not cool headline numbers',
+        id: 'noc-service',
+        heading: 'Developer NOC and service charges',
         paragraphs: [
-          'Compliance costs and registration requirements shape execution timelines more than they reset owner expectations. In practice, sellers still anchor to recent comparables unless speed becomes a priority.',
+          'Before transfer, the seller must obtain a No Objection Certificate (NOC) from the master developer confirming that service charges are paid up. The developer charges a fee for it, and who pays is agreed in the contract.',
+          'After you buy, you pay annual service charges to the owners association, calculated per square foot. Rates for each building are registered with the DLD. Ask for the latest service charge invoice before you make an offer: in some towers it changes the net yield more than the price does.',
         ],
       },
       {
-        id: 'regulation-rental',
-        heading: 'Rental rules and resale positioning',
+        id: 'example',
+        heading: 'Worked example: AED 2 million apartment',
         paragraphs: [
-          'Tighter short-stay enforcement can influence buy-to-let underwriting, but owner-occupier and long-hold investors remain key price setters in prime UAE segments.',
+          '<p>An illustrative cash purchase of a ready apartment at AED 2,000,000:</p><ul><li>DLD transfer fee (4%): AED 80,000</li><li>Agency commission (2% + 5% VAT): AED 42,000</li><li>Registration Trustee fee: about AED 4,200 including VAT</li><li>Title deed issuance and DLD admin fees: a few hundred dirhams</li></ul><p>That comes to roughly AED 126,500, or about 6.3% of the price, before any developer NOC fee. With a mortgage, add 0.25% of the loan for registration plus the bank’s own fees.</p>',
         ],
       },
       {
-        id: 'policies',
-        heading: 'Policies most likely to shape 2026',
+        id: 'next',
+        heading: 'Before you make an offer',
         paragraphs: [
-          'Infrastructure delivery, service-charge governance, and regulatory transparency now sit at the core of due diligence. Buyers who model running costs early close with fewer surprises.',
-        ],
-      },
-      {
-        id: 'outlook',
-        heading: 'The bigger picture for buyers',
-        paragraphs: [
-          'If you are underwriting a purchase today, we favor discipline on capex assumptions and conservative rental projections. The market rewards prepared buyers who can move quickly on high-quality stock.',
+          '<p>Ask for the title deed, the Trakheesi permit number on the advert, the latest service charge invoice and the tenancy status if the property is let. Then compare the asking price with recent DLD transactions in the same building. Browse <a href="/for-sale">properties for sale in Dubai</a>, or <a href="/contact-us">speak to our team in Meydan</a> for a full cost sheet on a specific property.</p>',
         ],
       },
     ],
   },
-  'rental-law-updates-2026': {
-    dateLong: '3 March 2026',
-    lastUpdated: '2 March 2026',
+  'dubai-off-plan-buying-guide': {
+    dateLong: '2 November 2026',
+    lastUpdated: '2 November 2026',
     toc: [
-      { id: 'scope', label: 'What changed and who it affects' },
-      {
-        id: 'short-stays',
-        label: 'Short stays and holiday use',
-        subItems: [
-          { id: 'licences', label: 'Licences and municipal registers' },
-          { id: 'platforms', label: 'Platforms and reporting' },
-        ],
-      },
-      { id: 'long-lets', label: 'Long-term rentals' },
-      { id: 'checklist', label: 'Owner checklist before listing' },
+      { id: 'how-it-works', label: 'How off-plan works in Dubai' },
+      { id: 'escrow', label: 'Where your money goes: escrow' },
+      { id: 'oqood', label: 'Oqood registration and the DLD fee' },
+      { id: 'payment-plans', label: 'Reading a payment plan' },
+      { id: 'mortgage', label: 'Financing off-plan' },
+      { id: 'checks', label: 'Checks before you sign the SPA' },
+      { id: 'handover', label: 'Handover and snagging' },
     ],
     sections: [
       {
-        id: 'scope',
-        heading: 'What changed and who it affects',
+        id: 'how-it-works',
+        heading: 'How off-plan works in Dubai',
         paragraphs: [
-          'Recent UAE guidance emphasizes alignment between advertised use, registration status, and authority requirements. Owners should treat listing copy and lease terms as part of the compliance file, not an afterthought.',
+          'Buying off-plan means buying from a developer before the building is finished. You pay a booking deposit, sign a Sale and Purchase Agreement (SPA), and then pay instalments during construction, with the balance due at handover or, on post-handover plans, spread over the years after you get the keys.',
         ],
       },
       {
-        id: 'short-stays',
-        heading: 'Short stays and holiday use',
+        id: 'escrow',
+        heading: 'Where your money goes: escrow',
         paragraphs: [
-          'Expect more structured checks from regulators and insurers on occupancy intent and licensing status. If a property alternates between owner use and short stays, documentation consistency is essential.',
+          'Dubai law (Law No. 8 of 2007) requires off-plan projects to be registered with the Real Estate Regulatory Agency (RERA) and buyer payments to go into a project escrow account. The developer can only draw from that account as construction progresses.',
+          'In practice: pay only into the escrow account named in your SPA, never into an agent’s or an individual’s account. You can check a project’s registration and completion status through the Dubai Land Department’s Dubai REST app.',
         ],
       },
       {
-        id: 'licences',
-        heading: 'Licences and authority registers',
+        id: 'oqood',
+        heading: 'Oqood registration and the DLD fee',
         paragraphs: [
-          'Where approvals are pending renewal, disclose timelines in writing. Buyers and tenants increasingly discount value when compliance timelines are unclear.',
+          'Off-plan sales are registered on the DLD’s interim register, known as Oqood. The 4% DLD fee applies to off-plan purchases too and is normally paid at registration, early in the process. Some launches advertise a full or partial DLD fee waiver; read the SPA to see exactly what the developer covers.',
         ],
       },
       {
-        id: 'platforms',
-        heading: 'Platforms and reporting',
+        id: 'payment-plans',
+        heading: 'Reading a payment plan',
         paragraphs: [
-          'Listing platforms are not a substitute for UAE rules. A compliant setup in one emirate may still miss local authority requirements, so validate before publishing.',
+          'Plans are usually described as a split, such as 60/40 (60% during construction, 40% at handover) or 50/50 with a post-handover period. Compare plans on total price and on when the large payments fall, not on the headline down payment. A low entry deposit with a large handover payment needs either cash or a mortgage ready on that date.',
         ],
       },
       {
-        id: 'long-lets',
-        heading: 'Long-term rentals',
+        id: 'mortgage',
+        heading: 'Financing off-plan',
         paragraphs: [
-          'Annual contracts and rent-adjustment clauses should be reviewed carefully with counsel. Small drafting mistakes can create major disputes at renewal.',
+          'Most UAE banks will not lend on an off-plan unit until it is close to completion, and Central Bank rules cap lending on off-plan property at 50% of its value. Plan to fund construction instalments in cash, and speak to a mortgage adviser well before the handover payment is due.',
         ],
       },
       {
-        id: 'checklist',
-        heading: 'Owner checklist before listing',
+        id: 'checks',
+        heading: 'Checks before you sign the SPA',
         paragraphs: [
-          'Gather title documents, service-charge records, authority approvals, utility history, and a clear works timeline. This bundle accelerates serious enquiries and reduces renegotiation risk.',
+          '<ul><li><strong>Developer record:</strong> look at how the developer’s previous projects were delivered and how they are holding value. Our <a href="/developers">Dubai developer profiles</a> list current inventory by developer.</li><li><strong>Completion date and delay terms:</strong> what the SPA says happens if handover is late.</li><li><strong>Resale rules:</strong> many SPAs require a minimum percentage paid before you can sell before completion.</li><li><strong>Service charge estimate:</strong> ask for it now, so your rental yield maths is realistic.</li><li><strong>Specification:</strong> make sure finishes, appliances and parking are listed in the SPA, not just the brochure.</li></ul>',
+        ],
+      },
+      {
+        id: 'handover',
+        heading: 'Handover and snagging',
+        paragraphs: [
+          '<p>Before handover, inspect the unit and list defects (snagging) for the developer to fix. Once the final payment is made, the Oqood registration is converted into a title deed. To compare current launches and their payment plans, browse <a href="/offplan">off-plan projects in Dubai</a> or <a href="/contact-us">ask our team</a> for the SPA and payment schedule of a specific project.</p>',
         ],
       },
     ],
   },
-  'jumeirah-neighbourhood-notes': {
-    dateLong: '22 February 2026',
-    lastUpdated: '20 February 2026',
+  'renting-in-dubai-guide': {
+    dateLong: '2 November 2026',
+    lastUpdated: '2 November 2026',
     toc: [
-      { id: 'daily', label: 'Daily rhythm and conveniences in Jumeirah' },
-      {
-        id: 'beaches',
-        label: 'Beach access and mobility',
-        subItems: [
-          { id: 'coastline', label: 'Coastline access points' },
-          { id: 'family', label: 'Family-friendly zones' },
-        ],
-      },
-      { id: 'schools', label: 'Schools and services' },
-      { id: 'dining', label: 'Where we eat between viewings' },
+      { id: 'costs', label: 'What you pay upfront' },
+      { id: 'checks', label: 'Checks before you pay anything' },
+      { id: 'ejari', label: 'Ejari registration' },
+      { id: 'increases', label: 'How rent increases work' },
+      { id: 'notice', label: 'Notice periods and eviction' },
+      { id: 'next', label: 'Finding the right home' },
     ],
     sections: [
       {
-        id: 'daily',
-        heading: 'Daily rhythm and conveniences in Jumeirah',
+        id: 'costs',
+        heading: 'What you pay upfront',
         paragraphs: [
-          'Jumeirah balances low-rise residential calm with high-access city living. Morning traffic patterns and school runs matter more than map distance when clients are choosing between micro-zones.',
+          '<ul><li><strong>Rent:</strong> quoted per year and usually paid in one to four cheques. Fewer cheques can help you negotiate a lower rent.</li><li><strong>Security deposit:</strong> commonly 5% of annual rent for unfurnished homes and 10% for furnished, refundable at the end of the tenancy.</li><li><strong>Agency fee:</strong> typically 5% of annual rent plus VAT.</li><li><strong>Ejari registration:</strong> a small fee to register the contract.</li><li><strong>DEWA deposit:</strong> a refundable deposit to connect water and electricity, higher for villas than for apartments.</li></ul>',
         ],
       },
       {
-        id: 'beaches',
-        heading: 'Beach access and mobility',
+        id: 'checks',
+        heading: 'Checks before you pay anything',
         paragraphs: [
-          'Beach proximity is strong across much of Jumeirah, but practical access differs by street network, parking, and public entry points. Lifestyle fit often depends on these daily frictions.',
+          'Ask to see the landlord’s title deed and passport (or a valid power of attorney if someone else is signing). Check that the advert carries a Trakheesi permit number and that your agent holds a RERA broker card. Use the standard Dubai unified tenancy contract and write any agreed extras, such as maintenance or furniture, into the addendum.',
         ],
       },
       {
-        id: 'coastline',
-        heading: 'Coastline access points',
+        id: 'ejari',
+        heading: 'Ejari registration',
         paragraphs: [
-          'Some pockets offer immediate walkability to beach frontage, while others require short drives for better facilities. We map this before recommending family-led moves.',
+          'Every tenancy contract in Dubai must be registered with Ejari, the DLD’s tenancy registration system. You need it to connect DEWA, to sponsor family members’ residence visas and to bring any case to the Rental Dispute Centre. Make sure it is done within the first days of the tenancy.',
+        ],
+      },
+      {
+        id: 'increases',
+        heading: 'How rent increases work',
+        paragraphs: [
+          'Rent increases at renewal are capped by Decree No. 43 of 2013 and measured against the DLD rental index for comparable homes in the same area. If your rent is already close to the index average, the landlord cannot increase it; the further below the average it is, the larger the permitted increase, in bands of 5% up to a maximum of 20%.',
+          'Use the official DLD rental index calculator with your area, property type and current rent to see the exact figure before you negotiate a renewal.',
+        ],
+      },
+      {
+        id: 'notice',
+        heading: 'Notice periods and eviction',
+        paragraphs: [
+          'Either party who wants to change the terms of the contract at renewal, including the rent, must give at least 90 days’ written notice before it expires. A landlord who wants the property back at the end of a tenancy, for example to sell it or move in, must give 12 months’ notice through a notary public or registered mail, and only for the reasons the law allows. Disputes go to the Rental Dispute Centre.',
+        ],
+      },
+      {
+        id: 'next',
+        heading: 'Finding the right home',
+        paragraphs: [
+          '<p>Browse <a href="/for-rent">properties for rent in Dubai</a>, read our <a href="/faq">FAQ on renting and visas</a>, or <a href="/contact-us">tell us what you need</a> and we will shortlist homes that fit your budget and commute.</p>',
+        ],
+      },
+    ],
+  },
+  'uae-golden-visa-through-property': {
+    dateLong: '2 November 2026',
+    lastUpdated: '2 November 2026',
+    toc: [
+      { id: 'what', label: 'What the Golden Visa gives you' },
+      { id: 'threshold', label: 'The AED 2 million threshold' },
+      { id: 'mortgage-offplan', label: 'Mortgaged and off-plan property' },
+      { id: 'family', label: 'Sponsoring your family' },
+      { id: 'documents', label: 'Documents to prepare' },
+      { id: 'choosing', label: 'Choosing the property' },
+    ],
+    sections: [
+      {
+        id: 'what',
+        heading: 'What the Golden Visa gives you',
+        paragraphs: [
+          'The UAE Golden Visa is a 10-year, renewable residence visa. Property investors qualify through real estate they own in the UAE, and the visa stays valid while you spend long periods outside the country, unlike a standard residence visa.',
+        ],
+      },
+      {
+        id: 'threshold',
+        heading: 'The AED 2 million threshold',
+        paragraphs: [
+          'To qualify as a property investor, the property you own must be worth at least AED 2 million. This can be a single property or a portfolio adding up to that value. If you own jointly, the value of your own share is what counts, so check how ownership is recorded on the title deed before you rely on it.',
+        ],
+      },
+      {
+        id: 'mortgage-offplan',
+        heading: 'Mortgaged and off-plan property',
+        paragraphs: [
+          'Mortgaged property can qualify; the bank will need to issue a letter supporting the application. Off-plan property bought from approved developers can also qualify in Dubai. The rules for both have changed several times, so confirm the current criteria with the Dubai Land Department before you buy specifically to meet them.',
         ],
       },
       {
         id: 'family',
-        heading: 'Family-friendly zones',
+        heading: 'Sponsoring your family',
         paragraphs: [
-          'For family buyers, we prioritize school commute reliability, healthcare access, and quieter internal roads over purely visual curb appeal.',
+          'Golden Visa holders can sponsor their spouse and children, and in many cases domestic staff. Each family member needs their own application, medical test and Emirates ID.',
         ],
       },
       {
-        id: 'schools',
-        heading: 'Schools and services',
+        id: 'documents',
+        heading: 'Documents to prepare',
         paragraphs: [
-          'School availability, curriculum fit, and transport timing drive long-term retention in this district. We benchmark travel times at actual peak windows, not off-peak estimates.',
+          'Expect to need your title deed (or the Oqood certificate for off-plan), a property valuation where required, your passport and photo, health insurance and a medical fitness test inside the UAE. Applications run through the DLD and the immigration authorities, and fees and checklists change, so use the official channel’s current list.',
         ],
       },
       {
-        id: 'dining',
-        heading: 'Where we eat between viewings',
+        id: 'choosing',
+        heading: 'Choosing the property',
         paragraphs: [
-          'Our team tends to choose reliable neighbourhood spots that reflect everyday livability. Consistent service and practical convenience usually matter more than headline venues.',
+          '<p>Buy the property for its own merits first: location, service charges, rental demand and resale liquidity. A home that only makes sense because it crosses AED 2 million is a weak investment. Browse <a href="/for-sale">Dubai properties for sale</a> and <a href="/offplan">off-plan projects</a>, or <a href="/contact-us">ask us</a> which options meet the threshold in your preferred area.</p>',
         ],
       },
     ],
   },
-  'abu-dhabi-day-routes': {
-    dateLong: '8 February 2026',
-    lastUpdated: '7 February 2026',
+  'living-in-meydan-guide': {
+    dateLong: '2 November 2026',
+    lastUpdated: '2 November 2026',
     toc: [
-      { id: 'drive', label: 'Drive timing and route planning' },
-      {
-        id: 'routes',
-        label: 'Three routes we still recommend',
-        subItems: [
-          { id: 'route-corniche', label: 'Corniche and downtown core' },
-          { id: 'route-saadiyat', label: 'Saadiyat and cultural district' },
-        ],
-      },
-      { id: 'quiet', label: 'Avoiding peak-week crush' },
+      { id: 'where', label: 'Where Meydan is' },
+      { id: 'communities', label: 'Communities around Meydan' },
+      { id: 'commute', label: 'Getting around' },
+      { id: 'lifestyle', label: 'Everyday life' },
+      { id: 'suits', label: 'Who Meydan suits' },
     ],
     sections: [
       {
-        id: 'drive',
-        heading: 'Drive timing and route planning',
+        id: 'where',
+        heading: 'Where Meydan is',
         paragraphs: [
-          'For Dubai-origin trips, early weekday departures usually provide smoother arrival windows and better scheduling flexibility for multiple site visits.',
+          'Meydan sits inside Mohammed Bin Rashid Al Maktoum City (MBR City), between Al Khail Road and Ras Al Khor Road, just south-east of Downtown Dubai. It is built around Meydan Racecourse, home of the Dubai World Cup. Our own office is here, at Rosebay Living in Meydan, so this is the area we know best.',
         ],
       },
       {
-        id: 'routes',
-        heading: 'Three routes we still recommend',
+        id: 'communities',
+        heading: 'Communities around Meydan',
         paragraphs: [
-          'Each route assumes you want one core objective: market reconnaissance, lifestyle due diligence, or institutional meetings. Trying to do all three in one day usually reduces decision quality.',
+          'The wider MBR City area mixes ready and off-plan homes. Sobha Hartland offers apartments, townhouses and villas around green space and international schools. District One is known for large villas around a man-made lagoon. Apartment communities closer to the racecourse, such as Azizi Riviera, attract tenants and first-time buyers looking for newer stock at lower prices than Downtown.',
         ],
       },
       {
-        id: 'route-corniche',
-        heading: 'Corniche and downtown core',
+        id: 'commute',
+        heading: 'Getting around',
         paragraphs: [
-          'Start with the Corniche and downtown zones to benchmark established stock and infrastructure quality, then layer in secondary districts for value comparison.',
+          'Al Khail Road connects Meydan to Business Bay and the rest of the city. Outside rush hour, Downtown Dubai is usually around 10–15 minutes by car and Dubai International Airport around 20 minutes. Most residents drive or use taxis, as metro coverage in the area is limited.',
         ],
       },
       {
-        id: 'route-saadiyat',
-        heading: 'Saadiyat and cultural district',
+        id: 'lifestyle',
+        heading: 'Everyday life',
         paragraphs: [
-          'Use Saadiyat as a quality-and-pricing benchmark for premium positioning. This route is strongest for buyers evaluating long-hold lifestyle assets.',
+          'Expect quieter streets than Downtown or Dubai Marina, with parks, cycle tracks and community retail within the master plans. The Ras Al Khor Wildlife Sanctuary, known for its flamingos, is close by. Much of MBR City is still being built, so check the construction plans around any building before you commit.',
         ],
       },
       {
-        id: 'quiet',
-        heading: 'Avoiding peak-week crush',
+        id: 'suits',
+        heading: 'Who Meydan suits',
         paragraphs: [
-          'Avoid Friday evening and Sunday return peaks when possible. Structured scheduling with pre-confirmed appointments materially improves the productivity of one-day UAE intercity trips.',
-        ],
-      },
-    ],
-  },
-  'restoration-vs-new-build': {
-    dateLong: '24 January 2026',
-    lastUpdated: '22 January 2026',
-    toc: [
-      { id: 'underwrite', label: 'How we underwrite total cost' },
-      {
-        id: 'restoration',
-        label: 'Restoration paths',
-        subItems: [
-          { id: 'structure', label: 'Structure and systems' },
-          { id: 'licences-rest', label: 'Licences and inspectors' },
-        ],
-      },
-      {
-        id: 'newbuild',
-        label: 'New build on raw land',
-        subItems: [{ id: 'timeline', label: 'Timeline realism' }],
-      },
-      { id: 'liquidity', label: 'Resale liquidity compared' },
-    ],
-    sections: [
-      {
-        id: 'underwrite',
-        heading: 'How we underwrite total cost',
-        paragraphs: [
-          'We separate four buckets: land (or existing structure), hard construction, soft costs, and contingency. The mistake is mixing optimism across buckets — a disciplined spreadsheet beats a beautiful render.',
-        ],
-      },
-      {
-        id: 'restoration',
-        heading: 'Restoration paths',
-        paragraphs: [
-          'Heritage charm can carry hidden liabilities: moisture paths, outdated electrics, and roof geometry that fights modern insulation. We walk sites with engineers before we endorse a number to a client.',
-        ],
-      },
-      {
-        id: 'structure',
-        heading: 'Structure and systems',
-        paragraphs: [
-          'Walls that look thick in photographs may not carry the loads you assume. Test pits and targeted openings reduce guesswork more than glossy concept plans.',
-        ],
-      },
-      {
-        id: 'licences-rest',
-        heading: 'Licences and inspectors',
-        paragraphs: [
-          'Authority interpretation can vary by asset class and location. Build slack into the programme for technical comments, revised drawings, and approval sequencing.',
-        ],
-      },
-      {
-        id: 'newbuild',
-        heading: 'New build on raw land',
-        paragraphs: [
-          'Utilities, access rights, and topography determine feasibility before architecture does. If any of the three is weak, the best design in the world will not save the underwriting.',
-        ],
-      },
-      {
-        id: 'timeline',
-        heading: 'Timeline realism',
-        paragraphs: [
-          'Twelve-month fantasies are rare once licensing and weather are honest. We prefer conservative schedules with staged payments tied to verified milestones.',
-        ],
-      },
-      {
-        id: 'liquidity',
-        heading: 'Resale liquidity compared',
-        paragraphs: [
-          'Finished, compliant homes with clear paperwork trade faster than ambitious projects mid-flight. If exit flexibility matters, bias toward de-risked assets even if headline yield looks lower on paper.',
+          '<p>Meydan works well for families who want space within a short drive of Downtown, and for investors looking at newer buildings and off-plan launches in a central location. Browse <a href="/all-properties">all our Dubai listings</a>, compare <a href="/offplan">off-plan projects</a>, or <a href="/contact-us">visit us at Rosebay Living</a> for a walk around the area.</p>',
         ],
       },
     ],

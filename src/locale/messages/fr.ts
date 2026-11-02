@@ -177,13 +177,16 @@ export const fr: Record<string, string> = {
   'aria.about.partners': 'À propos — promoteurs partenaires',
 
   'hero.aria': 'En-tête',
-  'hero.line1': 'Ne jouez pas',
-  'hero.line2': 'à la roulette',
-  'hero.line3': 'immobilière.',
-  'hero.sub1': 'Nous associons des clients privés à des biens validés,',
-  'hero.sub2': 'une présentation éditoriale, un processus discipliné,',
-  'hero.sub3': 'et zéro effet d’affiche du premier échange jusqu’à la signature.',
-  'hero.ctaSearch': 'Rechercher des biens',
+  'hero.line1': 'Immobilier à Dubaï :',
+  'hero.line2': 'acheter, vendre,',
+  'hero.line3': 'louer en confiance.',
+  'hero.sub1':
+    'Biens prêts à habiter, projets sur plan et locations à Dubaï,',
+  'hero.sub2':
+    'avec frais, permis et plans de paiement détaillés avant la visite.',
+  'hero.sub3':
+    'Une seule équipe à Meydan, de la première visite au titre de propriété.',
+  'hero.ctaSearch': 'Rechercher à Dubaï',
 
   'heroCards.rent': 'Vous cherchez à louer ?',
   'heroCards.buy': 'Vous souhaitez acheter un bien ?',
@@ -193,9 +196,9 @@ export const fr: Record<string, string> = {
   'intro.heading': 'Une approche plus sereine pour entrer sur le marché immobilier des Émirats',
   'intro.imgAlt': 'Amis autour d’une table',
   'intro.p1':
-    'Capital Dream est un courtier privé pour ceux qui considèrent l’immobilier comme du capital, pas du contenu. Nous examinons chaque mise en relation — documents, comparables et nuances du littoral — avant de proposer une visite.',
+    'Capital Dreams est une agence immobilière à Dubaï pour ceux qui considèrent l’immobilier comme un capital. Avant toute visite, nous vérifions le titre de propriété ou l’Oqood, les transactions DLD récentes à proximité, les charges de copropriété et l’historique du promoteur.',
   'intro.p2':
-    'Pas de roulette. Pas d’annonces gonflées pour l’image. Si ce n’est pas le bon bien, nous le disons tôt — et restons à vos côtés jusqu’à ce que la bonne porte s’ouvre.',
+    'Si un bien ne vous convient pas, nous le disons tôt. Puis nous vous accompagnons jusqu’à l’offre, le prêt et le transfert au Dubai Land Department.',
   'intro.ctaAbout': 'À propos',
 
   'founders.heading': 'Fondée sur la discrétion — bâtie sur des preuves.',
