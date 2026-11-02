@@ -503,6 +503,32 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Who is asking, before any Property Finder call is made.
+    const gate = createClient(supabaseUrl, serviceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    })
+    const {
+      data: { user },
+      error: userErr,
+    } = await gate.auth.getUser(jwt)
+    if (userErr || !user) {
+      return json({ ok: false, error: 'Invalid auth token.' }, 401)
+    }
+    // A sync can unpublish listings, so only website owners/admins and CRM admins/managers may
+    // run it (same rule as pf-publish-listing), not any signed-in account.
+    const email = (user.email ?? '').trim().toLowerCase()
+    const { data: siteAdmin } = await gate
+      .from('admin_users')
+      .select('role, is_active')
+      .or(`auth_user_id.eq.${user.id}${email ? `,email.eq.${email}` : ''}`)
+      .limit(1)
+      .maybeSingle()
+    const { data: crmRoles } = await gate.from('user_roles').select('role').eq('user_id', user.id)
+    const allowed =
+      (siteAdmin?.is_active && ['owner', 'admin'].includes(siteAdmin.role)) ||
+      (crmRoles ?? []).some((r: { role: string }) => ['super_admin', 'admin', 'manager'].includes(r.role))
+    if (!allowed) return json({ ok: false, error: 'Not allowed.' }, 403)
+
     const accessToken = await pfToken(apiKey, apiSecret)
 
     // Prefer live (`draft=false`) rows; optional second pass only adds listing ids not returned live.
@@ -522,13 +548,6 @@ Deno.serve(async (req) => {
       auth: { persistSession: false, autoRefreshToken: false },
     })
 
-    const {
-      data: { user },
-      error: userErr,
-    } = await supabase.auth.getUser(jwt)
-    if (userErr || !user) {
-      return json({ ok: false, error: 'Invalid auth token.' }, 401)
-    }
 
     const { data: existingRows, error: exErr } = await supabase
       .from('properties')
