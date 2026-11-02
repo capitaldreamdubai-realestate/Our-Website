@@ -550,21 +550,36 @@ Deno.serve(async (req) => {
     if (action === 'locations') {
       const q = String(body.query ?? '').trim()
       if (q.length < 2) return json({ ok: true, results: [] })
-      const r = await pfGet(pf.token, `/v1/locations?search=${encodeURIComponent(q)}`)
-      if (r.status >= 400) return json({ ok: false, error: `Location search failed (${r.status})`, detail: r.body }, 502)
-      return json({ ok: true, results: r.body })
+      // Property Finder's search intermittently answers 404 for some forms of the same query;
+      // try a few before giving up (the CRM then falls back to locations listings already use).
+      const words = q.split(/\s+/).filter(Boolean)
+      const variants = [...new Set([q, q.toLowerCase(), words.sort((x, y) => y.length - x.length)[0] ?? q])]
+      let last: { status: number; body: unknown } | null = null
+      for (const v of variants) {
+        for (const extra of ['&page=1&perPage=50', '']) {
+          const r = await pfGet(pf.token, `/v1/locations?search=${encodeURIComponent(v)}${extra}`)
+          if (r.status < 400) return json({ ok: true, results: r.body, query: v })
+          last = r
+        }
+      }
+      return json({ ok: false, error: `Location search failed (${last?.status ?? 'no response'})`, detail: last?.body })
     }
 
     if (action === 'permit') {
       const permit = String(body.permitNumber ?? '').trim()
       const license = String(body.licenseNumber ?? '').trim()
       if (!permit || !license) return json({ ok: false, error: 'Permit and license numbers are required.' }, 400)
-      const r = await pfGet(pf.token, `/v1/compliances/${encodeURIComponent(permit)}/${encodeURIComponent(license)}`)
+      // Property Finder now requires the permit type: rera (Dubai DLD / Trakheesi) unless told otherwise.
+      const permitType = String(body.permitType ?? 'rera').trim() || 'rera'
+      const r = await pfGet(
+        pf.token,
+        `/v1/compliances/${encodeURIComponent(permit)}/${encodeURIComponent(license)}?permitType=${encodeURIComponent(permitType)}`,
+      )
       if (r.status >= 400) return json({ ok: false, status: r.status, error: pfError(r.status, r.body) })
       const result = (r.body && typeof r.body === 'object' ? r.body : {}) as Record<string, unknown>
       return json({
         ok: true,
-        result: { type: 'rera', ...result, issuingClientLicenseNumber: license, listingAdvertisementNumber: permit },
+        result: { type: permitType, ...result, issuingClientLicenseNumber: license, listingAdvertisementNumber: permit },
       })
     }
 
