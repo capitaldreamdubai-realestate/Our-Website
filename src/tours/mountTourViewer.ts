@@ -1,14 +1,30 @@
 export type TourSceneView = {
+  id?: string
   title: string
   zone: string
   grade: string
   image: string
   thumb: string
   capture: string
+  initialYaw?: number | null
+  initialPitch?: number | null
+  initialFov?: number | null
 }
+
+export type TourStartView = { yaw: number; pitch: number; fov: number }
 
 const GRADES = ['daylight', 'interior', 'sunset'] as const
 const DEHAZE = 0.28
+/** Vertical field of view in degrees. Landscape screens open at 75, portrait phones a little wider. */
+const DEFAULT_FOV_LANDSCAPE = 75
+const DEFAULT_FOV_PORTRAIT = 90
+const MIN_FOV = 30
+const MAX_FOV = 100
+/** Never show more than this horizontally, so wide screens don't stretch at the edges. */
+const MAX_HORIZONTAL_FOV = 120
+const FADE_MS = 400
+/** How long a switch may take before the loading notice appears. */
+const LOADING_DELAY_MS = 250
 const VERTEX = 'attribute vec2 pos; varying vec2 uv;void main(){uv=pos;gl_Position=vec4(pos,0.,1.);}'
 const FRAGMENT = `precision highp float;varying vec2 uv;uniform sampler2D pano;uniform float aspect,yaw,pitch,fov,gradeEnabled,dehaze;uniform sampler2D colorLut;vec3 grade(vec3 c){float b=c.b*31.;float lo=floor(b),hi=min(lo+1.,31.);vec2 p1=vec2((lo*32.+c.r*31.+.5)/1024.,(c.g*31.+.5)/32.);vec2 p2=vec2((hi*32.+c.r*31.+.5)/1024.,(c.g*31.+.5)/32.);return mix(texture2D(colorLut,p1).rgb,texture2D(colorLut,p2).rgb,b-lo);}void main(){float t=tan(fov*.5);vec3 d=normalize(vec3(uv.x*aspect*t,uv.y*t,1.));float cp=cos(pitch),sp=sin(pitch);d=vec3(d.x,d.y*cp+d.z*sp,d.z*cp-d.y*sp);float cy=cos(yaw),sy=sin(yaw);d=vec3(d.x*cy+d.z*sy,d.y,d.z*cy-d.x*sy);vec2 p=vec2(fract(atan(d.x,d.z)/6.2831853+.5),.5-asin(clamp(d.y,-1.,1.))/3.14159265);vec3 c=texture2D(pano,p).rgb;float dark=min(c.r,min(c.g,c.b))/.96;float transmission=max(.70,1.-dehaze*dark);c=clamp((c-vec3(.96))/transmission+vec3(.96),0.,1.);float luminance=dot(c,vec3(.2126,.7152,.0722));c=clamp(mix(vec3(luminance),c,1.+dehaze*.18),0.,1.);gl_FragColor=vec4(mix(c,grade(c),gradeEnabled),1.);}`
 
@@ -26,9 +42,18 @@ function gradeName(scene: TourSceneView | undefined): string {
   return GRADES.includes(scene?.grade as (typeof GRADES)[number]) ? scene!.grade : 'daylight'
 }
 
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value))
+}
+
 export function mountTourViewer(
   root: HTMLElement,
-  options: { title: string; scenes: TourSceneView[] },
+  options: {
+    title: string
+    scenes: TourSceneView[]
+    /** Shown to signed-in editors only. Resolves true when the view was saved. */
+    onSaveStartView?: (index: number, view: TourStartView) => Promise<boolean>
+  },
 ): () => void {
   const scenes = options.scenes
   root.replaceChildren()
@@ -36,6 +61,10 @@ export function mountTourViewer(
   const canvas = document.createElement('canvas')
   canvas.id = 'view'
   canvas.setAttribute('aria-label', `Interactive 360 degree ${options.title} panorama`)
+  const fade = document.createElement('canvas')
+  fade.className = 'fade'
+  fade.setAttribute('aria-hidden', 'true')
+  fade.hidden = true
 
   const header = document.createElement('header')
   const brand = document.createElement('div')
@@ -55,20 +84,6 @@ export function mountTourViewer(
 
   const tools = document.createElement('div')
   tools.className = 'tools'
-  const galleryButton = document.createElement('button')
-  galleryButton.id = 'gallery'
-  galleryButton.type = 'button'
-  galleryButton.setAttribute('aria-expanded', 'false')
-  toolControl(
-    galleryButton,
-    'Explore views',
-    toolIcon([
-      'M4 4h6.5v6.5H4z',
-      'M13.5 4H20v6.5h-6.5z',
-      'M4 13.5h6.5V20H4z',
-      'M13.5 13.5H20V20h-6.5z',
-    ]),
-  )
   const allVillas = document.createElement('a')
   allVillas.href = '/tours'
   toolControl(
@@ -84,7 +99,21 @@ export function mountTourViewer(
     'Fullscreen',
     toolIcon(['M9 4H4v5', 'M15 4h5v5', 'M9 20H4v-5', 'M15 20h5v-5']),
   )
-  tools.append(galleryButton, allVillas, fullButton)
+  tools.append(allVillas, fullButton)
+
+  let saveButton: HTMLButtonElement | null = null
+  let saveLabel: HTMLSpanElement | null = null
+  if (options.onSaveStartView) {
+    saveButton = document.createElement('button')
+    saveButton.id = 'save-start'
+    saveButton.type = 'button'
+    saveLabel = toolControl(
+      saveButton,
+      'Set start view',
+      toolIcon(['M12 3v4', 'M12 17v4', 'M3 12h4', 'M17 12h4', 'M12 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6z']),
+    )
+    tools.prepend(saveButton)
+  }
   header.append(brand, tools)
 
   const loading = document.createElement('div')
@@ -110,49 +139,103 @@ export function mountTourViewer(
   const hint = document.createElement('div')
   hint.className = 'hint'
   hint.id = 'hint'
+  hint.setAttribute('aria-hidden', 'true')
   hint.innerHTML =
-    '<span class="hint-orb" aria-hidden="true"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18"/><ellipse cx="24" cy="24" rx="8" ry="18"/><ellipse cx="24" cy="24" rx="18" ry="7"/><path d="M6 24h36M24 6v36"/></svg></span><span class="hint-copy"><strong class="hint-desktop">Drag to look around</strong><strong class="hint-mobile">Swipe to look around</strong><span class="hint-desktop">Scroll to zoom</span><span class="hint-mobile">Use + and − to zoom</span></span>'
+    '<svg class="hint-icon hint-desktop" viewBox="0 0 48 32"><rect x="18" y="4" width="12" height="20" rx="6"/><path d="M24 8v4"/><path d="M12 14l-5 0M9.5 11.5 7 14l2.5 2.5"/><path d="M36 14l5 0M38.5 11.5 41 14l-2.5 2.5"/></svg>' +
+    '<svg class="hint-icon hint-mobile" viewBox="0 0 48 32"><path d="M21 26v-12a2.5 2.5 0 0 1 5 0v6l5 1.2a3 3 0 0 1 2.2 3.4L32.4 28"/><path d="M11 10h-5M8.5 7.5 6 10l2.5 2.5"/><path d="M37 10h5M39.5 7.5 42 10l-2.5 2.5"/></svg>' +
+    '<span class="hint-desktop">Click and drag<br>to explore</span><span class="hint-mobile">Swipe to explore</span>'
 
   const controls = document.createElement('nav')
   controls.className = 'controls'
   controls.setAttribute('aria-label', 'Tour controls')
-  const prev = button('prev', 'Previous view')
+  const prev = button('prev', '‹', 'Previous view')
   const zoomOut = button('out', '−', 'Zoom out')
   const reset = button('reset', '↺', 'Reset direction')
   const zoomIn = button('in', '+', 'Zoom in')
-  const next = button('next', 'Next view')
-  controls.append(prev, zoomOut, reset, zoomIn, next)
+  const next = button('next', '›', 'Next view')
+  const roomsToggle = button('rooms', '▾', 'Hide rooms')
+  roomsToggle.setAttribute('aria-controls', 'strip')
+  roomsToggle.setAttribute('aria-expanded', 'true')
+  controls.append(prev, zoomOut, reset, zoomIn, next, roomsToggle)
 
-  const panel = document.createElement('aside')
-  panel.id = 'panel'
-  panel.hidden = true
-  const panelHead = document.createElement('div')
-  panelHead.className = 'panelhead'
-  const panelCopy = document.createElement('div')
-  const panelTitle = document.createElement('h2')
-  panelTitle.textContent = `Explore ${options.title}`
-  const panelMeta = document.createElement('p')
-  panelMeta.textContent = `${scenes.length} viewpoints · Capture sequence`
-  panelCopy.append(panelTitle, panelMeta)
-  const close = button('close', '✕', 'Close views')
-  panelHead.append(panelCopy, close)
-  const views = document.createElement('div')
-  views.id = 'views'
-  panel.append(panelHead, views)
+  const strip = document.createElement('nav')
+  strip.id = 'strip'
+  strip.className = 'strip'
+  strip.setAttribute('aria-label', 'Rooms')
 
-  root.append(canvas, header, loading, errorBox, location, hint, controls, panel)
+  root.append(canvas, fade, header, loading, errorBox, location, hint, controls, strip)
 
   let yaw = 0
   let pitch = 0
-  let fov = 110
+  let fov = DEFAULT_FOV_LANDSCAPE
   let current = 0
   let request = 0
   let textureReady = false
-  const viewButtons: HTMLButtonElement[] = []
+  let loadingTimer = 0
+  const stripButtons: HTMLButtonElement[] = []
+
+  /** Decoded panoramas for the current view and its neighbours, so switching is instant. */
+  const imageCache = new Map<string, Promise<HTMLImageElement>>()
+  function cachedImage(src: string) {
+    let image = imageCache.get(src)
+    if (!image) {
+      image = loadImage(src)
+      image.catch(() => imageCache.delete(src))
+      imageCache.set(src, image)
+    }
+    return image
+  }
+  function preloadAround(index: number) {
+    const keep = new Set<string>()
+    for (const offset of [0, 1, -1, 2]) {
+      const scene = scenes[index + offset]
+      if (!scene) continue
+      keep.add(scene.image)
+      void cachedImage(scene.image).catch(() => {})
+    }
+    for (const src of imageCache.keys()) if (!keep.has(src)) imageCache.delete(src)
+  }
+
+  function aspect() {
+    return root.clientHeight ? root.clientWidth / root.clientHeight : 1
+  }
+  function defaultFov() {
+    return aspect() < 1 ? DEFAULT_FOV_PORTRAIT : DEFAULT_FOV_LANDSCAPE
+  }
+  /** Vertical FOV actually rendered: the chosen zoom, capped so the horizontal span stays natural. */
+  function effectiveFov() {
+    const capped = (2 * Math.atan(Math.tan((MAX_HORIZONTAL_FOV * Math.PI) / 360) / aspect()) * 180) / Math.PI
+    return Math.min(fov, capped)
+  }
+  function setFov(value: number) {
+    fov = clamp(value, MIN_FOV, MAX_FOV)
+    // Zooming out past the horizontal cap does nothing visible; keep fov at the cap so zoom-in responds at once.
+    fov = Math.min(fov, Math.max(MIN_FOV, effectiveFov()))
+  }
+  function applyStart(index: number) {
+    const scene = scenes[index]
+    yaw = scene?.initialYaw ?? 0
+    pitch = scene?.initialPitch ?? 0
+    setFov(scene?.initialFov ?? defaultFov())
+  }
 
   function fail(message: string) {
+    window.clearTimeout(loadingTimer)
     errorBox.textContent = message
     errorBox.hidden = false
+    loading.hidden = true
+  }
+
+  function beginLoading(token: number) {
+    window.clearTimeout(loadingTimer)
+    errorBox.hidden = true
+    loadingTimer = window.setTimeout(() => {
+      if (token === request) loading.hidden = false
+    }, LOADING_DELAY_MS)
+  }
+
+  function endLoading() {
+    window.clearTimeout(loadingTimer)
     loading.hidden = true
   }
 
@@ -161,9 +244,20 @@ export function mountTourViewer(
     return [scene?.zone || 'Exterior', scene?.title || 'View']
   }
 
-  function showPanel(show: boolean) {
-    panel.hidden = !show
-    galleryButton.setAttribute('aria-expanded', String(show))
+  // Keep the controls sitting just above the strip, whatever its rendered height.
+  const stripSize = new ResizeObserver(() => {
+    root.style.setProperty('--strip-open-height', `${strip.offsetHeight}px`)
+  })
+  stripSize.observe(strip)
+
+  let roomsHidden = false
+  function showRooms(show: boolean) {
+    roomsHidden = !show
+    root.classList.toggle('strip-hidden', !show)
+    roomsToggle.textContent = show ? '▾' : '▴'
+    roomsToggle.setAttribute('aria-label', show ? 'Hide rooms' : 'Show rooms')
+    roomsToggle.setAttribute('aria-expanded', String(show))
+    if (show) stripButtons[current]?.scrollIntoView({ block: 'nearest', inline: 'center' })
   }
 
   function remember(index: number) {
@@ -176,17 +270,21 @@ export function mountTourViewer(
       : `View ${index + 1} of ${scenes.length}`
     prev.disabled = index === 0
     next.disabled = index === scenes.length - 1
-    viewButtons.forEach((item, buttonIndex) => {
+    stripButtons.forEach((item, buttonIndex) => {
       const selected = buttonIndex === index
       item.classList.toggle('active', selected)
       if (selected) item.setAttribute('aria-current', 'true')
       else item.removeAttribute('aria-current')
     })
+    if (!roomsHidden) {
+      stripButtons[index]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+    }
     const url = `${window.location.pathname}${window.location.search}#view=${index + 1}`
     window.history.replaceState(null, '', url)
   }
 
-  scenes.forEach((scene, index) => {
+  function thumbButton(index: number, captionText: string) {
+    const scene = scenes[index]
     const item = document.createElement('button')
     item.type = 'button'
     const image = document.createElement('img')
@@ -194,20 +292,33 @@ export function mountTourViewer(
     image.alt = ''
     image.loading = 'lazy'
     const caption = document.createElement('span')
-    caption.textContent = `${index + 1}. ${label(index)[1]}`
+    caption.textContent = captionText
     item.append(image, caption)
-    item.onclick = () => {
-      load(index)
-      showPanel(false)
+    return item
+  }
+
+  let lastZone = ''
+  scenes.forEach((_scene, index) => {
+    const zone = label(index)[0]
+    if (zone !== lastZone) {
+      lastZone = zone
+      const zoneLabel = document.createElement('span')
+      zoneLabel.className = 'strip-zone'
+      zoneLabel.textContent = zone
+      strip.append(zoneLabel)
     }
-    views.append(item)
-    viewButtons.push(item)
+    const thumb = thumbButton(index, label(index)[1])
+    thumb.className = 'strip-thumb'
+    thumb.setAttribute('aria-label', `${index + 1}. ${zone}: ${label(index)[1]}`)
+    thumb.onclick = () => load(index)
+    strip.append(thumb)
+    stripButtons.push(thumb)
   })
 
   let draw = () => {}
   let load = (index: number) => {
     if (!scenes.length) return
-    current = Math.max(0, Math.min(scenes.length - 1, index))
+    current = clamp(index, 0, scenes.length - 1)
     remember(current)
   }
 
@@ -219,22 +330,19 @@ export function mountTourViewer(
     fail('This browser cannot display panoramas. Please try Chrome or Safari.')
   }
 
-  galleryButton.onclick = () => showPanel(panel.hidden)
-  close.onclick = () => showPanel(false)
   prev.onclick = () => load(current - 1)
   next.onclick = () => load(current + 1)
+  roomsToggle.onclick = () => showRooms(roomsHidden)
   zoomIn.onclick = () => {
-    fov = Math.max(40, fov - 10)
+    setFov(fov - 10)
     draw()
   }
   zoomOut.onclick = () => {
-    fov = Math.min(110, fov + 10)
+    setFov(fov + 10)
     draw()
   }
   reset.onclick = () => {
-    yaw = 0
-    pitch = 0
-    fov = 110
+    applyStart(current)
     draw()
   }
   fullButton.onclick = async () => {
@@ -246,32 +354,90 @@ export function mountTourViewer(
       fullButton.title = 'Fullscreen unavailable'
     }
   }
+  let saveTimer = 0
+  if (saveButton && saveLabel && options.onSaveStartView) {
+    const save = options.onSaveStartView
+    const saveText = saveLabel
+    saveButton.onclick = async () => {
+      const index = current
+      const view = {
+        yaw: Math.atan2(Math.sin(yaw), Math.cos(yaw)),
+        pitch,
+        fov: Math.round(fov),
+      }
+      saveText.textContent = 'Saving…'
+      const ok = await save(index, view).catch(() => false)
+      if (ok) {
+        scenes[index].initialYaw = view.yaw
+        scenes[index].initialPitch = view.pitch
+        scenes[index].initialFov = view.fov
+      }
+      saveText.textContent = ok ? 'Start view saved' : 'Could not save'
+      window.clearTimeout(saveTimer)
+      saveTimer = window.setTimeout(() => {
+        saveText.textContent = 'Set start view'
+      }, 2500)
+    }
+  }
 
-  let drag: [number, number] | null = null
-  const onPointerDown = (event: PointerEvent) => {
-    drag = [event.clientX, event.clientY]
-    canvas.setPointerCapture(event.pointerId)
+  const hintTimer = window.setTimeout(hideHint, 6000)
+  function hideHint() {
+    window.clearTimeout(hintTimer)
     hint.style.opacity = '0'
   }
+
+  // One finger or mouse drags the view; two fingers pinch to zoom.
+  const pointers = new Map<number, { x: number; y: number }>()
+  let pinch: { distance: number; fov: number } | null = null
+  let stripTimer = 0
+  function pointerDistance() {
+    const [a, b] = [...pointers.values()]
+    return Math.hypot(a.x - b.x, a.y - b.y)
+  }
+  const onPointerDown = (event: PointerEvent) => {
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
+    canvas.setPointerCapture(event.pointerId)
+    hideHint()
+    window.clearTimeout(stripTimer)
+    root.classList.add('dragging')
+    if (pointers.size === 2) pinch = { distance: pointerDistance(), fov }
+  }
   const onPointerMove = (event: PointerEvent) => {
-    if (!drag) return
-    yaw -= (event.clientX - drag[0]) * 0.004
-    pitch = Math.max(-1.45, Math.min(1.45, pitch + (event.clientY - drag[1]) * 0.004))
-    drag = [event.clientX, event.clientY]
+    const last = pointers.get(event.pointerId)
+    if (!last) return
+    const dx = event.clientX - last.x
+    const dy = event.clientY - last.y
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
+    if (pointers.size >= 2) {
+      if (!pinch) return
+      const distance = pointerDistance()
+      if (distance > 0) setFov((pinch.fov * pinch.distance) / distance)
+    } else {
+      // Move the panorama at the same speed as the finger, whatever the zoom.
+      const radiansPerPixel = ((effectiveFov() * Math.PI) / 180) / Math.max(1, root.clientHeight)
+      yaw -= dx * radiansPerPixel
+      pitch = clamp(pitch + dy * radiansPerPixel, -1.45, 1.45)
+    }
     draw()
   }
-  const onPointerUp = () => {
-    drag = null
+  const onPointerUp = (event: PointerEvent) => {
+    pointers.delete(event.pointerId)
+    if (pointers.size < 2) pinch = null
+    if (pointers.size === 0) {
+      window.clearTimeout(stripTimer)
+      stripTimer = window.setTimeout(() => root.classList.remove('dragging'), 600)
+    }
   }
   const onWheel = (event: WheelEvent) => {
     event.preventDefault()
-    fov = Math.max(40, Math.min(110, fov + event.deltaY * 0.04))
+    setFov(fov + event.deltaY * 0.04)
     draw()
   }
-  const onResize = () => draw()
+  const onResize = () => {
+    setFov(fov)
+    draw()
+  }
   const onKey = (event: KeyboardEvent) => {
-    if (event.key === 'Escape') showPanel(false)
-    if (!panel.hidden) return
     if (event.target instanceof HTMLElement && event.target.tagName === 'BUTTON') return
     if (event.key === 'ArrowLeft') yaw -= 0.1
     if (event.key === 'ArrowRight') yaw += 0.1
@@ -291,6 +457,10 @@ export function mountTourViewer(
   if (!scenes.length) fail('This villa has no active views.')
 
   return () => {
+    window.clearTimeout(loadingTimer)
+    window.clearTimeout(stripTimer)
+    window.clearTimeout(saveTimer)
+    window.clearTimeout(hintTimer)
     canvas.removeEventListener('pointerdown', onPointerDown)
     canvas.removeEventListener('pointermove', onPointerMove)
     canvas.removeEventListener('pointerup', onPointerUp)
@@ -298,7 +468,15 @@ export function mountTourViewer(
     canvas.removeEventListener('wheel', onWheel)
     window.removeEventListener('resize', onResize)
     window.removeEventListener('keydown', onKey)
+    stripSize.disconnect()
+    imageCache.clear()
+    root.style.removeProperty('--strip-open-height')
     root.replaceChildren()
+  }
+
+  function startIndex() {
+    const start = Number(window.location.hash.match(/view=(\d+)/)?.[1] || 1)
+    return clamp(start - 1, 0, Math.max(0, scenes.length - 1))
   }
 
   function mountWebGl(context: WebGLRenderingContext) {
@@ -382,7 +560,7 @@ export function mountTourViewer(
       ),
     )
 
-    draw = () => {
+    function render() {
       const ratio = Math.min(window.devicePixelRatio || 1, 2)
       const width = Math.round(root.clientWidth * ratio)
       const height = Math.round(root.clientHeight * ratio)
@@ -402,45 +580,81 @@ export function mountTourViewer(
       context.uniform1f(uniforms.aspect, width / height)
       context.uniform1f(uniforms.yaw, yaw)
       context.uniform1f(uniforms.pitch, pitch)
-      context.uniform1f(uniforms.fov, (fov * Math.PI) / 180)
+      context.uniform1f(uniforms.fov, (effectiveFov() * Math.PI) / 180)
       context.drawArrays(context.TRIANGLES, 0, 6)
+    }
+
+    let frame = 0
+    draw = () => {
+      if (frame) return
+      frame = requestAnimationFrame(() => {
+        frame = 0
+        render()
+      })
+    }
+
+    const fadeContext = fade.getContext('2d')
+    /** Freeze the outgoing view on top so the next one can fade in underneath. */
+    function holdFrame() {
+      if (!fadeContext || !textureReady) return false
+      window.clearTimeout(fadeTimer)
+      render()
+      fade.width = canvas.width
+      fade.height = canvas.height
+      fadeContext.drawImage(canvas, 0, 0)
+      fade.style.transition = 'none'
+      fade.style.opacity = '1'
+      fade.hidden = false
+      return true
+    }
+    let fadeTimer = 0
+    function releaseFrame() {
+      requestAnimationFrame(() => {
+        fade.style.transition = `opacity ${FADE_MS}ms ease`
+        fade.style.opacity = '0'
+      })
+      // A timer rather than transitionend, which never fires in a background tab.
+      window.clearTimeout(fadeTimer)
+      fadeTimer = window.setTimeout(() => {
+        fade.hidden = true
+      }, FADE_MS + 100)
     }
 
     load = (index: number) => {
       if (!scenes.length) return
-      const nextIndex = Math.max(0, Math.min(scenes.length - 1, index))
+      const nextIndex = clamp(index, 0, scenes.length - 1)
       const token = ++request
-      loading.hidden = false
-      errorBox.hidden = true
-      const image = new Image()
-      image.crossOrigin = 'anonymous'
-      image.onload = () => {
-        if (token !== request) return
-        try {
-          context.activeTexture(context.TEXTURE0)
-          context.bindTexture(context.TEXTURE_2D, texture)
-          context.texImage2D(context.TEXTURE_2D, 0, context.RGB, context.RGB, context.UNSIGNED_BYTE, image)
+      beginLoading(token)
+      cachedImage(scenes[nextIndex].image)
+        .then((image) => {
+          if (token !== request) return
+          const fading = holdFrame()
+          try {
+            context.activeTexture(context.TEXTURE0)
+            context.bindTexture(context.TEXTURE_2D, texture)
+            context.texImage2D(context.TEXTURE_2D, 0, context.RGB, context.RGB, context.UNSIGNED_BYTE, image)
+          } catch {
+            fail('This panorama could not load. Please try another view.')
+            return
+          }
           textureReady = true
           current = nextIndex
-          yaw = 0
-          pitch = 0
-          fov = 110
-          draw()
-          loading.hidden = true
+          applyStart(nextIndex)
+          render()
+          endLoading()
           remember(nextIndex)
-        } catch {
-          fail('This panorama could not load. Please try another view.')
-        }
-      }
-      image.onerror = () => {
-        if (token === request) fail('Could not load this view. Check your connection and choose another view.')
-      }
-      image.src = scenes[nextIndex].image
+          if (fading) releaseFrame()
+          preloadAround(nextIndex)
+        })
+        .catch(() => {
+          if (token === request) fail('Could not load this view. Check your connection and choose another view.')
+        })
     }
 
-    const start = Number(window.location.hash.match(/view=(\d+)/)?.[1] || 1)
+    const start = startIndex()
+    preloadAround(start)
     lutsReady
-      .then(() => load(Math.max(0, Math.min(scenes.length - 1, start - 1))))
+      .then(() => load(start))
       .catch(() => fail('The tour could not load. Please refresh to try again.'))
   }
 
@@ -516,14 +730,15 @@ export function mountTourViewer(
         if (!pixels || !gradePixels) return
         const width = Math.min(800, root.clientWidth)
         const height = Math.round((width * root.clientHeight) / root.clientWidth)
-        const key = [width, height, fov].join(',')
+        const viewFov = effectiveFov()
+        const key = [width, height, viewFov].join(',')
         if (key !== lastKey) {
           lastKey = key
           canvas.width = width
           canvas.height = height
           frame = context.createImageData(width, height)
           rays = new Float32Array(width * height * 3)
-          const tan = Math.tan((fov * Math.PI) / 360)
+          const tan = Math.tan((viewFov * Math.PI) / 360)
           const aspect = width / height
           let offset = 0
           for (let y = 0; y < height; y += 1) {
@@ -585,9 +800,8 @@ export function mountTourViewer(
       if (!scenes.length) return
       const nextIndex = Math.max(0, Math.min(scenes.length - 1, index))
       const token = ++request
-      loading.hidden = false
-      errorBox.hidden = true
-      void loadImage(scenes[nextIndex].image)
+      beginLoading(token)
+      void cachedImage(scenes[nextIndex].image)
         .then((image) => {
           if (token !== request) return
           const scratch = document.createElement('canvas')
@@ -600,20 +814,20 @@ export function mountTourViewer(
           const lut = lutData[gradeName(scenes[nextIndex])] ?? lutData.daylight
           gradePixels = lut ? colourPixels(pixels, lut, DEHAZE) : pixels
           current = nextIndex
-          yaw = 0
-          pitch = 0
-          fov = 110
+          applyStart(nextIndex)
           textureReady = true
           draw()
-          loading.hidden = true
+          endLoading()
           remember(nextIndex)
+          preloadAround(nextIndex)
         })
         .catch(() => {
           if (token === request) fail('Could not load this view. Check your connection and choose another view.')
         })
     }
 
-    const start = Number(window.location.hash.match(/view=(\d+)/)?.[1] || 1)
+    const start = startIndex()
+    preloadAround(start)
     void Promise.all(
       GRADES.map(async (name) => {
         const image = await loadImage(`/tours/grades/${name}.png`)
@@ -626,7 +840,7 @@ export function mountTourViewer(
         lutData[name] = scratchContext.getImageData(0, 0, 1024, 32).data
       }),
     )
-      .then(() => load(Math.max(0, Math.min(scenes.length - 1, start - 1))))
+      .then(() => load(start))
       .catch(() => fail('The tour could not load. Please refresh to try again.'))
   }
 }

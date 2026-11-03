@@ -797,6 +797,9 @@ export type Database = {
           active: boolean
           capture: string | null
           source_key: string
+          initial_yaw: number | null
+          initial_pitch: number | null
+          initial_fov: number | null
           created_at: string
           updated_at: string
         }
@@ -812,6 +815,9 @@ export type Database = {
           active?: boolean
           capture?: string | null
           source_key: string
+          initial_yaw?: number | null
+          initial_pitch?: number | null
+          initial_fov?: number | null
         }
         Update: Partial<Database['public']['Tables']['virtual_tour_scenes']['Insert']>
         Relationships: []

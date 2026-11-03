@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Seo } from '@/components/Seo'
 import { getSupabase } from '@/integrations/supabase/client'
-import { mountTourViewer, type TourSceneView } from '@/tours/mountTourViewer'
+import { mountTourViewer, type TourSceneView, type TourStartView } from '@/tours/mountTourViewer'
 import '@/tours/villa-tour.css'
 
 type LoadedTour = {
@@ -11,11 +11,36 @@ type LoadedTour = {
   scenes: TourSceneView[]
 }
 
+async function saveStartView(sceneId: string | undefined, view: TourStartView): Promise<boolean> {
+  const supabase = getSupabase()
+  if (!supabase || !sceneId) return false
+  // Row-level security only lets CMS editors update scenes; anyone else gets zero rows back.
+  const { data, error } = await supabase
+    .from('virtual_tour_scenes')
+    .update({ initial_yaw: view.yaw, initial_pitch: view.pitch, initial_fov: view.fov })
+    .eq('id', sceneId)
+    .select('id')
+  return !error && (data?.length ?? 0) > 0
+}
+
 export function TourPage() {
   const { slug = '' } = useParams()
   const [tour, setTour] = useState<LoadedTour | null>(null)
   const [missing, setMissing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [canEdit, setCanEdit] = useState(false)
+
+  useEffect(() => {
+    const supabase = getSupabase()
+    if (!supabase) return
+    let cancelled = false
+    void supabase.auth.getSession().then(({ data }) => {
+      if (!cancelled) setCanEdit(Boolean(data.session))
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     const supabase = getSupabase()
@@ -44,7 +69,7 @@ export function TourPage() {
       }
       const { data: scenes, error: sceneError } = await supabase
         .from('virtual_tour_scenes')
-        .select('title, zone, grade, image_url, thumb_url, capture, sort_order')
+        .select('*')
         .eq('tour_id', row.id)
         .eq('active', true)
         .order('sort_order')
@@ -58,12 +83,16 @@ export function TourPage() {
         title: row.title,
         summary: row.summary,
         scenes: (scenes ?? []).map((scene) => ({
+          id: scene.id,
           title: scene.title,
           zone: scene.zone,
           grade: scene.grade,
           image: scene.image_url,
           thumb: scene.thumb_url,
           capture: scene.capture ?? '',
+          initialYaw: scene.initial_yaw ?? null,
+          initialPitch: scene.initial_pitch ?? null,
+          initialFov: scene.initial_fov ?? null,
         })),
       })
     })()
@@ -76,8 +105,14 @@ export function TourPage() {
     if (!tour) return
     const root = document.getElementById('villa-tour-root')
     if (!root) return
-    return mountTourViewer(root, { title: tour.title, scenes: tour.scenes })
-  }, [tour])
+    return mountTourViewer(root, {
+      title: tour.title,
+      scenes: tour.scenes,
+      onSaveStartView: canEdit
+        ? (index, view) => saveStartView(tour.scenes[index]?.id, view)
+        : undefined,
+    })
+  }, [tour, canEdit])
 
   if (!tour) {
     return (
