@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 import { X } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useLocation } from 'react-router-dom'
 import { buttonClassNames } from '@/components/Button'
@@ -8,9 +8,58 @@ import { CampaignPopupLeadForm } from '@/components/CampaignPopupLeadForm'
 import { FormSuccessPanel } from '@/components/FormSuccessPanel'
 import { useCms } from '@/contexts/CmsContext'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { getSupabase } from '@/integrations/supabase/client'
 import type { CampaignPopup } from '@/lib/campaignPopup'
 import { markPopupShownThisSession, pickPopupForPage } from '@/lib/campaignPopup'
+
+/** Form column width on desktop; the image column takes whatever the image's shape needs. */
+const FORM_WIDTH = 416
+const MAX_DIALOG_HEIGHT = 720
+const MAX_DIALOG_WIDTH = 1120
+/** Wider than this, the image sits above the form instead of beside it. */
+const SIDE_BY_SIDE_MAX_RATIO = 1.2
+
+type Layout = {
+  dialog: CSSProperties
+  image: CSSProperties
+  sideBySide: boolean
+}
+
+/** Size the dialog around the uploaded image so it is never cropped. */
+function desktopLayout(ratio: number, viewportWidth: number, viewportHeight: number): Layout {
+  const maxHeight = Math.min(viewportHeight * 0.9, MAX_DIALOG_HEIGHT)
+  const maxWidth = Math.min(viewportWidth - 48, MAX_DIALOG_WIDTH)
+  if (ratio <= SIDE_BY_SIDE_MAX_RATIO) {
+    let height = maxHeight
+    let imageWidth = height * ratio
+    if (imageWidth + FORM_WIDTH > maxWidth) {
+      imageWidth = Math.max(0, maxWidth - FORM_WIDTH)
+      height = imageWidth / ratio
+    }
+    return {
+      dialog: { width: imageWidth + FORM_WIDTH, height: Math.max(height, Math.min(maxHeight, 520)) },
+      image: { width: imageWidth },
+      sideBySide: true,
+    }
+  }
+  const width = Math.min(maxWidth, 760)
+  return {
+    dialog: { width, maxHeight },
+    image: { height: Math.min(width / ratio, maxHeight * 0.45) },
+    sideBySide: false,
+  }
+}
+
+function useViewportSize() {
+  const [size, setSize] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }))
+  useEffect(() => {
+    const onResize = () => setSize({ width: window.innerWidth, height: window.innerHeight })
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+  return size
+}
 
 export function CampaignPopupOverlay() {
   const { pathname } = useLocation()
@@ -20,6 +69,11 @@ export function CampaignPopupOverlay() {
   const [active, setActive] = useState<CampaignPopup | null>(null)
   const [open, setOpen] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  // Width ÷ height of the uploaded image, read once it loads. 3:4 until then.
+  const [imageRatio, setImageRatio] = useState(3 / 4)
+  const [step, setStep] = useState<1 | 2>(1)
+  const isDesktop = useMediaQuery('(min-width: 768px)')
+  const viewport = useViewportSize()
 
   const loadPopups = useCallback(async () => {
     const sb = getSupabase()
@@ -40,6 +94,7 @@ export function CampaignPopupOverlay() {
     setOpen(false)
     setActive(null)
     setSubmitted(false)
+    setStep(1)
     const next = pickPopupForPage(popups, pathname)
     if (!next) return
 
@@ -87,6 +142,7 @@ export function CampaignPopupOverlay() {
   const close = useCallback(() => {
     setOpen(false)
     setSubmitted(false)
+    setStep(1)
   }, [])
 
   useEffect(() => {
@@ -113,6 +169,9 @@ export function CampaignPopupOverlay() {
     ? offplanProjects.find((project) => project.id === active.project_id) ?? null
     : null
   const salesperson = launch?.salespersonId ? salespeopleById[launch.salespersonId] ?? null : null
+  const layout = isDesktop ? desktopLayout(imageRatio, viewport.width, viewport.height) : null
+  // On phones the second form step drops the image so the questions have room.
+  const showImage = Boolean(active.image_url) && (isDesktop || step === 1 || submitted)
 
   return createPortal(
     <>
@@ -126,10 +185,12 @@ export function CampaignPopupOverlay() {
         role="dialog"
         aria-modal="true"
         aria-labelledby="campaign-popup-title"
+        style={layout?.dialog}
         className={clsx(
-          'fixed z-[250] flex w-full max-h-[min(94dvh,720px)] flex-col overflow-hidden border border-ink/10 bg-[#FAF7F2] text-terracotta shadow-[0_-16px_48px_rgba(28,20,18,0.2)]',
-          'inset-x-0 bottom-0 rounded-t-[1.25rem]',
-          'sm:inset-auto sm:left-1/2 sm:top-1/2 sm:w-[min(100%-2rem,56rem)] sm:max-w-4xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl sm:shadow-2xl',
+          'fixed z-[250] flex flex-col overflow-hidden border border-ink/10 bg-[#FAF7F2] text-terracotta',
+          isDesktop
+            ? 'left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-2xl shadow-2xl'
+            : 'inset-x-0 bottom-0 max-h-[94dvh] w-full rounded-t-[1.25rem] shadow-[0_-16px_48px_rgba(28,20,18,0.2)]',
         )}
       >
         <button
@@ -141,18 +202,47 @@ export function CampaignPopupOverlay() {
           <X className="size-5" strokeWidth={2} aria-hidden />
         </button>
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto md:grid-cols-2 md:grid-rows-1 md:overflow-hidden">
-          <div className="relative h-[min(42vh,300px)] overflow-hidden bg-ink md:h-auto md:self-stretch">
-            <img
-              src={active.image_url}
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover object-center"
-            />
-          </div>
+        <div
+          className={clsx(
+            'flex min-h-0 flex-1',
+            layout?.sideBySide ? 'flex-row' : 'flex-col overflow-y-auto',
+          )}
+        >
+          {showImage ? (
+            <div
+              className={clsx(
+                'relative shrink-0 overflow-hidden bg-ink',
+                layout?.sideBySide ? 'h-full' : 'w-full',
+              )}
+              style={
+                layout
+                  ? layout.image
+                  : { height: `min(${100 / imageRatio}vw, 40dvh)` }
+              }
+            >
+              {/* Blurred fill behind the whole image, only visible when the box is not the image's exact shape. */}
+              <img
+                src={active.image_url}
+                alt=""
+                aria-hidden
+                className="absolute inset-0 h-full w-full scale-110 object-cover blur-xl brightness-75"
+              />
+              <img
+                src={active.image_url}
+                alt=""
+                className="relative h-full w-full object-contain"
+                onLoad={(event) => {
+                  const { naturalWidth, naturalHeight } = event.currentTarget
+                  if (naturalWidth && naturalHeight) setImageRatio(naturalWidth / naturalHeight)
+                }}
+              />
+            </div>
+          ) : null}
 
           <div
             className={clsx(
-              'flex min-h-[12rem] flex-col p-5 sm:p-6 md:min-h-0 md:overflow-y-auto',
+              'flex min-w-0 flex-1 flex-col p-5 sm:p-6',
+              layout?.sideBySide && 'min-h-0 overflow-y-auto',
               submitted ? 'justify-center' : 'gap-4',
             )}
           >
@@ -194,7 +284,7 @@ export function CampaignPopupOverlay() {
                   >
                     {active.title}
                   </h2>
-                  {active.description?.trim() ? (
+                  {active.description?.trim() && step === 1 ? (
                     <p className="mt-2 font-sans text-sm leading-relaxed text-terracotta/90 sm:text-[0.95rem]">
                       {active.description}
                     </p>
@@ -210,6 +300,8 @@ export function CampaignPopupOverlay() {
                   salespersonId={salesperson?.id ?? null}
                   salespersonName={salesperson?.name ?? null}
                   compact
+                  stepped={!isDesktop}
+                  onStepChange={setStep}
                   onSuccess={() => setSubmitted(true)}
                 />
               </>

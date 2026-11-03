@@ -27,6 +27,9 @@ type Props = {
   salespersonName?: string | null
   onSuccess?: () => void
   compact?: boolean
+  /** Split into contact details, then the qualification questions (used on phones). */
+  stepped?: boolean
+  onStepChange?: (step: 1 | 2) => void
 }
 
 export function CampaignPopupLeadForm({
@@ -40,6 +43,8 @@ export function CampaignPopupLeadForm({
   salespersonName,
   onSuccess,
   compact,
+  stepped,
+  onStepChange,
 }: Props) {
   const { t } = useLocalePreferences()
   const [name, setName] = useState('')
@@ -50,16 +55,31 @@ export function CampaignPopupLeadForm({
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  const [step, setStep] = useState<1 | 2>(1)
+  const [detailsAttempted, setDetailsAttempted] = useState(false)
+
+  function goToStep(next: 1 | 2) {
+    setStep(next)
+    onStepChange?.(next)
+  }
 
   const errors = useMemo(() => {
     const n = name.trim()
     const em = email.trim()
+    const shown = attempted || detailsAttempted
     return {
-      name: attempted && n.length === 0,
-      emailRequired: attempted && em.length === 0,
-      emailFormat: attempted && em.length > 0 && !isValidEmail(em),
+      name: shown && n.length === 0,
+      emailRequired: shown && em.length === 0,
+      emailFormat: shown && em.length > 0 && !isValidEmail(em),
     }
-  }, [attempted, name, email])
+  }, [attempted, detailsAttempted, name, email])
+
+  const detailsValid = name.trim().length > 0 && isValidEmail(email)
+
+  function continueToQuestions() {
+    setDetailsAttempted(true)
+    if (detailsValid) goToStep(2)
+  }
 
   const fieldClass = compact
     ? 'w-full rounded-xl border border-[#6B3B34]/28 bg-white px-3 py-2.5 text-sm text-ink outline-none transition focus:border-[#6B3B34]/55 focus:ring-2 focus:ring-[#6B3B34]/20'
@@ -81,6 +101,7 @@ export function CampaignPopupLeadForm({
       !isValidEmail(trimmedEmail) ||
       !qualificationComplete(qualification)
     ) {
+      if (stepped && !detailsValid) goToStep(1)
       return
     }
 
@@ -115,74 +136,111 @@ export function CampaignPopupLeadForm({
     setPhone('')
     setQualification(emptyQualification)
     setAttempted(false)
+    setDetailsAttempted(false)
+    goToStep(1)
     onSuccess?.()
   }
 
   // Success UI is owned by CampaignPopupOverlay so image + copy stay balanced.
   if (done) return null
 
+  const showDetails = !stepped || step === 1
+  const showQuestions = !stepped || step === 2
+
   return (
     <form className="space-y-3" noValidate onSubmit={handleSubmit}>
-      <Field
-        id={`popup-name-${popupId}`}
-        label={t('contact.name')}
-        value={name}
-        onChange={setName}
-        error={errors.name ? t('contact.errorName') : null}
-        fieldClass={fieldClass}
-        labelClass={labelClass}
-      />
-      <Field
-        id={`popup-email-${popupId}`}
-        label={t('contact.email')}
-        type="email"
-        value={email}
-        onChange={setEmail}
-        error={
-          errors.emailRequired
-            ? t('contact.errorEmailRequired')
-            : errors.emailFormat
-              ? t('contact.errorEmailFormat')
-              : null
-        }
-        fieldClass={fieldClass}
-        labelClass={labelClass}
-      />
-      <div className="space-y-1.5">
-        <label htmlFor={`popup-phone-${popupId}`} className={labelClass}>
-          {t('contact.phone')}
-        </label>
-        <PhoneInputField
-          id={`popup-phone-${popupId}`}
-          value={phone}
-          onChange={(value) => setPhone(value ?? '')}
-          variant="public"
-          defaultCountry="AE"
-          placeholder={t('contact.phone')}
+      {stepped ? (
+        <p className="font-sans text-xs font-medium uppercase tracking-[0.12em] text-terracotta/70" aria-live="polite">
+          {t(step === 1 ? 'popup.step1' : 'popup.step2')}
+        </p>
+      ) : null}
+      {showDetails ? (
+        <>
+          <Field
+            id={`popup-name-${popupId}`}
+            label={t('contact.name')}
+            value={name}
+            onChange={setName}
+            error={errors.name ? t('contact.errorName') : null}
+            fieldClass={fieldClass}
+            labelClass={labelClass}
+          />
+          <Field
+            id={`popup-email-${popupId}`}
+            label={t('contact.email')}
+            type="email"
+            value={email}
+            onChange={setEmail}
+            error={
+              errors.emailRequired
+                ? t('contact.errorEmailRequired')
+                : errors.emailFormat
+                  ? t('contact.errorEmailFormat')
+                  : null
+            }
+            fieldClass={fieldClass}
+            labelClass={labelClass}
+          />
+          <div className="space-y-1.5">
+            <label htmlFor={`popup-phone-${popupId}`} className={labelClass}>
+              {t('contact.phone')}
+            </label>
+            <PhoneInputField
+              id={`popup-phone-${popupId}`}
+              value={phone}
+              onChange={(value) => setPhone(value ?? '')}
+              variant="public"
+              defaultCountry="AE"
+              placeholder={t('contact.phone')}
+            />
+          </div>
+        </>
+      ) : null}
+      {showQuestions ? (
+        <LeadQualificationFields
+          idPrefix={`popup-${popupId}`}
+          answers={qualification}
+          onChange={setQualification}
+          attempted={attempted}
+          labelClass={labelClass}
+          fieldClass={fieldClass}
+          errorClass="text-sm text-terracotta"
+          stackClass="flex flex-col gap-3"
         />
-      </div>
-      <LeadQualificationFields
-        idPrefix={`popup-${popupId}`}
-        answers={qualification}
-        onChange={setQualification}
-        attempted={attempted}
-        labelClass={labelClass}
-        fieldClass={fieldClass}
-        errorClass="text-sm text-terracotta"
-        stackClass="flex flex-col gap-3"
-      />
+      ) : null}
       {err ? (
         <p className="text-sm text-red-600" role="alert">
           {err}
         </p>
       ) : null}
-      <button
-        type="submit"
-        disabled={busy}
-        className={buttonClassNames('primary', 'min-h-11 w-full px-5 py-2.5')}
-      >
-        {busy ? t('popup.sending') : submitLabel?.trim() || t('popup.submit')}
-      </button>
+      {stepped && step === 1 ? (
+        <button
+          type="button"
+          onClick={continueToQuestions}
+          className={buttonClassNames('primary', 'min-h-11 w-full px-5 py-2.5')}
+        >
+          {t('popup.continue')}
+        </button>
+      ) : (
+        <div className="flex gap-2">
+          {stepped ? (
+            <button
+              type="button"
+              onClick={() => goToStep(1)}
+              className={buttonClassNames('outlineTerracotta', 'min-h-11 px-5 py-2.5')}
+            >
+              {t('popup.back')}
+            </button>
+          ) : null}
+          <button
+            type="submit"
+            disabled={busy}
+            className={buttonClassNames('primary', 'min-h-11 flex-1 px-5 py-2.5')}
+          >
+            {busy ? t('popup.sending') : submitLabel?.trim() || t('popup.submit')}
+          </button>
+        </div>
+      )}
     </form>
   )
 }
