@@ -25,6 +25,9 @@ const MAX_HORIZONTAL_FOV = 120
 const FADE_MS = 400
 /** How long a switch may take before the loading notice appears. */
 const LOADING_DELAY_MS = 250
+/** Idle auto-rotate: one full turn every 90 seconds, resuming 8 seconds after the visitor stops. */
+const AUTO_ROTATE_RADIANS_PER_MS = (2 * Math.PI) / 90_000
+const AUTO_ROTATE_RESUME_MS = 8000
 const VERTEX = 'attribute vec2 pos; varying vec2 uv;void main(){uv=pos;gl_Position=vec4(pos,0.,1.);}'
 const FRAGMENT = `precision highp float;varying vec2 uv;uniform sampler2D pano;uniform float aspect,yaw,pitch,fov,gradeEnabled,dehaze;uniform sampler2D colorLut;vec3 grade(vec3 c){float b=c.b*31.;float lo=floor(b),hi=min(lo+1.,31.);vec2 p1=vec2((lo*32.+c.r*31.+.5)/1024.,(c.g*31.+.5)/32.);vec2 p2=vec2((hi*32.+c.r*31.+.5)/1024.,(c.g*31.+.5)/32.);return mix(texture2D(colorLut,p1).rgb,texture2D(colorLut,p2).rgb,b-lo);}void main(){float t=tan(fov*.5);vec3 d=normalize(vec3(uv.x*aspect*t,uv.y*t,1.));float cp=cos(pitch),sp=sin(pitch);d=vec3(d.x,d.y*cp+d.z*sp,d.z*cp-d.y*sp);float cy=cos(yaw),sy=sin(yaw);d=vec3(d.x*cy+d.z*sy,d.y,d.z*cy-d.x*sy);vec2 p=vec2(fract(atan(d.x,d.z)/6.2831853+.5),.5-asin(clamp(d.y,-1.,1.))/3.14159265);vec3 c=texture2D(pano,p).rgb;float dark=min(c.r,min(c.g,c.b))/.96;float transmission=max(.70,1.-dehaze*dark);c=clamp((c-vec3(.96))/transmission+vec3(.96),0.,1.);float luminance=dot(c,vec3(.2126,.7152,.0722));c=clamp(mix(vec3(luminance),c,1.+dehaze*.18),0.,1.);gl_FragColor=vec4(mix(c,grade(c),gradeEnabled),1.);}`
 
@@ -212,6 +215,32 @@ export function mountTourViewer(
     // Zooming out past the horizontal cap does nothing visible; keep fov at the cap so zoom-in responds at once.
     fov = Math.min(fov, Math.max(MIN_FOV, effectiveFov()))
   }
+  // Only the WebGL renderer is fast enough to animate every frame.
+  let canAutoRotate = false
+  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+  let rotateFrame = 0
+  let rotateLast = 0
+  let rotateResumeTimer = 0
+  function rotateTick(time: number) {
+    if (rotateLast) yaw += Math.min(64, time - rotateLast) * AUTO_ROTATE_RADIANS_PER_MS
+    rotateLast = time
+    draw()
+    rotateFrame = requestAnimationFrame(rotateTick)
+  }
+  function startAutoRotate() {
+    window.clearTimeout(rotateResumeTimer)
+    if (!canAutoRotate || reduceMotion || rotateFrame || !textureReady || pointers.size) return
+    rotateLast = 0
+    rotateFrame = requestAnimationFrame(rotateTick)
+  }
+  /** Stop rotating while the visitor is in control; pick it up again once they leave it alone. */
+  function pauseAutoRotate() {
+    cancelAnimationFrame(rotateFrame)
+    rotateFrame = 0
+    window.clearTimeout(rotateResumeTimer)
+    rotateResumeTimer = window.setTimeout(startAutoRotate, AUTO_ROTATE_RESUME_MS)
+  }
+
   function applyStart(index: number) {
     const scene = scenes[index]
     yaw = scene?.initialYaw ?? 0
@@ -334,14 +363,17 @@ export function mountTourViewer(
   next.onclick = () => load(current + 1)
   roomsToggle.onclick = () => showRooms(roomsHidden)
   zoomIn.onclick = () => {
+    pauseAutoRotate()
     setFov(fov - 10)
     draw()
   }
   zoomOut.onclick = () => {
+    pauseAutoRotate()
     setFov(fov + 10)
     draw()
   }
   reset.onclick = () => {
+    pauseAutoRotate()
     applyStart(current)
     draw()
   }
@@ -397,6 +429,7 @@ export function mountTourViewer(
   const onPointerDown = (event: PointerEvent) => {
     pointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
     canvas.setPointerCapture(event.pointerId)
+    pauseAutoRotate()
     hideHint()
     window.clearTimeout(stripTimer)
     root.classList.add('dragging')
@@ -408,6 +441,7 @@ export function mountTourViewer(
     const dx = event.clientX - last.x
     const dy = event.clientY - last.y
     pointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
+    pauseAutoRotate()
     if (pointers.size >= 2) {
       if (!pinch) return
       const distance = pointerDistance()
@@ -430,6 +464,7 @@ export function mountTourViewer(
   }
   const onWheel = (event: WheelEvent) => {
     event.preventDefault()
+    pauseAutoRotate()
     setFov(fov + event.deltaY * 0.04)
     draw()
   }
@@ -439,6 +474,7 @@ export function mountTourViewer(
   }
   const onKey = (event: KeyboardEvent) => {
     if (event.target instanceof HTMLElement && event.target.tagName === 'BUTTON') return
+    if (event.key.startsWith('Arrow')) pauseAutoRotate()
     if (event.key === 'ArrowLeft') yaw -= 0.1
     if (event.key === 'ArrowRight') yaw += 0.1
     if (event.key === 'ArrowUp') pitch = Math.min(1.45, pitch + 0.1)
@@ -461,6 +497,8 @@ export function mountTourViewer(
     window.clearTimeout(stripTimer)
     window.clearTimeout(saveTimer)
     window.clearTimeout(hintTimer)
+    window.clearTimeout(rotateResumeTimer)
+    cancelAnimationFrame(rotateFrame)
     canvas.removeEventListener('pointerdown', onPointerDown)
     canvas.removeEventListener('pointermove', onPointerMove)
     canvas.removeEventListener('pointerup', onPointerUp)
@@ -480,6 +518,7 @@ export function mountTourViewer(
   }
 
   function mountWebGl(context: WebGLRenderingContext) {
+    canAutoRotate = true
     function shader(type: number, source: string) {
       const item = context.createShader(type)
       if (!item) throw new Error('Viewer failed to initialize')
@@ -645,6 +684,7 @@ export function mountTourViewer(
           remember(nextIndex)
           if (fading) releaseFrame()
           preloadAround(nextIndex)
+          startAutoRotate()
         })
         .catch(() => {
           if (token === request) fail('Could not load this view. Check your connection and choose another view.')
