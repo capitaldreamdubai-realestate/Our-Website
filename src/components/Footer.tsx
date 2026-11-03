@@ -84,7 +84,7 @@ export function Footer() {
           label: 'Info@capitaldreamdubai.com',
           href: 'mailto:Info@capitaldreamdubai.com',
         },
-        { label: '+971 50 108 3541', href: 'tel:+971501083541' },
+        { label: '+971 50 119 6521', href: 'tel:+971501196521' },
         {
           label:
             'Rosebay Living · Office No R02 · Meydan · Dubai · UAE',

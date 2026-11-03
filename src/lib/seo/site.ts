@@ -44,7 +44,7 @@ export const realEstateAgentJsonLd = {
   logo: DEFAULT_OG_IMAGE,
   image: DEFAULT_OG_IMAGE,
   email: 'Info@capitaldreamdubai.com',
-  telephone: '+971501083541',
+  telephone: '+971501196521',
   address: {
     '@type': 'PostalAddress',
     streetAddress: 'Rosebay Living, Office No R02, Meydan',

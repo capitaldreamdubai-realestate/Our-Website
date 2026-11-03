@@ -121,10 +121,10 @@ export function ContactUsPage() {
               Info@capitaldreamdubai.com
             </a>
             <a
-              href="tel:+971501083541"
+              href="tel:+971501196521"
               className="block text-[0.95rem] leading-relaxed text-terracotta transition hover:opacity-80"
             >
-              +971 50 108 3541
+              +971 50 119 6521
             </a>
             <p className="text-[0.95rem] leading-relaxed text-terracotta/85">{t('contact.office')}</p>
           </div>

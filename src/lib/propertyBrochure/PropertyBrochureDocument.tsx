@@ -289,7 +289,7 @@ export function PropertyBrochureDocument({
             </View>
           ) : (
             <Text style={styles.location}>
-              Capital Dream · Info@capitaldreamdubai.com · +971 50 108 3541
+              Capital Dream · Info@capitaldreamdubai.com · +971 50 119 6521
             </Text>
           )}
           <Text style={[styles.agentLine, { marginTop: 8 }]}>
@@ -301,7 +301,7 @@ export function PropertyBrochureDocument({
           Disclaimer: Property information, availability, pricing, images and other details are
           subject to change and should be independently verified. This brochure is generated
           automatically from the Capital Dream website listing. capitaldreamdubai.com ·
-          Info@capitaldreamdubai.com · +971 50 108 3541
+          Info@capitaldreamdubai.com · +971 50 119 6521
           {mapImage ? '  Map data © OpenStreetMap contributors.' : ''}
         </Text>
       </Page>
