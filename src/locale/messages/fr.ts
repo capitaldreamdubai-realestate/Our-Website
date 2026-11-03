@@ -274,6 +274,11 @@ export const fr: Record<string, string> = {
   'footer.privacy': 'Confidentialité',
   'footer.terms': 'Conditions',
   'footer.cookies': 'Cookies',
+  'consent.title': 'Votre vie privée',
+  'consent.body': 'Nous utilisons des cookies pour mesurer l’utilisation du site et vous montrer des annonces immobilières pertinentes. Vous pouvez les accepter ou les refuser, et modifier votre choix à tout moment dans Paramètres des cookies.',
+  'consent.accept': 'Tout accepter',
+  'consent.reject': 'Refuser',
+  'footer.cookieSettings': 'Paramètres des cookies',
 
   'listing.clearFilters': 'Réinitialiser les filtres',
   'listing.filters': 'Filtres',

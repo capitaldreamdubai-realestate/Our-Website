@@ -8,6 +8,9 @@ import { PropertyFilterDockProvider } from './contexts/PropertyFilterDockContext
 import './index.css'
 import './admin/admin-theme.css'
 import App from './App.tsx'
+import { captureAttribution } from './lib/analytics/attribution'
+
+captureAttribution()
 
 const Router = import.meta.env.VITE_ROUTER_MODE === 'hash' ? HashRouter : BrowserRouter
 

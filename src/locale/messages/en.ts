@@ -271,6 +271,11 @@ export const en: Record<string, string> = {
   'footer.privacy': 'Privacy',
   'footer.terms': 'Terms',
   'footer.cookies': 'Cookies',
+  'consent.title': 'Your privacy',
+  'consent.body': 'We use cookies to measure how the site is used and to show you relevant property ads. You can accept or reject them, and change your choice at any time under Cookie settings.',
+  'consent.accept': 'Accept all',
+  'consent.reject': 'Reject',
+  'footer.cookieSettings': 'Cookie settings',
 
   'listing.clearFilters': 'Clear filters',
   'listing.filters': 'Filters',

@@ -266,6 +266,11 @@ export const ar: Record<string, string> = {
   'footer.privacy': 'الخصوصية',
   'footer.terms': 'الشروط',
   'footer.cookies': 'ملفات تعريف الارتباط',
+  'consent.title': 'خصوصيتك',
+  'consent.body': 'نستخدم ملفات تعريف الارتباط لقياس استخدام الموقع وعرض إعلانات عقارية ذات صلة. يمكنك قبولها أو رفضها، وتغيير اختيارك في أي وقت من إعدادات ملفات تعريف الارتباط.',
+  'consent.accept': 'قبول الكل',
+  'consent.reject': 'رفض',
+  'footer.cookieSettings': 'إعدادات ملفات تعريف الارتباط',
 
   'listing.clearFilters': 'مسح الفلاتر',
   'listing.filters': 'الفلاتر',

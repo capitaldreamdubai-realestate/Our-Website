@@ -66,6 +66,28 @@ export function qualificationMessage(answers: QualificationAnswers): string {
   ].join('\n')
 }
 
+export type LeadTier = 'premium' | 'qualified' | 'entry' | 'unqualified'
+
+/**
+ * Lead quality from the stated budget, sent to GTM with every lead so Google and Meta
+ * can optimise towards buyers who can actually afford the stock.
+ * premium: AED 3m+ · qualified: AED 1–3m · entry: under AED 1m · unqualified: no budget given.
+ */
+export function leadTier(budget: string | null | undefined): LeadTier {
+  if (budget === '5m_plus' || budget === '3m_5m') return 'premium'
+  if (budget === '1m_3m') return 'qualified'
+  if (budget === '750k_1m') return 'entry'
+  return 'unqualified'
+}
+
+/** Relative lead score (AED) used as the conversion value. Not a sale price. */
+export const LEAD_TIER_VALUE: Record<LeadTier, number> = {
+  premium: 1000,
+  qualified: 500,
+  entry: 100,
+  unqualified: 50,
+}
+
 export function qualificationMeta(answers: QualificationAnswers) {
   return {
     investment_budget: answers.budget,

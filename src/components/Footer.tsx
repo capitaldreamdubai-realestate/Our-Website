@@ -1,6 +1,7 @@
 import { useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { FormSuccessPanel } from '@/components/FormSuccessPanel'
+import { OPEN_CONSENT_EVENT } from '@/lib/analytics/consent'
 import { submitWebsiteForm } from '@/lib/submitWebsiteForm'
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
 import { cn } from '../lib/utils'
@@ -290,6 +291,13 @@ export function Footer() {
             <Link to="/cookies" className="nav-caps hover:text-cream">
               {t('footer.cookies')}
             </Link>
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event(OPEN_CONSENT_EVENT))}
+              className="nav-caps hover:text-cream"
+            >
+              {t('footer.cookieSettings')}
+            </button>
           </div>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { Footer } from '../components/Footer'
 import { useCms } from '../contexts/CmsContext'
 import { trackPageView } from '../lib/analytics/trackPageView'
 import { CampaignPopupOverlay } from '../components/CampaignPopupOverlay'
+import { CookieConsentBanner } from '../components/CookieConsentBanner'
 import { FloatingWhatsappButton } from '../components/FloatingWhatsappButton'
 import { Navbar } from '../components/Navbar'
 import { Noise } from '../components/Noise'
@@ -57,6 +58,7 @@ export function SiteLayout() {
         <PropertyFilterDock />
         <FloatingWhatsappButton />
         <CampaignPopupOverlay />
+        <CookieConsentBanner />
       </div>
     </>
   )

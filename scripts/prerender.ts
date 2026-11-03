@@ -135,6 +135,9 @@ async function snapshot(browser: Browser, routePath: string): Promise<'written' 
     }
     let html = await page.content()
     html = dropShellDuplicates(html)
+    // The GTM snippet injects its loader at the top of <head> while rendering. Keep only the
+    // inline snippet, so GTM always loads after the consent defaults in index.html.
+    html = html.replace(/<script async="" src="https:\/\/www\.googletagmanager\.com\/gtm\.js[^"]*"><\/script>/g, '')
     if (!/^<!doctype html>/i.test(html)) html = `<!DOCTYPE html>\n${html}`
     const file = outputFile(routePath)
     await mkdir(dirname(file), { recursive: true })
