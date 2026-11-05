@@ -1,7 +1,9 @@
 /**
  * Website → Property Finder publishing (the website CMS is the master copy).
  *
- * Actions (POST body `{ action, ... }`, website admin JWT required):
+ * Actions (POST body `{ action, ... }`). Website admins and CRM admins/managers can run all of
+ * them; CRM agents can run locations, permit, known, preview, sync and publish, for listings
+ * where they are the listing agent.
  *   probe     read-only: token scopes, one sample listing's shape, location search, live listing summary
  *   locations read-only: search Property Finder's location tree `{ query }`
  *   permit    read-only: validate a DLD permit `{ permitNumber, licenseNumber }`
@@ -462,9 +464,13 @@ async function syncRow(sb: SupabaseClient, token: string, row: PropertyRow): Pro
 
 /* ---------------------------------- Handler ---------------------------------- */
 
-async function requireAdmin(sb: SupabaseClient, jwt: string): Promise<string | null> {
+type Access = { error: string } | { agentOf: Set<string> | null }
+
+/** Website admins and CRM admins/managers manage every listing (agentOf = null). CRM agents
+ * (salespeople) manage only listings where they are the listing agent (agentOf = their ids). */
+async function access(sb: SupabaseClient, jwt: string): Promise<Access> {
   const { data: { user }, error } = await sb.auth.getUser(jwt)
-  if (error || !user?.id) return 'Invalid auth token.'
+  if (error || !user?.id) return { error: 'Invalid auth token.' }
   const email = (user.email ?? '').trim().toLowerCase()
   const { data: row } = await sb
     .from('admin_users')
@@ -472,13 +478,19 @@ async function requireAdmin(sb: SupabaseClient, jwt: string): Promise<string | n
     .or(`auth_user_id.eq.${user.id}${email ? `,email.eq.${email}` : ''}`)
     .limit(1)
     .maybeSingle()
-  if (row?.is_active && ['owner', 'admin'].includes(row.role)) return null
-  // CRM admins and managers (Capital Dream CRM) manage listings too. Salespeople can't publish:
-  // publishing spends Property Finder credits.
+  if (row?.is_active && ['owner', 'admin'].includes(row.role)) return { agentOf: null }
   const { data: roles } = await sb.from('user_roles').select('role').eq('user_id', user.id)
-  if ((roles ?? []).some((r: { role: string }) => ['super_admin', 'admin', 'manager'].includes(r.role))) return null
-  return 'Not allowed.'
+  const list = (roles ?? []).map((r: { role: string }) => r.role)
+  if (list.some((r) => ['super_admin', 'admin', 'manager'].includes(r))) return { agentOf: null }
+  if (list.includes('salesperson')) {
+    const { data: mine } = await sb.from('salespeople').select('id').eq('user_id', user.id)
+    return { agentOf: new Set((mine ?? []).map((s: { id: string }) => String(s.id))) }
+  }
+  return { error: 'Not allowed.' }
 }
+
+/** What an agent may do: look things up, and save or publish their own listings. */
+const AGENT_ACTIONS = new Set(['locations', 'permit', 'known', 'preview', 'sync', 'publish'])
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -495,11 +507,12 @@ Deno.serve(async (req) => {
     const jwt = auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : ''
     if (!jwt) return json({ ok: false, error: 'Missing bearer token.' }, 401)
     const sb = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } })
-    const denied = await requireAdmin(sb, jwt)
-    if (denied) return json({ ok: false, error: denied }, denied === 'Not allowed.' ? 403 : 401)
+    const who = await access(sb, jwt)
+    if ('error' in who) return json({ ok: false, error: who.error }, who.error === 'Not allowed.' ? 403 : 401)
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>
     const action = String(body.action ?? '')
+    if (who.agentOf && !AGENT_ACTIONS.has(action)) return json({ ok: false, error: 'Not allowed.' }, 403)
     const pf = await pfToken(apiKey, apiSecret)
 
     if (action === 'probe') {
@@ -590,7 +603,10 @@ Deno.serve(async (req) => {
     const loadRow = async () => {
       const { data, error } = await sb.from('properties').select(ROW_COLUMNS).eq('id', propertyId).maybeSingle()
       if (error) throw new Error(error.message)
-      return data as PropertyRow | null
+      const row = data as PropertyRow | null
+      // Agents only see their own listings here; anyone else's reads as not found.
+      if (row && who.agentOf && !who.agentOf.has(String(row.salesperson_id ?? ''))) return null
+      return row
     }
 
     // Read-only: this account's Property Finder users and their public profile ids.
@@ -650,7 +666,7 @@ Deno.serve(async (req) => {
       return json(await syncRow(sb, pf.token, row))
     }
 
-    // Goes public and uses listing credits, so it only runs when an admin presses Publish.
+    // Goes public and uses listing credits, so it only runs when someone presses Publish.
     if (action === 'publish') {
       const row = await loadRow()
       if (!row) return json({ ok: false, error: 'Listing not found.' }, 404)
