@@ -9,6 +9,8 @@ export type PropertyGalleryItem = {
   type: 'image' | 'video'
   src: string
   poster?: string
+  /** Describes the image for search engines and screen readers. */
+  alt?: string
 }
 
 export type Property = {

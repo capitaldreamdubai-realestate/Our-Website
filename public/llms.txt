@@ -24,6 +24,7 @@ Capital Dreams is a real estate brokerage in Dubai, United Arab Emirates. The of
 - [All properties](https://capitaldreamdubai.com/all-properties): Full listing catalogue
 - [Deals](https://capitaldreamdubai.com/deals): Limited-time property deals
 - [Off-plan](https://capitaldreamdubai.com/offplan): Developer projects and launches
+- [Palm Springs by Nakheel](https://capitaldreamdubai.com/offplan/palm-springs-by-nakheel): Nakheel's upcoming townhouse and villa community in Hessyan First, Jebel Ali, beside Palm Jebel Ali. Location, expected prices, payment plan, launch status and registration
 - [Developers](https://capitaldreamdubai.com/developers): UAE property developers with listings
 - [About](https://capitaldreamdubai.com/about): Practice and approach
 - [Team](https://capitaldreamdubai.com/team): Real estate specialists

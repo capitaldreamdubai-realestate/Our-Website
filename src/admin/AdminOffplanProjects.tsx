@@ -37,7 +37,14 @@ type SalespersonRow = Pick<
   'id' | 'name'
 >
 
-type GalleryImageItem = { type: 'image'; src: string }
+type GalleryImageItem = { type: 'image'; src: string; alt?: string }
+type GallerySlot = { src: string; alt: string }
+
+const MIN_GALLERY_SLOTS = 6
+
+function emptySlots(count = MIN_GALLERY_SLOTS): GallerySlot[] {
+  return Array.from({ length: count }, () => ({ src: '', alt: '' }))
+}
 
 function fieldClass() {
   return 'mt-1 w-full rounded-2xl border border-ink/15 bg-white px-3 py-2 text-xs text-ink md:text-sm'
@@ -51,8 +58,14 @@ function slugify(name: string): string {
     .replace(/^-+|-+$/g, '')
 }
 
-function galleryFromSlots(slots: string[]): GalleryImageItem[] {
-  return slots.filter(Boolean).map((src) => ({ type: 'image' as const, src }))
+function galleryFromSlots(slots: GallerySlot[]): GalleryImageItem[] {
+  return slots
+    .filter((slot) => slot.src)
+    .map((slot) => ({
+      type: 'image' as const,
+      src: slot.src,
+      ...(slot.alt.trim() ? { alt: slot.alt.trim() } : {}),
+    }))
 }
 
 async function saveLaunchChildren(
@@ -147,16 +160,18 @@ async function createLaunchPopup(
   return error?.message ?? null
 }
 
-function slotsFromGallery(gallery: unknown): string[] {
-  const slots = ['', '', '', '', '', '']
-  if (!Array.isArray(gallery)) return slots
-  gallery.forEach((item, i) => {
-    if (i >= 6) return
-    if (item && typeof item === 'object' && 'src' in item && typeof item.src === 'string') {
-      slots[i] = item.src
+/** Every saved image gets a slot (never truncated), padded to at least six. */
+function slotsFromGallery(gallery: unknown): GallerySlot[] {
+  const slots: GallerySlot[] = []
+  if (Array.isArray(gallery)) {
+    for (const item of gallery) {
+      if (item && typeof item === 'object' && 'src' in item && typeof item.src === 'string') {
+        const alt = 'alt' in item && typeof item.alt === 'string' ? item.alt : ''
+        slots.push({ src: item.src, alt })
+      }
     }
-  })
-  return slots
+  }
+  return [...slots, ...emptySlots(Math.max(0, MIN_GALLERY_SLOTS - slots.length))]
 }
 
 export function AdminOffplanProjects() {
@@ -168,7 +183,7 @@ export function AdminOffplanProjects() {
   const [err, setErr] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [draft, setDraft] = useState<Row | null>(null)
-  const [gallerySlots, setGallerySlots] = useState<string[]>(() => ['', '', '', '', '', ''])
+  const [gallerySlots, setGallerySlots] = useState<GallerySlot[]>(() => emptySlots())
   const [floorPlans, setFloorPlans] = useState<FloorPlanDraft[]>([])
   const [paymentPlans, setPaymentPlans] = useState<PaymentPlanDraft[]>([])
   const [faqs, setFaqs] = useState<FaqDraft[]>([])
@@ -232,7 +247,7 @@ export function AdminOffplanProjects() {
     const defaultDev = developers[0]?.id ?? ''
     setIsNew(true)
     setSlugLocked(false)
-    setGallerySlots(['', '', '', '', '', ''])
+    setGallerySlots(emptySlots())
     setFloorPlans([])
     setPaymentPlans([])
     setFaqs([])
@@ -787,25 +802,50 @@ export function AdminOffplanProjects() {
               />
             </div>
             <div className="sm:col-span-2">
-              <p className="text-xs font-medium text-ink/70">Gallery — up to six images</p>
+              <p className="text-xs font-medium text-ink/70">Gallery</p>
               <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {gallerySlots.map((slotUrl, i) => (
-                  <ImageUploadField
-                    key={i}
-                    compact
-                    label={`Image ${i + 1}`}
-                    folder="projects"
-                    value={slotUrl}
-                    onChange={(url) => {
-                      setGallerySlots((prev) => {
-                        const next = [...prev]
-                        next[i] = url
-                        return next
-                      })
-                    }}
-                  />
+                {gallerySlots.map((slot, i) => (
+                  <div key={i} className="space-y-1.5">
+                    <ImageUploadField
+                      compact
+                      label={`Image ${i + 1}`}
+                      folder="projects"
+                      value={slot.src}
+                      onChange={(url) => {
+                        setGallerySlots((prev) => {
+                          const next = [...prev]
+                          next[i] = { src: url, alt: url === prev[i].src ? prev[i].alt : '' }
+                          return next
+                        })
+                      }}
+                    />
+                    {slot.src ? (
+                      <input
+                        type="text"
+                        value={slot.alt}
+                        placeholder="Describe the image (for Google and screen readers)"
+                        aria-label={`Image ${i + 1} description`}
+                        onChange={(event) => {
+                          const alt = event.target.value
+                          setGallerySlots((prev) => {
+                            const next = [...prev]
+                            next[i] = { ...prev[i], alt }
+                            return next
+                          })
+                        }}
+                        className={fieldClass()}
+                      />
+                    ) : null}
+                  </div>
                 ))}
               </div>
+              <button
+                type="button"
+                onClick={() => setGallerySlots((prev) => [...prev, ...emptySlots(2)])}
+                className="mt-3 rounded-full border border-ink/15 px-4 py-1.5 text-xs font-medium text-ink hover:bg-ink/5"
+              >
+                Add more images
+              </button>
             </div>
             <div className="sm:col-span-2">
               <DocumentUploadField

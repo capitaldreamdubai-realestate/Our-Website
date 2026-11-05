@@ -74,7 +74,7 @@ export function ProjectGalleryHero({ title, gallery }: Props) {
         {active.type === 'image' ? (
           <img
             src={active.src}
-            alt=""
+            alt={active.alt || title}
             className="size-full object-cover"
           />
         ) : (
@@ -116,7 +116,7 @@ export function ProjectGalleryHero({ title, gallery }: Props) {
                       : 'border-transparent opacity-75 hover:opacity-100',
                   )}
                 >
-                  <img src={item.src} alt="" className="size-full object-cover" loading="lazy" />
+                  <img src={item.src} alt={item.alt ?? ''} className="size-full object-cover" loading="lazy" />
                 </button>
               ))}
             </div>

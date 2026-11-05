@@ -204,7 +204,7 @@ export function OffplanProjectDetailPage() {
 
             {project.descriptionHtml ? (
               <div
-                className="prose prose-ink mt-8 max-w-none text-ink/85"
+                className="mt-8 max-w-none text-[length:var(--brand-font-body-lg)] leading-relaxed text-ink/85 [&_a]:font-medium [&_a]:text-terracotta [&_a]:underline [&_a]:underline-offset-2 [&_h2]:mt-10 [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:text-ink [&_h2]:first:mt-0 [&_h3]:mt-6 [&_h3]:font-display [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-ink [&_li]:my-1 [&_ol]:mt-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mt-3 [&_table]:mt-4 [&_table]:w-full [&_table]:text-sm [&_td]:border-t [&_td]:border-ink/10 [&_td]:py-2 [&_td]:pr-3 [&_td]:align-top [&_th]:py-2 [&_th]:pr-3 [&_th]:text-left [&_th]:font-semibold [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:pl-5"
                 dangerouslySetInnerHTML={{ __html: project.descriptionHtml }}
               />
             ) : null}
