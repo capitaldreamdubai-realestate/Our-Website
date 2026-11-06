@@ -36,6 +36,18 @@ export function serializeJsonLd(data: unknown): string {
   return JSON.stringify(data).replace(/</g, '\\u003c')
 }
 
+/** Google Business Profile: CAPITAL DREAM Real Estate LLC (Maps CID). */
+export const GOOGLE_BUSINESS_PROFILE_URL = 'https://maps.google.com/?cid=10251747739928503581'
+
+export const SOCIAL_PROFILE_URLS = [
+  GOOGLE_BUSINESS_PROFILE_URL,
+  'https://www.facebook.com/capitaldreamdubairealestate',
+  'https://www.instagram.com/capitaldreamdubai',
+  'https://www.linkedin.com/company/capital-dream',
+  'https://www.youtube.com/@CAPITALDREAMDUBAI',
+  'https://www.tiktok.com/@capitaldreamdubai',
+]
+
 export const realEstateAgentJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'RealEstateAgent',
@@ -51,6 +63,9 @@ export const realEstateAgentJsonLd = {
     addressLocality: 'Dubai',
     addressCountry: 'AE',
   },
+  geo: { '@type': 'GeoCoordinates', latitude: 25.155009, longitude: 55.2905927 },
+  hasMap: GOOGLE_BUSINESS_PROFILE_URL,
+  sameAs: SOCIAL_PROFILE_URLS,
   areaServed: [
     { '@type': 'City', name: 'Dubai' },
     { '@type': 'Country', name: 'United Arab Emirates' },

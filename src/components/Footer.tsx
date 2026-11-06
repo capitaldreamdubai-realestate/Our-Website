@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { FormSuccessPanel } from '@/components/FormSuccessPanel'
 import { OPEN_CONSENT_EVENT } from '@/lib/analytics/consent'
 import { submitWebsiteForm } from '@/lib/submitWebsiteForm'
+import { GOOGLE_BUSINESS_PROFILE_URL } from '@/lib/seo/site'
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
 import { cn } from '../lib/utils'
 import { Button } from './Button'
@@ -79,7 +80,7 @@ export function Footer() {
   const connectLinks = useMemo(
     () =>
       [
-        { label: t('footer.instagram'), href: 'https://instagram.com' },
+        { label: t('footer.instagram'), href: 'https://www.instagram.com/capitaldreamdubai' },
         {
           label: 'Info@capitaldreamdubai.com',
           href: 'mailto:Info@capitaldreamdubai.com',
@@ -88,7 +89,7 @@ export function Footer() {
         {
           label:
             'Rosebay Living · Office No R02 · Meydan · Dubai · UAE',
-          href: 'https://maps.google.com/?q=Rosebay+Living+Office+No+R02+Meydan+Dubai+UAE',
+          href: GOOGLE_BUSINESS_PROFILE_URL,
         },
       ] as const,
     [t],
