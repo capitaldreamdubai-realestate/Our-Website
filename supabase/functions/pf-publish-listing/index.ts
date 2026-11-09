@@ -466,7 +466,7 @@ async function syncRow(sb: SupabaseClient, token: string, row: PropertyRow): Pro
 
 type Access = { error: string } | { agentOf: Set<string> | null }
 
-/** Website admins and CRM admins/managers manage every listing (agentOf = null). CRM agents
+/** Website admins and CRM admins/managers/editors manage every listing (agentOf = null). CRM agents
  * (salespeople) manage only listings where they are the listing agent (agentOf = their ids). */
 async function access(sb: SupabaseClient, jwt: string): Promise<Access> {
   const { data: { user }, error } = await sb.auth.getUser(jwt)
@@ -481,7 +481,8 @@ async function access(sb: SupabaseClient, jwt: string): Promise<Access> {
   if (row?.is_active && ['owner', 'admin'].includes(row.role)) return { agentOf: null }
   const { data: roles } = await sb.from('user_roles').select('role').eq('user_id', user.id)
   const list = (roles ?? []).map((r: { role: string }) => r.role)
-  if (list.some((r) => ['super_admin', 'admin', 'manager'].includes(r))) return { agentOf: null }
+  // Editors (the CRM's property team) manage every listing too.
+  if (list.some((r) => ['super_admin', 'admin', 'manager', 'editor'].includes(r))) return { agentOf: null }
   if (list.includes('salesperson')) {
     const { data: mine } = await sb.from('salespeople').select('id').eq('user_id', user.id)
     return { agentOf: new Set((mine ?? []).map((s: { id: string }) => String(s.id))) }

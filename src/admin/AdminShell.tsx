@@ -52,6 +52,8 @@ const nav: NavItem[] = [
   { to: '/admin/campaign-popups', label: 'Campaign popups', icon: Megaphone },
 ]
 
+const EDITOR_PATHS = new Set(['/admin', '/admin/properties', '/admin/media'])
+
 export function AdminShell({ children }: { children: ReactNode }) {
   const { signOut, session } = useAdminAuth()
   const location = useLocation()
@@ -100,8 +102,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
   }, [session])
 
   const visibleNav = useMemo(() => {
+    // Editors are the property team (CRM "editor" role): listings, off-plan projects and media.
+    // The database allows them nothing else here, so the rest of the menu would only show errors.
     if (currentRole !== 'editor') return nav
-    return nav.filter((item) => item.to !== '/admin/users')
+    return nav.filter((item) => EDITOR_PATHS.has(item.to))
   }, [currentRole])
 
   useEffect(() => {
