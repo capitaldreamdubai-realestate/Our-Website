@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { buttonClassNames } from '@/components/Button'
+import { PAGE_ENQUIRY_ANCHOR, PageEnquirySection } from '@/components/PageEnquirySection'
 import { OffplanProjectCard } from '@/components/OffplanProjectCard'
 import { PropertyListingCard } from '@/components/PropertyListingCard'
 import { SectionShell } from '@/components/SectionShell'
@@ -108,6 +109,12 @@ export function DeveloperDetailPage() {
                   {heroDescription}
                 </p>
               ) : null}
+              <a
+                href={`#${PAGE_ENQUIRY_ANCHOR}`}
+                className={buttonClassNames('primary', 'mt-6 inline-block w-full text-center sm:w-auto')}
+              >
+                {t('pageEnquiry.cta')}
+              </a>
             </div>
           </div>
           <Link
@@ -144,6 +151,13 @@ export function DeveloperDetailPage() {
           </div>
         </SectionShell>
       ) : null}
+
+      <PageEnquirySection
+        pageContext="developer"
+        title={t('pageEnquiry.developer.title', { name: developer.name })}
+        intro={t('pageEnquiry.developer.intro', { name: developer.name })}
+        interest={developer.name}
+      />
     </main>
   )
 }

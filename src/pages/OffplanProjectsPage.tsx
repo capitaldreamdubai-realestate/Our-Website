@@ -2,6 +2,8 @@ import useEmblaCarousel from 'embla-carousel-react'
 import { useMemo } from 'react'
 import { CarouselNav } from '@/components/CarouselNav'
 import { OffplanProjectCard } from '@/components/OffplanProjectCard'
+import { buttonClassNames } from '@/components/Button'
+import { PAGE_ENQUIRY_ANCHOR, PageEnquirySection } from '@/components/PageEnquirySection'
 import { SectionShell } from '@/components/SectionShell'
 import { useCms } from '@/contexts/CmsContext'
 import { useLocalePreferences } from '@/contexts/LocalePreferencesContext'
@@ -134,6 +136,12 @@ export function OffplanProjectsPage() {
         <p className="mt-4 max-w-2xl text-[length:var(--brand-font-body-lg)] leading-relaxed text-ink/75">
           {t('offplan.intro')}
         </p>
+        <a
+          href={`#${PAGE_ENQUIRY_ANCHOR}`}
+          className={buttonClassNames('primary', 'mt-6 inline-block w-full text-center sm:w-auto')}
+        >
+          {t('pageEnquiry.cta')}
+        </a>
       </SectionShell>
 
       {loading ? (
@@ -157,6 +165,12 @@ export function OffplanProjectsPage() {
           />
         ))
       )}
+      <PageEnquirySection
+        pageContext="offplan"
+        title={t('pageEnquiry.offplan.title')}
+        intro={t('pageEnquiry.offplan.intro')}
+        interest={t('pageEnquiry.offplan.interest')}
+      />
     </main>
   )
 }

@@ -14,12 +14,13 @@ import {
   qualificationMeta,
   type QualificationAnswers,
 } from '@/lib/leadQualification'
-import { submitWebsiteForm } from '@/lib/submitWebsiteForm'
+import { submitWebsiteForm, type WebsiteFormSource } from '@/lib/submitWebsiteForm'
 
 export type ProjectLeadIntent = 'inquiry' | 'brochure'
 
 type Props = {
-  projectId: string
+  /** Null for general enquiries (off-plan, developer and listing pages). */
+  projectId: string | null
   projectName: string
   /** Public off-plan slug for CRM deep links (/offplan/:slug). */
   projectSlug?: string | null
@@ -34,6 +35,14 @@ type Props = {
   submitLabel?: string
   onSuccess?: (details: { email: string; name: string }) => void
   compact?: boolean
+  /** Overrides the default project_enquiry / project_brochure source. */
+  source?: WebsiteFormSource
+  /** Overrides the default headline. */
+  headline?: string
+  /** Extra non-personal context saved with the lead (e.g. which page). */
+  extraMeta?: Record<string, string | null>
+  /** Prefix for field ids, so two forms can share a page. */
+  idPrefix?: string
 }
 
 function isValidEmail(s: string) {
@@ -50,6 +59,10 @@ export function ProjectLeadForm({
   submitLabel,
   onSuccess,
   compact,
+  source: sourceOverride,
+  headline: headlineOverride,
+  extraMeta,
+  idPrefix = 'project-lead',
 }: Props) {
   const { t } = useLocalePreferences()
   const [name, setName] = useState('')
@@ -62,11 +75,12 @@ export function ProjectLeadForm({
   const [err, setErr] = useState<string | null>(null)
 
   const headline =
-    intent === 'brochure'
+    headlineOverride ??
+    (intent === 'brochure'
       ? t('projectLead.headlineBrochure', { name: projectName })
       : salesperson
         ? t('projectLead.headlineWithAgent', { name: salesperson.name })
-        : t('projectLead.headlineGeneric', { name: projectName })
+        : t('projectLead.headlineGeneric', { name: projectName }))
 
   const thumb =
     salesperson?.profile_image_url?.trim() ||
@@ -84,17 +98,19 @@ export function ProjectLeadForm({
     if (!n || !em || !isValidEmail(em) || !qualificationComplete(qualification)) return
 
     setBusy(true)
-    const source = intent === 'brochure' ? 'project_brochure' : 'project_enquiry'
+    const source =
+      sourceOverride ?? (intent === 'brochure' ? 'project_brochure' : 'project_enquiry')
     const { error } = await submitWebsiteForm({
       source,
       projectId,
-      projectName,
+      projectName: projectId ? projectName : null,
       name: n,
       email: em,
       phone: phone?.trim() || null,
       message: qualificationMessage(qualification),
       meta: {
         intent,
+        ...(extraMeta ?? {}),
         project_slug: projectSlug?.trim() || null,
         salesperson_id: salesperson?.id ?? null,
         salesperson_name: salesperson?.name ?? null,
@@ -221,13 +237,13 @@ export function ProjectLeadForm({
           </div>
           <div>
             <label
-              htmlFor="project-lead-phone"
+              htmlFor={`${idPrefix}-phone`}
               className="text-[0.6875rem] font-semibold uppercase tracking-widest text-ink/55"
             >
               {t('lead.phone')}
             </label>
             <PhoneInputField
-              id="project-lead-phone"
+              id={`${idPrefix}-phone`}
               value={phone}
               onChange={(v) => setPhone(v ?? '')}
               variant="public"
@@ -236,7 +252,7 @@ export function ProjectLeadForm({
             />
           </div>
           <LeadQualificationFields
-            idPrefix="project-lead"
+            idPrefix={idPrefix}
             answers={qualification}
             onChange={setQualification}
             attempted={attempted}

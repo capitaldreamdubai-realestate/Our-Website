@@ -34,6 +34,8 @@ type BaseProps = {
   secondaryHref?: string
   secondaryLabel?: string
   belowHero?: ReactNode
+  /** Rendered after the listings grid (e.g. an enquiry form). */
+  afterGrid?: ReactNode
 }
 
 type AllVariant = BaseProps & {
@@ -163,6 +165,7 @@ export function PropertyListingPage(props: PropertyListingPageProps) {
     secondaryHref,
     secondaryLabel,
     belowHero,
+    afterGrid,
   } = props
   const [gridPage, setGridPage] = useState(0)
   const pageSize = 12
@@ -361,6 +364,7 @@ export function PropertyListingPage(props: PropertyListingPageProps) {
           ) : null}
         </div>
       </SectionShell>
+      {afterGrid}
     </main>
   )
 }

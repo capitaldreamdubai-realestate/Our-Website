@@ -1,3 +1,4 @@
+import { PAGE_ENQUIRY_ANCHOR, PageEnquirySection } from '@/components/PageEnquirySection'
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext'
 import { isForSaleListing } from '../lib/propertyChannels'
 import { PropertyListingPage } from './PropertyListingPage'
@@ -17,6 +18,16 @@ export function ForSalePage() {
       gridTitle={t('listing.grid.sale')}
       emptyFilteredMessage={t('listing.emptyFiltered')}
       emptyChannelMessage={t('listing.emptyChannel.sale')}
+      primaryHref={`#${PAGE_ENQUIRY_ANCHOR}`}
+      primaryLabel={t('pageEnquiry.cta')}
+      afterGrid={
+        <PageEnquirySection
+          pageContext="for_sale"
+          title={t('pageEnquiry.forSale.title')}
+          intro={t('pageEnquiry.forSale.intro')}
+          interest={t('pageEnquiry.forSale.interest')}
+        />
+      }
     />
   )
 }
