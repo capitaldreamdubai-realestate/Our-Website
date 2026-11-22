@@ -304,7 +304,7 @@ export function OffplanProjectDetailPage() {
             ) : null}
           </div>
 
-          <aside id="project-inquiry" className="w-full shrink-0 lg:sticky lg:top-24 lg:max-w-md">
+          <aside id="project-inquiry" className="w-full shrink-0 scroll-mt-24 lg:sticky lg:top-24 lg:max-w-md">
             {selectedPlan ? (
               <p className="mb-3 text-sm text-ink/70">
                 {t('offplan.detail.askingAbout', { name: selectedPlan.name })}

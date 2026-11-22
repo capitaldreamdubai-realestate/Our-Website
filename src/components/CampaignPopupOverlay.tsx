@@ -95,6 +95,9 @@ export function CampaignPopupOverlay() {
     setActive(null)
     setSubmitted(false)
     setStep(1)
+    // Visitors who land straight on an enquiry form (ads use #enquire / #project-inquiry)
+    // should not get a popup covering the form they came for.
+    if (/^#(enquire|project-inquiry)$/.test(window.location.hash)) return
     const next = pickPopupForPage(popups, pathname)
     if (!next) return
 
