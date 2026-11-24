@@ -6,6 +6,10 @@
  * Runtime also injects SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY in many setups.
  *
  * Invoke (authenticated admin JWT): supabase.functions.invoke('sync-property-finder', { body: { includeDrafts?: boolean, importUnlinked?: boolean } })
+ * Scheduled: pg_cron sends header x-crm-cron = CRM_CRON_TOKEN (same secret as crm-pf-leads-sync).
+ * A scheduled run always imports Property Finder-only listings (importUnlinked), so a listing
+ * created straight on Property Finder appears on the website and in the CRM without anyone
+ * pressing Sync.
  *
  * The website is the master copy. A Property Finder listing that belongs to a website listing
  * (its `reference` is the website id, or a website row holds its pf_listing_id) only refreshes
@@ -478,17 +482,17 @@ Deno.serve(async (req) => {
       )
     }
 
+    const cronToken = Deno.env.get('CRM_CRON_TOKEN')?.trim()
+    const fromCron = !!cronToken && req.headers.get('x-crm-cron') === cronToken
     const authHeader = req.headers.get('Authorization') ?? req.headers.get('authorization')
-    if (!authHeader?.toLowerCase().startsWith('bearer ')) {
-      return json({ ok: false, error: 'Missing bearer token.' }, 401)
-    }
-    const jwt = authHeader.slice(7).trim()
-    if (!jwt) {
+    const jwt = authHeader?.toLowerCase().startsWith('bearer ') ? authHeader.slice(7).trim() : ''
+    if (!fromCron && !jwt) {
       return json({ ok: false, error: 'Missing bearer token.' }, 401)
     }
 
     let includeDrafts = false
     let importUnlinked = false
+    let dryRun = false
     if (req.method === 'POST') {
       try {
         const body = await req.json()
@@ -497,6 +501,10 @@ Deno.serve(async (req) => {
         }
         if (body && typeof body === 'object' && (body as { importUnlinked?: boolean }).importUnlinked === true) {
           importUnlinked = true
+        }
+        // Preview: report what a run would import and change, write nothing.
+        if (body && typeof body === 'object' && (body as { dryRun?: boolean }).dryRun === true) {
+          dryRun = true
         }
       } catch {
         /* empty body */
@@ -507,27 +515,30 @@ Deno.serve(async (req) => {
     const gate = createClient(supabaseUrl, serviceKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     })
-    const {
-      data: { user },
-      error: userErr,
-    } = await gate.auth.getUser(jwt)
-    if (userErr || !user) {
-      return json({ ok: false, error: 'Invalid auth token.' }, 401)
+    if (fromCron) importUnlinked = true
+    else {
+      const {
+        data: { user },
+        error: userErr,
+      } = await gate.auth.getUser(jwt)
+      if (userErr || !user) {
+        return json({ ok: false, error: 'Invalid auth token.' }, 401)
+      }
+      // A sync can unpublish listings, so only website owners/admins and CRM admins/managers may
+      // run it (same rule as pf-publish-listing), not any signed-in account.
+      const email = (user.email ?? '').trim().toLowerCase()
+      const { data: siteAdmin } = await gate
+        .from('admin_users')
+        .select('role, is_active')
+        .or(`auth_user_id.eq.${user.id}${email ? `,email.eq.${email}` : ''}`)
+        .limit(1)
+        .maybeSingle()
+      const { data: crmRoles } = await gate.from('user_roles').select('role').eq('user_id', user.id)
+      const allowed =
+        (siteAdmin?.is_active && ['owner', 'admin'].includes(siteAdmin.role)) ||
+        (crmRoles ?? []).some((r: { role: string }) => ['super_admin', 'admin', 'manager'].includes(r.role))
+      if (!allowed) return json({ ok: false, error: 'Not allowed.' }, 403)
     }
-    // A sync can unpublish listings, so only website owners/admins and CRM admins/managers may
-    // run it (same rule as pf-publish-listing), not any signed-in account.
-    const email = (user.email ?? '').trim().toLowerCase()
-    const { data: siteAdmin } = await gate
-      .from('admin_users')
-      .select('role, is_active')
-      .or(`auth_user_id.eq.${user.id}${email ? `,email.eq.${email}` : ''}`)
-      .limit(1)
-      .maybeSingle()
-    const { data: crmRoles } = await gate.from('user_roles').select('role').eq('user_id', user.id)
-    const allowed =
-      (siteAdmin?.is_active && ['owner', 'admin'].includes(siteAdmin.role)) ||
-      (crmRoles ?? []).some((r: { role: string }) => ['super_admin', 'admin', 'manager'].includes(r.role))
-    if (!allowed) return json({ ok: false, error: 'Not allowed.' }, 403)
 
     const accessToken = await pfToken(apiKey, apiSecret)
 
@@ -613,6 +624,7 @@ Deno.serve(async (req) => {
     for (const [pfId, listing] of byId) {
       const ref = typeof listing.reference === 'string' ? listing.reference : ''
       const ownerId = ownedByPfId.get(pfId) ?? (ownedIds.has(ref) ? ref : null)
+      if (ownerId && dryRun) { refreshedOwned += 1; continue }
       if (ownerId) {
         const state = listing.state as Record<string, unknown> | undefined
         const stage = typeof state?.stage === 'string' ? state.stage : null
@@ -637,6 +649,34 @@ Deno.serve(async (req) => {
       syncedPfIds.add(pfId)
       const preserve = preserveMap.get(pfId)
       rows.push(mapListingToRow(listing, preserve, agentMaps))
+    }
+
+    if (dryRun) {
+      const { data: currentPf } = await supabase
+        .from('properties')
+        .select('pf_listing_id, availability_status')
+        .eq('listing_source', 'property_finder')
+      const wouldHide = (currentPf ?? []).filter(
+        (r) => r.pf_listing_id && !syncedPfIds.has(r.pf_listing_id) && r.availability_status !== 'sold' && r.availability_status !== 'rented',
+      ).length
+      return json({
+        ok: true,
+        dryRun: true,
+        trigger: fromCron ? 'schedule' : 'manual',
+        pfListings: byId.size,
+        refreshedOwned,
+        wouldImport: rows.length,
+        wouldImportPublished: rows.filter((r) => r.published === true).length,
+        wouldHide: importUnlinked ? wouldHide : 0,
+        imports: rows.slice(0, 50).map((r) => ({
+          id: r.id,
+          title: r.title,
+          reference: r.property_ref_id ?? null,
+          published: r.published,
+          stage: r.pf_state_stage ?? null,
+          created: r.pf_published_at ?? null,
+        })),
+      })
     }
 
     const chunkSize = 40
@@ -671,6 +711,7 @@ Deno.serve(async (req) => {
       refreshedOwned,
       skippedUnlinked,
       includeDrafts,
+      trigger: fromCron ? 'schedule' : 'manual',
       at: new Date().toISOString(),
     }
 
